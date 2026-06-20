@@ -9,6 +9,7 @@ import nodemailer from "nodemailer";
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", true);
 const PORT = 3000;
 
 app.use(express.json({ limit: "50mb" }));
@@ -1001,9 +1002,10 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
 });
 
 app.get('/api/auth/discord/login', (req, res) => {
-  const host = req.get('X-Forwarded-Host') || req.get('host');
-  const protocol = req.get('X-Forwarded-Proto') || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
+  console.log("Discord OAuth Redirect URI:", redirectUri);
 
   const clientId = process.env.DISCORD_CLIENT_ID;
   if (!clientId) {
@@ -1015,8 +1017,8 @@ app.get('/api/auth/discord/login', (req, res) => {
 });
 
 app.get('/api/auth/discord/url', (req, res) => {
-  const host = req.get('X-Forwarded-Host') || req.get('host');
-  const protocol = req.get('X-Forwarded-Proto') || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
 
   const clientId = process.env.DISCORD_CLIENT_ID;
@@ -1032,8 +1034,8 @@ app.get('/api/auth/discord/callback', async (req, res) => {
   const code = req.query.code as string;
   if (!code) return res.send("No code provided.");
 
-  const host = req.get('X-Forwarded-Host') || req.get('host');
-  const protocol = req.get('X-Forwarded-Proto') || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
 
   const clientId = process.env.DISCORD_CLIENT_ID;

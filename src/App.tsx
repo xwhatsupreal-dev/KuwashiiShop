@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FakeTurnstile } from './components/FakeTurnstile';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { motion, AnimatePresence } from "motion/react";
 import {
   Shield,
@@ -504,6 +504,7 @@ export default function App() {
   const [authConfirmPassword, setAuthConfirmPassword] = useState("");
   const [authOtpCode, setAuthOtpCode] = useState("");
   const [authError, setAuthError] = useState("");
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
   const [showAuthPassword, setShowAuthPassword] = useState(false);
   
@@ -1161,8 +1162,12 @@ export default function App() {
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAuthLoading) return;
+    setIsAuthLoading(true);
+    setAuthError("");
 
-    if (authMode === "forgot") {
+    try {
+      if (authMode === "forgot") {
       if (!authEmail.trim()) {
         setAuthError("กรุณากรอกอีเมลให้ครบถ้วน");
         return;
@@ -1221,13 +1226,25 @@ export default function App() {
       }
 
       const usernameTrimmed = authUsername.trim();
-      const user = await fetchUser(usernameTrimmed);
+      let user = await fetchUser(usernameTrimmed);
+
+      if (!user && usernameTrimmed.includes("@")) {
+        try {
+          const { data } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("email", usernameTrimmed)
+            .limit(1)
+            .single();
+          if (data) user = data;
+        } catch (e) {}
+      }
 
       if (user && user.password === authPassword) {
-        setCurrentUser({ username: usernameTrimmed });
+        setCurrentUser({ username: user.username });
         storage.setItem(
           "KUWASHII_CURRENT_USER",
-          JSON.stringify({ username: usernameTrimmed }),
+          JSON.stringify({ username: user.username }),
         );
         storage.setItem("KUWASHII_IS_ADMIN", "false");
 
@@ -1427,6 +1444,12 @@ export default function App() {
         await fetch("/api/set-register-lock", { method: "POST" });
       } catch (e) {}
       showToast("สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!", "success");
+    }
+    } catch(err) {
+      console.error(err);
+      setAuthError("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setIsAuthLoading(false);
     }
   };
 
@@ -2543,7 +2566,13 @@ export default function App() {
                   </div>
                 )}
 
-                <FakeTurnstile key={authMode} onSuccess={() => setIsCaptchaVerified(true)} />
+                <div className="flex justify-center my-4">
+                  <Turnstile 
+                    siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                    onSuccess={() => setIsCaptchaVerified(true)}
+                    options={{ theme: 'dark' }}
+                  />
+                </div>
 
                 {authError && (
                   <div className="text-sm text-red-500 text-center bg-red-500/10 p-4 rounded-xl border border-red-500/20">
@@ -3110,7 +3139,7 @@ export default function App() {
                  authError={authError}
                  setAuthError={setAuthError}
                  handleAuthSubmit={handleAuthSubmit}
-                 isProcessing={false}
+                 isProcessing={isAuthLoading}
                  isCaptchaVerified={isCaptchaVerified}
                  setIsCaptchaVerified={setIsCaptchaVerified}
                />

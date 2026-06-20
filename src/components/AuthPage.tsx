@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { FakeTurnstile } from './FakeTurnstile';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export const AuthPage = ({
   authMode,
@@ -54,7 +54,7 @@ export const AuthPage = ({
                 {authMode !== "forgot" && authMode !== "forgot_verify_otp" && (
                   <div>
                     <label className="text-xs sm:text-sm font-bold text-zinc-300 block mb-1 sm:mb-1.5">
-                     ชื่อผู้ใช้ / Username
+                     ชื่อผู้ใช้ หรือ อีเมล / Username or Email
                     </label>
                     <input
                       type="text"
@@ -63,7 +63,7 @@ export const AuthPage = ({
                         setAuthUsername(e.target.value);
                         setAuthError("");
                       }}
-                      placeholder="กรอกชื่อผู้ใช้"
+                      placeholder="กรอกชื่อผู้ใช้ หรือ อีเมล"
                       required={authMode === "login" || authMode === "register"}
                       autoComplete="username"
                       className="w-full bg-[#151515] border border-zinc-800 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:border-[#0ea5e9] transition-all text-xs sm:text-sm placeholder-zinc-500 placeholder:font-medium"
@@ -188,7 +188,13 @@ export const AuthPage = ({
                   </div>
                 )}
 
-                <FakeTurnstile key={authMode} onSuccess={() => setIsCaptchaVerified(true)} />
+                <div className="flex justify-center my-4">
+                  <Turnstile 
+                    siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                    onSuccess={() => setIsCaptchaVerified(true)}
+                    options={{ theme: 'dark' }}
+                  />
+                </div>
 
                 {authError && (
                   <div className="text-sm text-red-500 text-center bg-red-500/10 p-3 rounded-lg border border-red-500/20">
