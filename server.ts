@@ -189,8 +189,6 @@ const SEED_ITEMS = [
 
 const DATA_FILE = path.join(process.cwd(), "items_db.json");
 
-import { createClient } from "@supabase/supabase-js";
-
 // Helpers for encoding/decoding extra properties within description to bypass schema restrictions without altering Supabase table
 function packExtraData(item: any): any {
   const packed = { ...item };
@@ -237,128 +235,6 @@ function unpackExtraData(item: any): any {
   return unpacked;
 }
 
-// Helper to loads items
-async function loadItems(): Promise<any[]> {
-  try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
-    
-    // Use Supabase if configured
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const { data, error } = await supabase.from('stock_items').select('*').order('updatedAt', { ascending: false });
-      
-      if (error) {
-        // If table doesn't exist or other error, fallback to seed
-        console.warn("Supabase load error (Table might not exist):", error.message);
-        return SEED_ITEMS;
-      }
-      
-      if (!data || data.length === 0) {
-        // Auto-seed Supabase if empty
-        await saveItems(SEED_ITEMS);
-        return SEED_ITEMS;
-      }
-      return data.map(unpackExtraData);
-    }
-
-    // Fallback to local JSON file
-    if (!fs.existsSync(DATA_FILE)) {
-      await fs.promises.writeFile(DATA_FILE, JSON.stringify(SEED_ITEMS, null, 2), "utf8");
-      return SEED_ITEMS;
-    }
-    const raw = await fs.promises.readFile(DATA_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      await fs.promises.writeFile(DATA_FILE, JSON.stringify(SEED_ITEMS, null, 2), "utf8");
-      return SEED_ITEMS;
-    }
-    return parsed.map(unpackExtraData);
-  } catch (err) {
-    console.error("Error reading items list from database file/Supabase:", err);
-    return SEED_ITEMS;
-  }
-}
-
-// Helper to save multiple items (used for full reset/seed)
-async function saveItems(itemsList: any[]): Promise<void> {
-  try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
-    const packedList = itemsList.map(packExtraData);
-    
-    // Use Supabase if configured 
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      // For a full reset, we upsert all items
-      const { error } = await supabase.from('stock_items').upsert(packedList);
-      if (error) {
-        console.error("Supabase upsert error:", error.message);
-      }
-      return;
-    }
-
-    // Fallback to local JSON file
-    await fs.promises.writeFile(DATA_FILE, JSON.stringify(packedList, null, 2), "utf8");
-  } catch (err) {
-    console.error("Error writing items database:", err);
-  }
-}
-
-// Helper to save a single item
-async function saveSingleItem(item: any): Promise<void> {
-  try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
-    const packedItem = packExtraData(item);
-    
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const { error } = await supabase.from('stock_items').upsert(packedItem);
-      if (error) {
-        console.error("Supabase single upsert error:", error.message);
-      }
-      return;
-    }
-
-    const itemsList = await loadItems();
-    const index = itemsList.findIndex((it) => it.id === item.id);
-    if (index >= 0) {
-      itemsList[index] = { ...itemsList[index], ...packedItem, updatedAt: new Date().toISOString() };
-    } else {
-      itemsList.unshift({ ...packedItem, updatedAt: new Date().toISOString() });
-    }
-    await saveItems(itemsList);
-  } catch (err) {
-    console.error("Error saving single item:", err);
-  }
-}
-
-// Helper to delete a single item
-async function deleteSingleItem(id: string): Promise<void> {
-  try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
-    
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const { error } = await supabase.from('stock_items').delete().eq('id', id);
-      if (error) {
-        console.error("Supabase delete error:", error.message);
-      }
-      return;
-    }
-
-    let itemsList = await loadItems();
-    itemsList = itemsList.filter((it) => it.id !== id);
-    await saveItems(itemsList);
-  } catch (err) {
-    console.error("Error deleting single item:", err);
-  }
-}
-
-
-// Lazy-initialization utility for Gemini API
 let aiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI {
   if (!aiClient) {
@@ -425,27 +301,11 @@ ${sharedItem.isPopular ? "⭐ สินค้านี้จัดเป็น�
 กรุณาให้ความสนใจและให้การวิเคราะห์ จุดเด่น ความคุ้มค่า หรือคำตอบพิเศษกับสินค้าชิ้นนี้เป็นสำคัญที่สุดและโยงเข้าความต้องการของลูกค้าอย่างดีที่สุด!`;
     }
 
-    // Set up chat instance with history
-    const chat = ai.chats.create({
-      model: "gemini-3.5-flash",
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.85,
-      }
-    });
-
-    // Populate actual history using sendMessage sequence or standard structure
-    // Since we want to send the message in context of the configured history:
-    // We can translate client's messages history into Gemini Chat history
-    // For simplicity, we can load history directly in ai.chats.create if it was defined,
-    // or manually query ai.models.generateContent with standard prompt structure!
-    // Let's call the chat history sequentially to rebuild it, or translate it into an array of Contents
     const formattedHistory = (history || []).map((h: any) => ({
       role: h.role === "user" ? "user" : "model",
       parts: [{ text: h.parts?.[0]?.text || "" }]
     }));
 
-    // Start with chat history and send the newest message
     const activeChat = ai.chats.create({
       model: "gemini-3.5-flash",
       history: formattedHistory,
@@ -465,92 +325,12 @@ ${sharedItem.isPopular ? "⭐ สินค้านี้จัดเป็น�
   }
 });
 
-// --- Stock Items CRUD APIs using local JSON file database ---
-
-// Get all items (initial loading)
-app.get("/api/items", async (req: express.Request, res: express.Response) => {
-  try {
-    const itemsList = await loadItems();
-    res.json(itemsList);
-  } catch (err: any) {
-    console.error("Error in GET /api/items:", err);
-    res.status(500).json({ error: "Failed to load items database" });
-  }
-});
-
-// Create or update a single item
-app.post("/api/items", async (req: express.Request, res: express.Response) => {
-  try {
-    const updatedItem = req.body;
-    if (!updatedItem || !updatedItem.id) {
-      res.status(400).json({ error: "Item and item ID are required" });
-       return;
-    }
-    await saveSingleItem(updatedItem);
-    res.json({ success: true, item: updatedItem });
-  } catch (err: any) {
-    console.error("Error in POST /api/items:", err);
-    res.status(500).json({ error: "Failed to save item to database" });
-  }
-});
-
-// Delete a single item
-app.delete("/api/items/:id", async (req: express.Request, res: express.Response) => {
-  try {
-    const { id } = req.params;
-    if (!id) {
-      res.status(400).json({ error: "Item ID is required" });
-       return;
-    }
-    await deleteSingleItem(id);
-    res.json({ success: true });
-  } catch (err: any) {
-    console.error("Error in DELETE /api/items:", err);
-    res.status(500).json({ error: "Failed to delete item from database" });
-  }
-});
-
-// Bulk reset database
-app.post("/api/items/reset", async (req: express.Request, res: express.Response) => {
-  try {
-    const itemsList = req.body;
-    if (!Array.isArray(itemsList)) {
-      res.status(400).json({ error: "Array of items is required" });
-       return;
-    }
-    await saveItems(itemsList);
-    res.json({ success: true });
-  } catch (err: any) {
-    console.error("Error in POST /api/items/reset:", err);
-    res.status(500).json({ error: "Failed to reset items database" });
-  }
-});
-
 // True Wallet Topup Proxy
 app.post("/api/topup/true-wallet", async (req: express.Request, res: express.Response) => {
   try {
     const { gift_link, game } = req.body;
-    
     let targetPhone = '0801249138';
-    try {
-      const supabaseUrl = process.env.SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_ANON_KEY;
-      if (supabaseUrl && supabaseKey) {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { data: configData } = await supabase.from('system_config').select('announcement_settings').eq('id', 'main').single();
-        if (configData && configData.announcement_settings) {
-          let ann = configData.announcement_settings;
-          if (typeof ann === 'string') {
-            try { ann = JSON.parse(ann); } catch(e) { ann = {}; }
-          }
-          if (ann.topup_angpao_phone) {
-            targetPhone = ann.topup_angpao_phone;
-          }
-        }
-      }
-    } catch(e) {
-      console.error("Error reading system_config from supabase:", e);
-    }
+
 
     // We send form data
     const params = new URLSearchParams();
@@ -1146,9 +926,13 @@ const setupServer = async () => {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 };
 
 setupServer();
+
+export default app;
