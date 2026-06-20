@@ -10,6 +10,7 @@ interface AdminModalProps {
   onSave: (item: Omit<StockItem, 'updatedAt'>) => void;
   editingItem: StockItem | null;
   currentGame: 'AOTR' | 'ASTD';
+  globalStats?: any;
 }
 
 const PRESET_IMAGE_SUGGESTIONS = [
@@ -27,6 +28,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   onSave,
   editingItem,
   currentGame,
+  globalStats,
 }) => {
   const [name, setName] = useState('');
   const [category, setCategory] = useState<string>('Grow A Garden 2');
@@ -35,6 +37,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [initialQuantity, setInitialQuantity] = useState<number | string>('');
   const [piecesPerUnit, setPiecesPerUnit] = useState<number | string>('');
   const [price, setPrice] = useState<number | string>(10);
+  const [originalPrice, setOriginalPrice] = useState<number | string>('');
   const [description, setDescription] = useState('');
   const [isPinned, setIsPinned] = useState(false);
   const [isPopular, setIsPopular] = useState(false);
@@ -60,6 +63,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       setInitialQuantity(editingItem.initialQuantity !== undefined ? editingItem.initialQuantity : editingItem.quantity);
       setPiecesPerUnit(editingItem.piecesPerUnit !== undefined ? editingItem.piecesPerUnit : '');
       setPrice(editingItem.price);
+      setOriginalPrice(editingItem.originalPrice !== undefined ? editingItem.originalPrice : '');
       setDescription(editingItem.description);
       setIsPinned(!!editingItem.isPinned);
       setIsPopular(!!editingItem.isPopular);
@@ -106,6 +110,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       setInitialQuantity('');
       setPiecesPerUnit('');
       setPrice(10);
+      setOriginalPrice('');
       setDescription('');
       setIsPinned(false);
       setIsPopular(false);
@@ -175,7 +180,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      Array.from(e.target.files).forEach(file => processFile(file));
+      Array.from(e.target.files).forEach((file: any) => processFile(file));
     }
   };
 
@@ -194,7 +199,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      Array.from(e.dataTransfer.files).forEach(file => processFile(file));
+      Array.from(e.dataTransfer.files).forEach((file: any) => processFile(file));
     }
   };
 
@@ -205,8 +210,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    const qty = typeof quantity === 'number' ? quantity : parseInt(quantity as string, 10);
-    const p = typeof price === 'number' ? price : parseInt(price as string, 10);
+    const qty = typeof quantity === 'number' ? quantity : parseFloat(quantity as string);
+    const p = typeof price === 'number' ? price : parseFloat(price as string);
     if (!name.trim()) newErrors.name = 'กรุณากรอกชื่อไอเทม';
     if (isNaN(qty) || qty < 0) newErrors.quantity = 'จำนวนสินค้าจะต้องไม่ติดลบ';
     if (isNaN(p) || p < 0) newErrors.price = 'ราคาจำเป็นจะต้องมากกว่าหรือเท่ากับ 0 บาท';
@@ -233,12 +238,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     let finalImageUrl = allImages.length > 0 ? allImages[0] : '';
     let addImgs = allImages;
 
-    const currentQty = typeof quantity === 'number' ? quantity : (parseInt(quantity as string, 10) || 0);
-    const currentPrice = typeof price === 'number' ? price : (parseInt(price as string, 10) || 0);
-    const initQty = typeof initialQuantity === 'number' ? initialQuantity : parseInt(initialQuantity as string, 10);
+    const currentQty = typeof quantity === 'number' ? quantity : (parseFloat(quantity as string) || 0);
+    const currentPrice = typeof price === 'number' ? price : (parseFloat(price as string) || 0);
+    const currOrigPrice = typeof originalPrice === 'number' ? originalPrice : parseFloat(originalPrice as string);
+    const finalOriginalPrice = (!isNaN(currOrigPrice) && currOrigPrice > currentPrice) ? currOrigPrice : undefined;
+
+    const initQty = typeof initialQuantity === 'number' ? initialQuantity : parseFloat(initialQuantity as string);
     const finalInitialQuantity = (!isNaN(initQty) && initQty >= currentQty) ? initQty : currentQty;
 
-    const pPerUnit = typeof piecesPerUnit === 'number' ? piecesPerUnit : parseInt(piecesPerUnit as string, 10);
+    const pPerUnit = typeof piecesPerUnit === 'number' ? piecesPerUnit : parseFloat(piecesPerUnit as string);
     const finalPiecesPerUnit = (!isNaN(pPerUnit) && pPerUnit > 0) ? pPerUnit : undefined;
 
     const accCreds = accountCredentialsText.trim().split('\n').map(c => c.trim()).filter(c => c.length > 0);
@@ -262,6 +270,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       initialQuantity: finalInitQty,
       piecesPerUnit: finalPiecesPerUnit,
       price: currentPrice,
+      originalPrice: finalOriginalPrice,
       description: description.trim(),
       imageUrl: finalImageUrl || undefined,
       imageUrls: addImgs.length > 0 ? addImgs : undefined,
@@ -344,7 +353,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 เลือกหมวดหมู่ไอเทม (Item Category) <span className="text-zinc-400 font-normal">(คลิกเลือกโดยตรง)</span>
               </label>
               <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-1.5 p-2 rounded-2xl bg-zinc-800 border border-white/5/40">
-                {(['Grow A Garden 2', 'ALL STAR', 'ROV']).map((cat) => {
+                {((globalStats?.announcement_settings?.categories?.map((c: any) => c.title)) || ['Grow A Garden 2', 'ALL STAR', 'ROV']).map((cat: string) => {
                   const isActive = category === cat;
                   return (
                     <motion.button whileTap={{ scale: 0.95 }}
@@ -383,7 +392,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               </select>
             </div>
             {/* Quantity, Initial Quantity, Pieces per pack, and Price row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-1.5 font-display tracking-tight flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1.5">
@@ -439,8 +448,23 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-1.5 font-display tracking-tight flex items-center gap-1.5">
+                  <Coins className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>ราคาเดิม (Original Price ฿)</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="ปล่อยว่างหากไม่มีส่วนลด"
+                  value={originalPrice}
+                  onChange={(e) => setOriginalPrice(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-850 text-zinc-400 line-through px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-amber-500 transition-all font-mono font-medium placeholder:line-through-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-1.5 font-display tracking-tight flex items-center gap-1.5">
                   <Coins className="w-3.5 h-3.5 text-yellow-500" />
-                  <span>ราคาบาทต่อชิ้น/ชุด (Price ฿)</span>
+                  <span>ราคาที่ลดเหลือ (Price ฿)</span>
                 </label>
                 <input
                   type="number"
@@ -514,7 +538,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               </div>
             </div>
 
-            {(category === 'Starter Accounts' || category === 'รหัส ROV' || category === 'ไอดี ROV') && (
+            {saleFormat === 'ขายรหัส' && (
               <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-850 space-y-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block font-display tracking-tight">
@@ -531,7 +555,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               </div>
             )}
 
-            {category === 'สุ่มตัวละคร - ออสตา' && (
+            {saleFormat === 'กล่องสุ่ม' && (
               <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-850 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block font-display tracking-tight">
@@ -817,7 +841,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
               <motion.button whileTap={{ scale: 0.95 }}
                 type="submit"
-                className="w-1/2 py-2.5 px-4 rounded-2xl bg-zinc-900 hover:bg-zinc-100 text-black border-white text-xs font-bold shadow-lg flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-all"
+                className="w-1/2 py-2.5 px-4 rounded-2xl bg-zinc-100 hover:bg-white text-zinc-900 border-white text-xs font-bold shadow-lg flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-all"
                 id="btn-submit-stock"
               >
                 <Save className="w-3.5 h-3.5" />

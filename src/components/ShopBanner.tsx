@@ -1,9 +1,19 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Users, Layers, Package, CheckSquare } from 'lucide-react';
 
-export const ShopBanner = ({ globalStats }: { globalStats: any }) => {
+export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, items?: any[] }) => {
+  const categoriesCount = new Set(items.map(i => i.category)).size;
+  const availableItemsCount = items.filter(i => i.quantity > 0).length;
+  const soldItemsCount = globalStats?.total_purchases || 0;
+
   return (
-    <div className="bg-zinc-900">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="bg-zinc-900"
+    >
       {/* Top Info section */}
       <div className="px-4 py-6 max-w-7xl mx-auto flex items-start gap-4">
         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-blue-900/40 flex items-center justify-center bg-zinc-900 flex-shrink-0 overflow-hidden shadow-sm">
@@ -43,7 +53,7 @@ export const ShopBanner = ({ globalStats }: { globalStats: any }) => {
           <Layers className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
           <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">จำนวนหมวดหมู่</span>
           <div className="flex items-baseline gap-1 z-10">
-            <span className="text-2xl font-bold text-zinc-100">3</span>
+            <span className="text-2xl font-bold text-zinc-100">{categoriesCount}</span>
             <span className="text-xs text-zinc-400">หมวด</span>
           </div>
         </div>
@@ -52,7 +62,7 @@ export const ShopBanner = ({ globalStats }: { globalStats: any }) => {
           <Package className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
           <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">สินค้าพร้อมจำหน่าย</span>
           <div className="flex items-baseline gap-1 z-10">
-            <span className="text-2xl font-bold text-zinc-100">128</span>
+            <span className="text-2xl font-bold text-zinc-100">{availableItemsCount}</span>
             <span className="text-xs text-zinc-400">ชิ้น</span>
           </div>
         </div>
@@ -61,11 +71,11 @@ export const ShopBanner = ({ globalStats }: { globalStats: any }) => {
           <CheckSquare className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
           <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">จำหน่ายไปแล้ว</span>
           <div className="flex items-baseline gap-1 z-10">
-            <span className="text-2xl font-bold text-zinc-100">1,133</span>
+            <span className="text-2xl font-bold text-zinc-100">{soldItemsCount.toLocaleString()}</span>
             <span className="text-xs text-zinc-400">ครั้ง</span>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

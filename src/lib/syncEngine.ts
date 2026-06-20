@@ -3,12 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey) 
-  : null;
+// 🔴 SUPABASE REMOVED TEMPORARILY AS REQUESTED 🔴
+export const supabase = null; 
 
 if (!supabase) {
-  console.warn("⚠️ VITE_SUPABASE_URL หรือ VITE_SUPABASE_ANON_KEY ไม่ได้ถูกตั้งค่า ระบบ Sync จึงไม่ทำงานข้อมูลจะถูกเก็บในเครื่องเท่านั้น!");
+  console.warn("⚠️ Supabase ถูกปิดการใช้งานอยู่! ข้อมูลจะถูกเก็บในเครื่อง (Local Storage) เท่านั้น!");
 }
 
 const SYNC_KEYS = [
@@ -35,14 +34,12 @@ const pendingSaves = new Map<string, number>();
 const originalSetItem = window.localStorage.setItem;
 
 export async function initSyncEngine() {
-  if (!supabase) return;
   if (isInitialized) return;
+  isInitialized = true;
+  
+  if (!supabase) return; // Skip online sync since Supabase is disabled
 
-  // 🔴 CLEAR LOCAL OFFLINE DATA TO FORCE FRESH SERVER LOAD 🔴
-  // According to user request: "เซฟออฟไลน์ในเครื่อง (Local Storage) เอาออก"
-  for (const key of SYNC_KEYS) {
-     window.localStorage.removeItem(key);
-  }
+  // 🔴 We DO NOT clear local storage here anymore, so data stays safe offline! 🔴
 
   try {
     const { data, error } = await supabase.from('kv_store').select('*');

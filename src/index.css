@@ -1,9 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Itim&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Prompt", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Prompt", sans-serif;
+  --font-sans: "Itim", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Itim", sans-serif;
+  --animate-marquee: marquee 15s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
 }
 
 html, body, #root {

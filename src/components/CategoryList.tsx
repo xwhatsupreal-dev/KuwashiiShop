@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Gamepad2, Star, Sparkles } from 'lucide-react';
+import { ChevronRight, Gamepad2, Star, Sparkles, Folders } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const categories = [
@@ -32,7 +32,10 @@ const categories = [
   }
 ];
 
-export const CategoryList = () => {
+export const CategoryList = ({ selectedCategory, setSelectedCategory, globalStats }: { selectedCategory: string, setSelectedCategory: (v: string) => void, globalStats?: any }) => {
+  const customCategories = globalStats?.announcement_settings?.categories;
+  const displayCategories = customCategories?.length > 0 ? customCategories : categories;
+  
   return (
     <div className="max-w-7xl mx-auto mb-8 w-full">
       <div className="flex items-center justify-between mb-4">
@@ -46,25 +49,33 @@ export const CategoryList = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {categories.map((category, index) => (
+        {displayCategories.map((category: any, index: number) => (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.95 }}
             transition={{ delay: index * 0.1, duration: 0.4 }}
             key={index} 
-            className={`group relative border border-zinc-800 rounded-2xl overflow-hidden bg-zinc-900/50 backdrop-blur-sm transition-all duration-300 ${category.borderColor} hover:shadow-[0_0_30px_-5px_rgba(0,0,0,0.5)]`}
+            onClick={() => setSelectedCategory(category.title)}
+            className={`group relative border border-zinc-800 rounded-2xl overflow-hidden bg-zinc-900/50 backdrop-blur-sm transition-all duration-300 ${category.borderColor} hover:shadow-[0_0_30px_-5px_rgba(0,0,0,0.5)] cursor-pointer`}
           >
             {/* Background Gradient */}
             <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
             {/* Banner Section */}
-            <div className="w-full h-28 sm:h-32 relative overflow-hidden">
+            <div className="w-full h-28 sm:h-32 relative overflow-hidden bg-zinc-800">
                 <div className="absolute inset-0 bg-black/20 z-10 group-hover:bg-transparent transition-colors duration-500" />
-                <img 
-                  src={category.image} 
-                  alt={category.title} 
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" 
-                />
+                {category.image ? (
+                  <img 
+                    src={category.image} 
+                    alt={category.title} 
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" 
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center transform group-hover:scale-105 transition-transform duration-700 ease-out">
+                    <Folders className="w-10 h-10 text-zinc-600" />
+                  </div>
+                )}
             </div>
 
             {/* Info Section */}
@@ -72,7 +83,7 @@ export const CategoryList = () => {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
-                    {React.cloneElement(category.icon as React.ReactElement, { className: 'w-4 h-4' })}
+                    {category.icon ? React.cloneElement(category.icon as React.ReactElement, { className: 'w-4 h-4' } as any) : <Gamepad2 className="w-4 h-4 text-zinc-400" />}
                     <h3 className="text-base font-black text-white tracking-wide">{category.title}</h3>
                   </div>
                   <span className="text-xs text-zinc-400 font-medium ">{category.subtitle}</span>

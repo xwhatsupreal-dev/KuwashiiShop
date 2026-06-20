@@ -7,6 +7,10 @@ export async function fetchItems() {
     console.error('Error fetching items:', error);
     return [];
   }
+  if (!data || !Array.isArray(data)) {
+    console.warn("fetchItems expected array but got:", data);
+    return [];
+  }
   return data.map((d: any) => {
     let pool = d.gacha_pool;
     let initialQty = d.initial_quantity;
@@ -111,5 +115,10 @@ export async function fetchUserTopups(username: string) {
 export async function getSystemConfig() {
   const { data, error } = await supabase.from('system_config').select('*').eq('id', 'main').single();
   if (error) return null;
+  if (data?.announcement_settings && typeof data.announcement_settings === 'string') {
+    try {
+      data.announcement_settings = JSON.parse(data.announcement_settings);
+    } catch(e) {}
+  }
   return data;
 }

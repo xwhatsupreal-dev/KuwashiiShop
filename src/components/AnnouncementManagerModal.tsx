@@ -60,7 +60,23 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
     localStorage.setItem('KUWASHII_ANNOUNCEMENT_UPDATED_AT', Date.now().toString());
     
     try {
-      await supabase.from('system_config').upsert({ id: 'main', announcement_settings: settings });
+      const { data: currentData } = await supabase.from('system_config').select('announcement_settings').eq('id', 'main').single();
+      let currentSettings = currentData?.announcement_settings || {};
+      if (typeof currentSettings === 'string') {
+        try {
+          currentSettings = JSON.parse(currentSettings);
+        } catch(e) {
+          currentSettings = {};
+        }
+      }
+
+      await supabase.from('system_config').upsert({ 
+        id: 'main', 
+        announcement_settings: {
+          ...currentSettings,
+          ...settings
+        }
+      });
     } catch(e) {}
     
     window.dispatchEvent(new Event('sync-announcement'));

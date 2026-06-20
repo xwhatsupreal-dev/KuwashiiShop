@@ -8,6 +8,7 @@ export interface StockItem {
   initialQuantity?: number;
   piecesPerUnit?: number;
   price: number; // in Thai Baht
+  originalPrice?: number; // pre-discount price
   description: string;
   imageUrl?: string;
   imageUrls?: string[];

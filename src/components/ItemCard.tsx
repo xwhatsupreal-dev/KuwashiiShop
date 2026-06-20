@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Edit2, Trash2, ShieldAlert, BadgeInfo, Coins, Package, Clock, ShoppingBag, Pin, Flame, Sparkles } from 'lucide-react';
+import { Edit2, Trash2, ShieldAlert, BadgeInfo, Coins, Package, Clock, ShoppingBag, Pin, Flame, Sparkles, Eye, X, Star } from 'lucide-react';
 import { StockItem } from '../types';
 
 interface ItemCardProps {
@@ -13,6 +13,7 @@ interface ItemCardProps {
   onBuy?: (item: StockItem, qty: number) => void;
   onTogglePin: (id: string) => void;
   appScreen?: string;
+  onCategoryClick?: (category: string) => void;
 }
 
 export const ItemCard: React.FC<ItemCardProps> = ({
@@ -25,6 +26,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   onBuy,
   onTogglePin,
   appScreen,
+  onCategoryClick,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
 
@@ -62,6 +64,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   };
 
   const status = getStockStatus(item.quantity);
+
+  let discountPercentage = 0;
+  if (item.originalPrice && item.originalPrice > item.price) {
+    discountPercentage = Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100);
+  }
 
   const getRelativeTimeString = (dateString?: string): string => {
     if (!dateString) return 'ไม่มีการบันทึกข้อมูล';
@@ -111,340 +118,217 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       whileHover={{ y: -4, transition: { duration: 0.15 } }}
-      className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-zinc-800 transition-all duration-300 ${colors.border} ${colors.glow}`}
+      whileTap={{ scale: 0.96 }}
+      className="group relative flex flex-col justify-between bg-[#0B0B0B] transition-all duration-300 border border-white/5 rounded-[16px] hover:border-[#0ea5e9]/50 hover:shadow-[0_0_30px_-5px_rgba(14,165,233,0.15)] overflow-hidden text-left"
       id={`item-card-${item.id}`}
     >
-      {/* Background radial gradient representing rarity */}
-      <div className={`absolute top-0 left-0 right-0 aspect-square bg-gradient-to-b ${colors.gradient} -z-10`} />
-
-      {/* Top Banner & Badges */}
-      <div className="p-3 sm:p-4 pb-1.5 sm:pb-2">
-        <div className="flex items-center justify-between gap-1.5 mb-2.5">
-          {/* Category & Pin Badge Group */}
-          <div className="flex items-center gap-1.5">
-            {isAdmin ? (
-              <motion.button whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={() => onTogglePin(item.id)}
-                className={`p-1.5 rounded-lg border transition-all duration-300 cursor-pointer flex items-center justify-center ${
-                  item.isPinned
-                    ? 'bg-amber-500/10 border-amber-500/50 text-amber-400 shadow-md shadow-amber-500/10'
-                    : 'bg-zinc-900 border-zinc-800 text-zinc-550 hover:text-zinc-400 hover:border-zinc-700'
-                }`}
-                title={item.isPinned ? 'เลิกปักหมุดสินค้านี้' : 'ปักหมุดสินค้านี้'}
-              >
-                <Pin className={`w-3.5 h-3.5 transition-transform ${item.isPinned ? 'fill-current scale-110 text-amber-400' : 'text-zinc-500 rotate-45'}`} />
-              </motion.button>
-            ) : item.isPinned ? (
-              <div
-                className="p-1.5 rounded-lg border bg-amber-500/10 border-amber-500/30 text-amber-400 flex items-center justify-center cursor-default"
-                title="สินค้านี้ถูกปักหมุดโดยแอดมิน"
-              >
-                <Pin className="w-3.5 h-3.5 fill-current text-amber-400" />
-              </div>
-            ) : null}
-            <span className="px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wider uppercase bg-zinc-900 text-zinc-500 border border-zinc-700/60">
-              {item.category}
-            </span>
-          </div>
-
-          {/* Sale Format Badge */}
-          {item.saleFormat && (
-            <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider border flex items-center gap-1 ${colors.bg}`}>
-              <span className="w-1 h-1 rounded-full bg-current animate-pulse"></span>
-              {item.saleFormat}
-            </span>
-          )}
-        </div>
-
-        {/* Item Image with hover expansion */}
-        <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 mb-3 flex items-center justify-center group/carousel">
-          {(item.imageUrls && item.imageUrls.length > 0) || item.imageUrl ? (
-            <>
-              <img
-                src={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls[currentImageIndex] : item.imageUrl!}
-                alt={item.name}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '';
-                }}
-              />
-              {item.imageUrls && item.imageUrls.length > 1 && (
-                <>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => prev === 0 ? item.imageUrls!.length - 1 : prev - 1); }}
-                    className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zinc-900 text-zinc-100 flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity"
-                  >
-                    &lsaquo;
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => prev === item.imageUrls!.length - 1 ? 0 : prev + 1); }}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zinc-900 text-zinc-100 flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity"
-                  >
-                    &rsaquo;
-                  </button>
-                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-                    {item.imageUrls.map((_, i) => (
-                      <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === currentImageIndex ? 'bg-zinc-900' : 'bg-zinc-900'}`} />
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 to-zinc-900 flex flex-col items-center justify-center p-3">
-              <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-700/50 mb-2 text-zinc-500 group-hover:border-zinc-600 transition-colors">
-                <Package className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] text-zinc-500 font-medium">AOT Revolution</span>
-            </div>
-          )}
-
-          {/* Absolute overlay price tag */}
-          <div className="absolute bottom-2 right-2 bg-zinc-900  px-2.5 py-1 rounded-lg border border-zinc-800/80 flex items-center gap-1">
-            <Coins className="w-3 h-3 text-yellow-500" />
-            <span className="font-mono text-xs font-bold text-zinc-100">฿{item.price.toLocaleString()}</span>
-          </div>
-
-          {/* Stock Availability indicator */}
-          <div className="absolute top-2 left-2 bg-zinc-900  px-2 py-0.5 rounded-md border border-zinc-800/60 flex items-center gap-1">
-            <span className={`w-1.5 h-1.5 rounded-full ${status.color.split(' ')[0]}`} />
-            <span className="text-[9px] tracking-wide font-medium text-zinc-400">{status.label}</span>
-          </div>
-
-          {/* Popular Tag */}
-          {item.isPopular && (
-            <div className="absolute top-2 right-2 bg-rose-500/90 text-zinc-100 font-bold  px-2 py-0.5 rounded-md border border-rose-450/40 flex items-center gap-1 shadow-md shadow-rose-500/20">
-              <Flame className="w-3 h-3 fill-current text-zinc-100 animate-pulse" />
-              <span className="text-[9px] tracking-wide">ยอดนิยม</span>
-            </div>
-          )}
-        </div>
-
-        {/* Typography */}
-        <h3 className="font-display text-[15px] font-bold tracking-tight text-zinc-100 tracking-tight mb-1 group-hover:text-amber-400 transition-colors flex items-center gap-1">
-          {item.isPinned && <Pin className="w-3 h-3 text-amber-400 fill-current flex-shrink-0 animate-bounce" />}
-          <span className="truncate">{item.name}</span>
-        </h3>
-
-        {/* Description */}
-        <p className="text-[11px] text-zinc-500 line-clamp-2 min-h-[1.75rem] leading-relaxed mb-3 font-display tracking-tight">
-          {item.description || 'ไม่มีคำอธิบายเพิ่มเติมสำหรับไอเทมนี้'}
-        </p>
-
-        {/* Info Grid */}
-        {(() => {
-          const initQty = item.initialQuantity && item.initialQuantity >= item.quantity ? item.initialQuantity : item.quantity;
-          const percentage = initQty > 0 ? (item.quantity / initQty) * 100 : 0;
-          const hasPieces = item.piecesPerUnit && item.piecesPerUnit > 1;
-
-          if (hasPieces) {
-            const pUnit = item.piecesPerUnit as number;
-            return (
-              <div className="space-y-2 bg-zinc-900 shadow-sm border border-zinc-800  p-2.5 rounded-2xl border border-zinc-800 text-[11px] font-display tracking-tight">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-zinc-500">
-                    <Package className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>สต๊อกคลังสินค้า:</span>
-                  </div>
-                  <div className="text-right font-mono font-bold text-zinc-100">
-                    {item.quantity === 0 ? (
-                      <span className="text-red-400 font-extrabold text-xs">หมดคลัง</span>
-                    ) : item.initialQuantity && item.initialQuantity > item.quantity ? (
-                      <span className="text-zinc-400">
-                        <span className="text-emerald-450 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">{item.quantity}</span>
-                        <span className="text-zinc-500 font-normal mx-0.5">/</span>
-                        <span className="text-zinc-500">{item.initialQuantity}</span> ชุด
-                      </span>
-                    ) : (
-                      <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">{item.quantity} ชุด</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-zinc-800/45 pt-1.5 mt-1">
-                  <div className="flex items-center gap-1.5 text-zinc-500">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>จำนวนของที่จะได้:</span>
-                  </div>
-                  <div className="text-right font-mono font-extrabold text-amber-400 text-xs">
-                    {pUnit} <span className="text-[9px] font-normal text-zinc-500">ชิ้นต่อชุด</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-zinc-800/45 pt-1.5 mt-1 bg-transparent/20 -mx-1 px-1 rounded-md">
-                  <div className="flex items-center gap-1.5 text-zinc-500">
-                    <Coins className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>รวมของทั้งหมดมี:</span>
-                  </div>
-                  <div className="text-right font-mono font-extrabold text-zinc-300">
-                    <span className="text-zinc-100 text-xs font-black">{item.quantity * pUnit}</span> ชิ้น
-                  </div>
-                </div>
-
-                {/* Progress bar visual */}
-                {initQty > 0 && (
-                  <div className="space-y-1 pt-1.5 border-t border-zinc-800/45">
-                    <div className="w-full bg-transparent h-1.5 rounded-full overflow-hidden p-0.5 flex items-center border border-zinc-800/30">
-                      <div 
-                        className={`h-0.5 rounded-full transition-all duration-500 ${
-                          item.quantity === 0
-                            ? 'w-0'
-                            : item.quantity <= 1
-                            ? 'bg-amber-500'
-                            : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[8px] text-zinc-500 font-medium leading-none">
-                      <span>สถานะคลังสินค้า</span>
-                      <span className="font-mono font-bold text-zinc-500">{percentage.toFixed(0)}%</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          return (
-            <div className="space-y-2 bg-zinc-900 shadow-sm border border-zinc-800  p-2.5 rounded-2xl border border-zinc-800 text-[11px] font-display tracking-tight">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-zinc-500">
-                  <Package className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>สต๊อกคงเหลือ:</span>
-                </div>
-                <div className="text-right font-mono font-bold text-zinc-100">
-                  {item.quantity === 0 ? (
-                    <span className="text-red-400 font-extrabold">หมดเกลี้ยง</span>
-                  ) : item.initialQuantity && item.initialQuantity > item.quantity ? (
-                    <span className="text-zinc-400">
-                      <span className="text-emerald-400 font-bold">{item.quantity}</span>
-                      <span className="text-zinc-500 font-normal mx-0.5">/</span>
-                      <span className="text-zinc-500">{item.initialQuantity}</span> ชิ้น
-                    </span>
-                  ) : (
-                    <span className="text-emerald-400 font-bold">{item.quantity} ชิ้น</span>
-                  )}
-                </div>
-              </div>
-              
-              {/* Progress bar visual */}
-              {initQty > 0 && (
-                <div className="space-y-1 pt-0.5">
-                  <div className="w-full bg-transparent h-1.5 rounded-full overflow-hidden p-0.5 flex items-center border border-zinc-800/30">
-                    <div 
-                      className={`h-0.5 rounded-full transition-all duration-500 ${
-                        item.quantity === 0
-                          ? 'w-0'
-                          : item.quantity <= 5
-                          ? 'bg-amber-500'
-                          : 'bg-emerald-500'
-                      }`}
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[8px] text-zinc-500 font-medium">
-                    <span>สถานะคลังสินค้า</span>
-                    <span className="font-mono font-bold text-zinc-500">{percentage.toFixed(0)}%</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* Bottom Action Section */}
-      <div className="p-3 sm:p-4 pt-0 bg-zinc-900">
-        {/* Admin actions or regular users Inquiry action */}
-        {isAdmin ? (
-          <div className="mt-1 border-t border-zinc-800 pt-3 flex flex-col gap-2.5">
-            {/* Quick stock adjustment controls */}
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">สต๊อก:</span>
-              <div className="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg p-0.5">
-                <motion.button whileTap={{ scale: 0.95 }}
-                  type="button"
-                  onClick={() => onQuickQuantityChange(item.id, -1)}
-                  disabled={item.quantity <= 0}
-                  className="w-6 h-6 flex items-center justify-center rounded text-zinc-450 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-40 disabled:hover:bg-transparent transition-colors text-xs font-bold font-mono cursor-pointer"
-                  id={`btn-add-dec-${item.id}`}
-                >
-                  -
-                </motion.button>
-                <span className="w-6 text-center font-mono font-bold text-xs text-zinc-100">
-                  {item.quantity}
-                </span>
-                <motion.button whileTap={{ scale: 0.95 }}
-                  type="button"
-                  onClick={() => onQuickQuantityChange(item.id, 1)}
-                  className="w-6 h-6 flex items-center justify-center rounded text-zinc-455 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-xs font-bold font-mono cursor-pointer"
-                  id={`btn-add-inc-${item.id}`}
-                >
-                  +
-                </motion.button>
-              </div>
-            </div>
-
-            {/* Core admin actions: Edit & Delete */}
-            <div className="grid grid-cols-2 gap-2">
-              <motion.button whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={() => onEdit(item)}
-                className="py-1 px-2 rounded-lg border border-zinc-700 hover:border-zinc-500 bg-zinc-900 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-805 text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
-                id={`btn-admin-edit-${item.id}`}
-              >
-                <Edit2 className="w-3 h-3" />
-                <span>แก้ไข</span>
-              </motion.button>
-              <motion.button whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={() => onDelete(item.id)}
-                className="py-1 px-2 rounded-lg border border-red-950/40 hover:border-red-600/50 bg-red-950/20 hover:bg-red-950/40 text-red-400 hover:text-red-300 text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
-                id={`btn-admin-del-${item.id}`}
-              >
-                <Trash2 className="w-3 h-3" />
-                <span>ลบออก</span>
-              </motion.button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-2 space-y-1.5">
-            <motion.button whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={() => {
-                onInquire(item);
+      {/* Item Image */}
+      <div className="relative w-full aspect-square overflow-hidden bg-[#0A0A0A] flex items-center justify-center group/carousel cursor-pointer border-b border-white/5" onClick={(e) => { e.stopPropagation(); if(onBuy && item.quantity > 0) onInquire(item); }}>
+        {(item.imageUrls && item.imageUrls.length > 0) || item.imageUrl ? (
+          <>
+            <img
+              src={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls[currentImageIndex] : item.imageUrl!}
+              alt={item.name}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
               }}
-              disabled={item.quantity === 0}
-              className={`w-full py-2 px-3 rounded-2xl font-bold text-[11px] transition-all flex items-center justify-center gap-1.5 border ${
-                item.quantity === 0
-                  ? 'bg-zinc-900 shadow-sm border border-zinc-800 border-zinc-700 text-zinc-400 cursor-not-allowed'
-                  : onBuy 
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-zinc-100 border-emerald-500 shadow-md shadow-emerald-500/20 cursor-pointer active:scale-[0.98]'
-                    : 'bg-zinc-900 hover:bg-zinc-100 text-black border-white shadow-md cursor-pointer active:scale-[0.98]'
-              }`}
-              id={`btn-buy-${item.id}`}
-            >
-              <ShoppingBag className="w-3 h-3" />
-              <span>{item.quantity === 0 ? 'สินค้าหมดคลัง' : (item.gachaPool && item.gachaPool.length > 0 && onBuy ? 'สั่งซื้อกล่องสุ่ม' : (onBuy ? 'ซื้อด้วยเครดิต / ระบุจำนวน' : 'สนใจซื้อ / สอบถามสต๊อก'))}</span>
-            </motion.button>
+            />
+            {item.imageUrls && item.imageUrls.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => prev === 0 ? item.imageUrls!.length - 1 : prev - 1); }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity"
+                >
+                  &lsaquo;
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => prev === item.imageUrls!.length - 1 ? 0 : prev + 1); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity"
+                >
+                  &rsaquo;
+                </button>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {item.imageUrls.map((_, i) => (
+                    <div key={i} className={`w-2 h-2 rounded-full ${i === currentImageIndex ? 'bg-white' : 'bg-white/50'}`} />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center p-3">
+            <Package className="w-10 h-10 text-zinc-700 mb-2" />
           </div>
         )}
 
-        {/* Timestamp footer in monospace */}
-        <div className="mt-2.5 flex items-center justify-between text-[9px] text-zinc-600 border-t border-zinc-800 pt-2 font-mono">
-          <span className="flex items-center gap-1">
-            <Clock className="w-2.5 h-2.5 text-zinc-300" />
-            <span className="text-zinc-500 font-display tracking-tight" title={formattedDate}>{relativeTime}</span>
-          </span>
-          <span className="text-zinc-700">ID: {item.id.slice(0, 6)}</span>
+        {/* Overlay Gradient for readability */}
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-none" />
+
+        {/* Top Badges */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex justify-between items-start pointer-events-none z-10">
+          <div className="flex gap-1.5 flex-col items-start">
+            <div className="flex gap-1.5 flex-wrap max-w-[80%]">
+                {item.isPinned && (
+                  <div className="bg-black/80 text-yellow-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg backdrop-blur-sm border border-yellow-500/20">
+                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    <span className="text-[10px] font-sans tracking-wide">แนะนำ</span>
+                  </div>
+                )}
+                {item.isPopular && (
+                  <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 text-orange-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg border border-orange-500/20 backdrop-blur-sm">
+                    <Flame className="w-3 h-3 fill-orange-400 text-orange-400" />
+                    <span className="text-[10px] font-sans tracking-wide">ยอดฮิต</span>
+                  </div>
+                )}
+                {item.quantity > 0 && item.quantity <= 5 && (
+                  <div className="bg-red-500/10 text-red-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-red-500/10 border border-red-500/20 backdrop-blur-sm animate-pulse">
+                    <Clock className="w-3 h-3 text-red-400" />
+                    <span className="text-[10px] font-sans tracking-wide">เหลือ {item.quantity}</span>
+                  </div>
+                )}
+                {(() => {
+                  try {
+                    const date = new Date(item.updatedAt);
+                    const diffDays = (new Date().getTime() - date.getTime()) / (1000 * 3600 * 24);
+                    // Considered new if updated in the last 3 days
+                    if (diffDays <= 3) {
+                      return (
+                        <div className="bg-blue-500/10 text-blue-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg border border-blue-500/20 backdrop-blur-sm">
+                          <Sparkles className="w-3 h-3 text-blue-400" />
+                          <span className="text-[10px] font-sans tracking-wide">ใหม่</span>
+                        </div>
+                      );
+                    }
+                  } catch (e) {}
+                  return null;
+                })()}
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-2 items-end">
+            {discountPercentage > 0 && (
+              <div className="bg-[#ff203a] text-white font-black px-2 py-1 rounded-[20px] shadow-lg flex items-center justify-center">
+                 <span className="text-[11px] sm:text-xs tracking-tight">-{discountPercentage}%</span>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Absolute Overlay if Out of Stock */}
+        {item.quantity === 0 && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+            <div className="w-14 h-14 bg-[#ff203a] rounded-full flex items-center justify-center shadow-2xl">
+              <X className="w-7 h-7 text-white stroke-[4]" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-3 sm:p-4 flex flex-col bg-transparent flex-1 relative z-10">
+        {/* Glow effect in the background */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#0ea5e9]/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-[#0ea5e9]/10 transition-colors" />
+
+        {/* Title */}
+        <h3 className="font-display text-sm sm:text-base font-bold text-white tracking-tight leading-tight mb-2 line-clamp-2 min-h-[40px] group-hover:text-[#0ea5e9] transition-colors relative z-10">
+          {item.name}
+        </h3>
+
+        {/* Category & Badge */}
+        <div className="flex flex-wrap items-center gap-1.5 mb-2 relative z-10">
+           <span className="inline-block px-1.5 py-0.5 bg-white/5 border border-white/10 text-zinc-300 text-[10px] uppercase font-medium rounded-sm">{item.category}</span>
+           {item.saleFormat && (
+             <span className={`inline-block px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wide rounded-sm ${colors.bg}`}>{item.saleFormat}</span>
+           )}
+        </div>
+
+        {/* Price & Stock Section */}
+        <div className="flex items-end justify-between border-t border-white/5 pt-2 mt-auto mb-3 relative z-10">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-zinc-500 font-bold tracking-wide mb-0.5">ราคา</span>
+            <div className="flex items-baseline gap-1.5 min-h-[24px]">
+               <span className={`${discountPercentage > 0 ? 'text-[#ff203a]' : 'text-white'} font-black text-lg sm:text-xl tracking-tighter`}>฿{item.price.toLocaleString()}</span>
+               {item.originalPrice && item.originalPrice > item.price && (
+                 <span className="text-zinc-600 font-bold text-xs sm:text-sm line-through">฿{item.originalPrice.toLocaleString()}</span>
+               )}
+            </div>
+          </div>
+          
+          <div className="flex flex-col items-end">
+             <span className="text-[10px] text-zinc-500 font-bold tracking-wide mb-0.5">คงเหลือ</span>
+             <span className="text-white font-black text-sm sm:text-base tracking-tighter">{item.quantity}</span>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        {isAdmin ? (
+          <div className="flex flex-col gap-2 mt-1 relative z-10">
+            <div className="flex items-center justify-between gap-2 bg-zinc-900 border border-zinc-700/50 rounded-lg p-2 shadow-inner">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">จัดการรหัส:</span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onQuickQuantityChange(item.id, -1)}
+                  disabled={item.quantity <= 0}
+                  className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 disabled:opacity-40 font-bold transition-colors cursor-pointer"
+                >
+                  -
+                </button>
+                <span className="w-6 text-center font-bold text-xs text-white">
+                  {item.quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onQuickQuantityChange(item.id, 1)}
+                  className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 font-bold transition-colors cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => onEdit(item)}
+                className="py-2.5 rounded-lg border border-zinc-700 bg-zinc-800 text-white text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:bg-zinc-700 hover:border-zinc-500 shadow-sm"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                <span>แก้ไข</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(item.id)}
+                className="py-2.5 rounded-lg border border-red-900/50 bg-red-950/30 text-red-500 text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:bg-red-950/60 hover:text-red-400 shadow-sm"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>ลบ</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onInquire(item)}
+            disabled={item.quantity === 0}
+            className={`w-full py-2 sm:py-2.5 rounded-xl font-bold font-mono tracking-wide text-xs transition-all flex items-center justify-center gap-2 mt-1 relative overflow-hidden group/btn z-10 ${
+              item.quantity === 0
+                ? 'bg-zinc-900 border border-zinc-800 text-zinc-600 shadow-none cursor-not-allowed'
+                : 'bg-white text-black hover:bg-zinc-200 cursor-pointer active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]'
+            }`}
+          >
+            {item.quantity !== 0 && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-[150%] skew-x-[-15deg] group-hover/btn:translate-x-[150%] transition-transform duration-700 ease-out" />
+            )}
+            <ShoppingBag className="w-4 h-4 z-10 relative" />
+            <span className="z-10 relative">{item.quantity === 0 ? 'สินค้าหมด' : 'ดูสินค้า'}</span>
+          </button>
+        )}
       </div>
     </motion.div>
   );

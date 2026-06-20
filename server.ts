@@ -5,12 +5,8 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import fs from "fs";
 import nodemailer from "nodemailer";
-import { startDiscordBot } from "./discordBot";
 
 dotenv.config();
-
-// Start the Discord Bot
-startDiscordBot();
 
 const app = express();
 const PORT = 3000;
@@ -534,10 +530,31 @@ app.post("/api/topup/true-wallet", async (req: express.Request, res: express.Res
   try {
     const { gift_link, game } = req.body;
     
+    let targetPhone = '0801249138';
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_ANON_KEY;
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const { data: configData } = await supabase.from('system_config').select('announcement_settings').eq('id', 'main').single();
+        if (configData && configData.announcement_settings) {
+          let ann = configData.announcement_settings;
+          if (typeof ann === 'string') {
+            try { ann = JSON.parse(ann); } catch(e) { ann = {}; }
+          }
+          if (ann.topup_angpao_phone) {
+            targetPhone = ann.topup_angpao_phone;
+          }
+        }
+      }
+    } catch(e) {
+      console.error("Error reading system_config from supabase:", e);
+    }
+
     // We send form data
     const params = new URLSearchParams();
     params.append('keyapi', '86eb4596fbb506a43b1b63b5911a5c78');
-    params.append('phone', game === 'ROV' ? '0801965815' : '0801249138');
+    params.append('phone', targetPhone);
     params.append('gift_link', gift_link);
     
     // Attempt fetch
@@ -758,6 +775,182 @@ app.post("/api/send-otp", async (req: express.Request, res: express.Response) =>
 // health endpoint
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+app.post("/api/d1/init", async (req: express.Request, res: express.Response) => {
+  console.log("HIT /api/d1/init endpoint!");
+  try {
+    const accountId = process.env.CF_ACCOUNT_ID?.trim();
+    let dbIdRaw = process.env.CF_DATABASE_ID?.trim();
+    let dbId = dbIdRaw;
+    if (dbIdRaw && dbIdRaw.includes("dash.cloudflare.com")) {
+      const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
+      if (match) dbId = match[0];
+    }
+    const token = process.env.CF_API_TOKEN?.trim();
+
+    if (!accountId || !dbId || !token) {
+      return res.status(400).json({ error: "Cloudflare D1 credentials not configured." });
+    }
+
+    const schemaStr = `
+      CREATE TABLE IF NOT EXISTS profiles (
+        username TEXT PRIMARY KEY,
+        password TEXT NOT NULL,
+        balance INTEGER DEFAULT 0,
+        balance_rov INTEGER DEFAULT 0,
+        is_admin BOOLEAN DEFAULT FALSE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS activities (
+        id TEXT PRIMARY KEY,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        type TEXT,
+        username TEXT,
+        item_name TEXT,
+        quantity INTEGER,
+        price INTEGER,
+        remaining_stock INTEGER,
+        game TEXT,
+        gacha_drops TEXT
+      );
+      CREATE TABLE IF NOT EXISTS purchases (
+        id TEXT PRIMARY KEY,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        username TEXT,
+        item_id TEXT,
+        item_name TEXT,
+        price INTEGER,
+        quantity INTEGER,
+        gacha_drops TEXT,
+        credential_data TEXT,
+        game TEXT
+      );
+      CREATE TABLE IF NOT EXISTS topups (
+        id TEXT PRIMARY KEY,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        username TEXT,
+        amount INTEGER,
+        method TEXT,
+        game TEXT
+      );
+      CREATE TABLE IF NOT EXISTS items (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        category TEXT,
+        rarity TEXT,
+        quantity INTEGER,
+        initial_quantity INTEGER,
+        price INTEGER,
+        description TEXT,
+        is_pinned BOOLEAN DEFAULT FALSE,
+        popular BOOLEAN DEFAULT FALSE,
+        image TEXT,
+        gacha_pool TEXT,
+        pieces_per_unit INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS system_config (
+        id TEXT PRIMARY KEY,
+        maintenance_mode BOOLEAN DEFAULT FALSE,
+        global_revenue_aotr INTEGER DEFAULT 0,
+        global_rev_astd INTEGER DEFAULT 0,
+        announcement_settings TEXT
+      );
+    `;
+
+    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: schemaStr })
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+       console.error("Init Error:", data.errors);
+       return res.status(400).json({ error: data.errors });
+    }
+    
+    // Add announcement_settings column to existing tables (ignoring errors if it exists)
+    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: "ALTER TABLE system_config ADD COLUMN announcement_settings TEXT;" })
+    });
+    
+    // Also insert main system config if not exists
+    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: "INSERT OR IGNORE INTO system_config (id) VALUES ('main')" })
+    });
+
+    // Also insert Admin user if not exists
+    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: "INSERT OR IGNORE INTO profiles (username, password, is_admin) VALUES ('Kuwashii_admin', 'S4e0P9', TRUE)" })
+    });
+
+    res.json({ success: true, message: "D1 Initialized" });
+  } catch (err: any) {
+    console.error("Init Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/d1", async (req: express.Request, res: express.Response) => {
+  try {
+    const { sql, params } = req.body;
+    const accountId = process.env.CF_ACCOUNT_ID?.trim();
+    let dbIdRaw = process.env.CF_DATABASE_ID?.trim();
+    let dbId = dbIdRaw;
+    if (dbIdRaw && dbIdRaw.includes("dash.cloudflare.com")) {
+      const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
+      if (match) dbId = match[0];
+    }
+    const token = process.env.CF_API_TOKEN?.trim();
+
+    if (!accountId || !dbId || !token) {
+      console.warn("D1 Query Failed: Missing CF credentials");
+      return res.status(400).json({ error: "Cloudflare D1 credentials not configured." });
+    }
+
+    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql, params: params || [] })
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      console.error("D1 Error response:", data.errors);
+      return res.status(400).json({ error: data.errors });
+    }
+    
+    // Convert D1 format to Supabase-like format { data: [...] }
+    const resultArr = data.result && data.result[0] ? data.result[0].results : [];
+    res.json({ data: resultArr });
+  } catch (err: any) {
+    console.error("D1 Proxy Error:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Configure Vite integration or static file serving

@@ -125,18 +125,22 @@ export const AnnouncementPopup: React.FC<AnnouncementPopupProps> = ({ appScreen 
             >
               {current.link ? (
                 <a href={current.link} target="_blank" rel="noopener noreferrer" className="block w-full">
+                  {current.image && (
+                    <img 
+                      src={current.image} 
+                      alt="Announcement" 
+                      className="w-full h-auto object-cover" 
+                    />
+                  )}
+                </a>
+              ) : (
+                current.image && (
                   <img 
                     src={current.image} 
                     alt="Announcement" 
                     className="w-full h-auto object-cover" 
                   />
-                </a>
-              ) : (
-                <img 
-                  src={current.image} 
-                  alt="Announcement" 
-                  className="w-full h-auto object-cover" 
-                />
+                )
               )}
 
               {activeAnnouncements.length > 1 && (

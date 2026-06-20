@@ -57,6 +57,7 @@ import {
   Edit3,
   Star,
   LogOut,
+  FolderPlus,
 } from "lucide-react";
 
 import {
@@ -84,6 +85,11 @@ import { MarqueeAnnouncement } from "./components/MarqueeAnnouncement";
 import Snowfall from "./components/Snowfall";
 import { ShopHeader } from "./components/ShopHeader";
 import { ShopBanner } from "./components/ShopBanner";
+import { TopupPage } from "./components/TopupPage";
+import { TopupTosModal } from "./components/TopupTosModal";
+import { PaymentSettingsModal } from "./components/PaymentSettingsModal";
+import { CategoryManagerModal } from "./components/CategoryManagerModal";
+import { AuthPage } from "./components/AuthPage";
 import jsQR from "jsqr";
 
 const readQRFromImage = (file: File): Promise<string | null> => {
@@ -156,7 +162,6 @@ const DiscordBanner = () => (
       src="https://discord.com/widget?id=1510845435751829565&theme=dark"
       width="100%"
       height="500"
-      allowtransparency="true"
       frameBorder="0"
       sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
       className="rounded-2xl shadow-xl w-full"
@@ -179,6 +184,7 @@ export default function App() {
   const [appScreen, setAppScreen] = useState<string>("SHOP");
   const [targetScreen, setTargetScreen] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [hoveredGame, setHoveredGame] = useState<string | null>(null);
   // User & Admin Authentications
   const [currentUser, setCurrentUser] = useState<{ username: string } | null>(
     () => {
@@ -270,6 +276,10 @@ export default function App() {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [syncCounter, setSyncCounter] = useState(0);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [appScreen, selectedCategory]);
+
   // Sync Engine Listener
   useEffect(() => {
     let activeSyncId = 0;
@@ -291,6 +301,12 @@ export default function App() {
           if (!error && count !== null) {
             config.user_count = count;
           }
+          const { count: purchaseCount, error: pError } = await supabase
+            .from("purchases")
+            .select("*", { count: "exact", head: true });
+          if (!pError && purchaseCount !== null) {
+            config.total_purchases = purchaseCount;
+          }
         } catch (e) {}
 
         if (syncId !== activeSyncId) return;
@@ -306,8 +322,18 @@ export default function App() {
 
       if (currentUser?.username) {
         const u = await fetchUser(currentUser.username);
+        let totalTopups = 0;
+        try {
+          const { data: topupsData } = await supabase.from('topups').select('amount').eq('username', currentUser.username);
+          if (topupsData) {
+            totalTopups = topupsData.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+          }
+        } catch (e) {}
+
         if (syncId !== activeSyncId) return;
-        if (u) setCurrentUserData(u);
+        if (u) {
+          setCurrentUserData({ ...u, topupCount: totalTopups });
+        }
       }
 
       setSyncCounter((c) => c + 1);
@@ -432,7 +458,13 @@ export default function App() {
   const [authConfirmPassword, setAuthConfirmPassword] = useState("");
   const [authOtpCode, setAuthOtpCode] = useState("");
   const [authError, setAuthError] = useState("");
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
   const [showAuthPassword, setShowAuthPassword] = useState(false);
+  
+  useEffect(() => {
+    setIsCaptchaVerified(false);
+  }, [authMode]);
+
   const [showAuthConfirmPassword, setShowAuthConfirmPassword] = useState(false);
 
   const [showMockEmailModal, setShowMockEmailModal] = useState(false);
@@ -445,11 +477,14 @@ export default function App() {
 
   // --- Top Up State ---
   const [showTopupModal, setShowTopupModal] = useState(false);
+  const [currentView, setCurrentView] = useState<"store" | "topup">("store");
+
   const [topupModalStep, setTopupModalStep] = useState<
     "select" | "angpao" | "bank" | "coupon" | "success"
   >("select");
   const [topupSuccessMessage, setTopupSuccessMessage] = useState("");
   const [topupError, setTopupError] = useState("");
+  const [topupTargetWallet, setTopupTargetWallet] = useState<'balance' | 'balance_rov'>('balance');
   const [topupCode, setTopupCode] = useState("");
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [tosAccepted, setTosAccepted] = useState(false);
@@ -462,14 +497,22 @@ export default function App() {
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
 
   // Modals controller
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isStockManagerOpen, setIsStockManagerOpen] = useState(false);
   const [isCustomerDbOpen, setIsCustomerDbOpen] = useState(false);
   const [isCouponManagerOpen, setIsCouponManagerOpen] = useState(false);
+  const [isPaymentConfigOpen, setIsPaymentConfigOpen] = useState(false);
   const [isAnnouncementManagerOpen, setIsAnnouncementManagerOpen] =
     useState(false);
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyTab, setHistoryTab] = useState<'purchases' | 'topups'>('purchases');
+
+  const openHistoryModal = (tab: 'purchases' | 'topups') => {
+    setHistoryTab(tab);
+    setShowHistoryModal(true);
+  };
   const [viewingUserHistory, setViewingUserHistory] = useState<string | null>(
     null,
   );
@@ -537,128 +580,8 @@ export default function App() {
   };
 
   // --- AI Chat Assistant States & Handlers ---
+  // Chat feature removed
   
-  
-  
-  
-  
-  
-
-  const handleShareToAI = (item: StockItem) => {
-    setChatSharedItem(item);
-    setChatInput(
-      `ช่วยวิเคราะห์ความน่าสนใจของ ${item.name} (รูปแบบ: ${item.saleFormat}) ให้หน่อยครับ ✨`,
-    );
-    showToast(
-      `แชร์ข้อมูลสินค้า "${item.name}" ไปยัง AI Chat เรียบร้อยแล้ว! 🔮`,
-      "success",
-    );
-
-    // Scroll smoothly to the AI Chatbox section
-    setTimeout(() => {
-      const chatSection = document.getElementById("ai-chat-section");
-      if (chatSection) {
-        chatSection.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }, 100);
-  };
-
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!chatInput.trim() || isChatLoading) return;
-
-    const userMsg = chatInput;
-    setChatInput("");
-    setIsChatLoading(true);
-
-    const updatedMessages = [
-      ...chatMessages,
-      { role: "user" as const, text: userMsg },
-    ];
-    setChatMessages(updatedMessages);
-
-    // Auto-scroll chat box container to bottom smoothly, without scrolling the main browser page
-    setTimeout(() => {
-      if (chatContainerRef.current) {
-        chatContainerRef.current.scrollTo({
-          top: chatContainerRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    }, 60);
-
-    try {
-      const apiHistory = chatMessages.map((msg) => ({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.text }],
-      }));
-
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: userMsg,
-          history: apiHistory,
-          items: items.map((item) => ({
-            id: item.id,
-            name: item.name,
-            category: item.category,
-            rarity: item.saleFormat,
-            quantity: item.quantity,
-            price: item.price,
-            description: item.description || "",
-            isPopular: item.isPopular,
-          })),
-          sharedItem: chatSharedItem
-            ? {
-                id: chatSharedItem.id,
-                name: chatSharedItem.name,
-                category: chatSharedItem.category,
-                rarity: chatSharedItem.saleFormat,
-                quantity: chatSharedItem.quantity,
-                price: chatSharedItem.price,
-                description: chatSharedItem.description || "",
-                isPopular: chatSharedItem.isPopular,
-              }
-            : null,
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "ระบบประมวลผลคำตอบขัดข้องชั่วคราว");
-      }
-
-      const data = await res.json();
-      setChatMessages((prev) => [
-        ...prev,
-        { role: "model", text: data.answer },
-      ]);
-    } catch (err: any) {
-      console.error(err);
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: "model",
-          text: `❌ **เกิดข้อผิดพลาด:** ${err.message || "ไม่สามารถติดต่อเซิร์ฟเวอร์ปัญญาประดิษฐ์ในขณะนี้ กรุณาลองใหม่อีกครั้ง"}`,
-        },
-      ]);
-      showToast("เชื่อมต่อ AI ไม่สำเร็จ", "error");
-    } finally {
-      setIsChatLoading(false);
-      setTimeout(() => {
-        if (chatContainerRef.current) {
-          chatContainerRef.current.scrollTo({
-            top: chatContainerRef.current.scrollHeight,
-            behavior: "smooth",
-          });
-        }
-      }, 60);
-    }
-  };
-
   // Cleanup logic (7 days retention)
   useEffect(() => {
     async function cleanupOldData() {
@@ -825,7 +748,7 @@ export default function App() {
         localStorage.setItem("KUWASHII_COUPONS", JSON.stringify(coupons));
 
             const configData = await getSystemConfig();
-            if (appScreen === "SHOP") {
+            if (topupTargetWallet === "balance") {
               const currentFree = configData
                 ? Number(configData.global_free_astd || 0)
                 : 0;
@@ -835,9 +758,7 @@ export default function App() {
                   id: "main",
                   global_free_astd: currentFree + coupon.amount,
                 });
-            } else if (false) {
-              // AOTR columns not reliably present, wrap in try/catch or assume it's fine for now,
-              // but we are focused on ROV. Just skip ROV since it has no columns.
+            } else if (topupTargetWallet === "balance_rov") {
               const currentFree = configData
                 ? Number(configData.global_free_credits_aotr || 0)
                 : 0;
@@ -849,7 +770,7 @@ export default function App() {
                 });
             }
 
-        const balanceField = false ? "balance_rov" : "balance";
+        const balanceField = topupTargetWallet;
         const userBalance = Number(liveUser[balanceField] || 0);
         const newBalance = userBalance + coupon.amount;
         await supabase
@@ -901,7 +822,7 @@ export default function App() {
           const res = await fetch("/api/topup/true-wallet", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ gift_link: topupCode.trim(), game: appScreen }),
+            body: JSON.stringify({ gift_link: topupCode.trim(), game: appScreen, target_wallet: topupTargetWallet }),
           });
           const data = await res.json();
           if (data.status === "success") {
@@ -931,7 +852,7 @@ export default function App() {
             }
             // If ROV, we do nothing to system_config because we don't track global_revenue_rov currently.
 
-            const balanceField = false ? "balance_rov" : "balance";
+            const balanceField = topupTargetWallet;
             const userBalance = Number(liveUser[balanceField] || 0);
             const newBalance = userBalance + amount;
             await supabase
@@ -974,7 +895,7 @@ export default function App() {
             );
           } else {
             let errorMsg =
-              data.message || "ซองของขวัญไม่ถูกต้องหรือถูกใช้งานไปแล้ว";
+              String(data.message || "ซองของขวัญไม่ถูกต้องหรือถูกใช้งานไปแล้ว");
             if (errorMsg.includes("ติดต่อผู้ดูแลระบบ")) {
               errorMsg += " ";
             }
@@ -1047,6 +968,28 @@ export default function App() {
               setIsProcessingTopup(false);
               return;
             }
+            
+            // Check receiver name if configured
+            let configName = "";
+            let settingsObj = globalStats?.announcement_settings || {};
+            if (typeof settingsObj === 'string') {
+               try { settingsObj = JSON.parse(settingsObj); } catch(e) {}
+            }
+            if (topupTargetWallet === 'balance_rov') {
+                configName = (settingsObj.topup_qrcode_name_rov || "").trim();
+            } else {
+                configName = (settingsObj.topup_qrcode_name || "").trim();
+            }
+            
+            if (configName && receiverName !== "ไม่ทราบชื่อ") {
+               // simple include check to handle prefix
+               if (!receiverName.toLowerCase().includes(configName.toLowerCase())) {
+                  setTopupError(`ชื่อบัญชีผู้รับไม่ถูกต้อง (ต้องเป็น: ${configName})`);
+                  showToast(`สลิปนี้ถูกโอนไปยัง: ${receiverName}`, "error");
+                  setIsProcessingTopup(false);
+                  return;
+               }
+            }
 
             const { data: existingTopup } = await supabase
               .from("topups")
@@ -1091,7 +1034,7 @@ export default function App() {
             }
             // If ROV, we do nothing to system_config because we don't track global_revenue_rov currently.
 
-            const balanceField = false ? "balance_rov" : "balance";
+            const balanceField = topupTargetWallet;
             const userBalance = Number(liveUser[balanceField] || 0);
             const newBalance = userBalance + amount;
             await supabase
@@ -1134,7 +1077,7 @@ export default function App() {
               appScreen
             );
           } else {
-            let finalErr = data.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้";
+            let finalErr = String(data.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้");
             if (finalErr.includes("ติดต่อผู้ดูแลระบบ")) {
               finalErr += " ";
             }
@@ -1220,7 +1163,7 @@ export default function App() {
           "KUWASHII_CURRENT_USER",
           JSON.stringify({ username: "Kuwashii_admin" }),
         );
-        setShowAuthModal(false);
+        setShowAuthModal(false); setAppScreen("SHOP");
         setAuthUsername("");
         setAuthEmail("");
         setAuthPassword("");
@@ -1241,7 +1184,7 @@ export default function App() {
         );
         storage.setItem("KUWASHII_IS_ADMIN", "false");
 
-        setShowAuthModal(false);
+        setShowAuthModal(false); setAppScreen("SHOP");
         setAuthUsername("");
         setAuthEmail("");
         setAuthPassword("");
@@ -1422,7 +1365,7 @@ export default function App() {
       );
       storage.setItem("KUWASHII_IS_ADMIN", "false");
 
-      setShowAuthModal(false);
+      setShowAuthModal(false); setAppScreen("SHOP");
       setAuthUsername("");
       setAuthEmail("");
       setAuthPassword("");
@@ -1675,7 +1618,7 @@ export default function App() {
     }
 
     const totalPrice = item.price * purchaseQty;
-    const balanceField = false ? "balance_rov" : "balance";
+    const balanceField = (item.category === "All Star" || item.category === "ALL STAR") ? "balance" : "balance_rov";
     const userBalance = Number(user[balanceField] || 0);
     if (userBalance < totalPrice) {
       showToast(
@@ -1962,26 +1905,12 @@ export default function App() {
       setIsProcessingPurchase(false);
       window.dispatchEvent(new Event("sync-update"));
 
-      if (drops.length > 0) {
-        setGachaResult({
-          item,
-          drops,
-          purchaseQty: purchaseQty,
-          remainingStock: liveItemQty - purchaseQty,
-        });
+      if (item.gachaPool && item.gachaPool.length > 0 && drops.length > 0) {
+        // Direct purchase, go straight to history to view credential/product
+        setShowHistoryModal(true);
       } else {
-        setGachaResult({
-          item,
-          purchaseQty: purchaseQty,
-          remainingStock: liveItemQty - purchaseQty,
-          drops: [
-            {
-              name: `${item.name} x${purchaseQty}`,
-              color: "#10B981",
-              isSalt: false,
-            },
-          ],
-        });
+        // Direct purchase, go straight to history to view credential/product
+        setShowHistoryModal(true);
       }
     }, 1500);
   };
@@ -2170,7 +2099,10 @@ export default function App() {
 
   // --- Filtering & Sorting Compute ---
   const filteredItems = items.filter((item) => {
-    const matchesGame = true;
+    let matchesGame = true;
+    if (appScreen === "AOTR") matchesGame = item.game === "AOTR";
+    if (appScreen === "ASTD") matchesGame = item.game === "ASTD";
+    if (appScreen === "ROV") matchesGame = item.game === "ROV";
 
     if (!matchesGame) return false;
 
@@ -2330,19 +2262,34 @@ export default function App() {
               className="absolute inset-0 bg-zinc-900 "
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative bg-zinc-950 border border-zinc-800 p-8 rounded-2xl flex flex-col items-center shadow-2xl"
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              className="relative bg-[#050505]/95 backdrop-blur-xl p-8 rounded-[2rem] border border-white/5 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)] flex flex-col items-center overflow-hidden min-w-[320px]"
             >
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4">
-                <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+              {/* Decorative Background Gradients */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] pointer-events-none rounded-full" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#0ea5e9]/10 blur-[50px] pointer-events-none rounded-full" />
+              
+              <div className="relative mb-6 w-20 h-20 flex items-center justify-center">
+                <motion.div 
+                  className="absolute inset-0 border-4 border-emerald-500/20 rounded-full"
+                />
+                <motion.div 
+                  className="absolute inset-0 border-4 border-emerald-400 border-t-transparent rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                />
+                <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                  <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-zinc-100 tracking-widest mb-2 font-display">
+              
+              <h3 className="text-xl font-bold text-white tracking-wide mb-2 font-display">
                 ระบบกำลังทำรายการ...
               </h3>
-              <p className="text-xs text-zinc-500 font-mono">
-                กรุณารอสักครู่ (Do not close)
+              <p className="text-[11px] text-zinc-500 font-mono tracking-[0.2em] font-medium uppercase mt-1">
+                Please wait • Do not close
               </p>
             </motion.div>
           </div>
@@ -2351,978 +2298,285 @@ export default function App() {
 
       {/* Mock Email Modal Removed */}
 
-      {/* Authentication Modal */}
+            {/* Authentication Modal */}
       <AnimatePresence>
         {showAuthModal && (
-  authMode === 'login' ? (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowAuthModal(false)}
-              className="absolute inset-0 bg-black/60"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative max-w-sm w-full rounded-xl bg-white p-6 md:p-8 shadow-2xl z-10 text-black font-sans"
-            >
-              <div className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 cursor-pointer" onClick={() => setShowAuthModal(false)}>
-                <X className="w-5 h-5" />
+          <div className="fixed inset-0 z-[100] flex flex-col bg-black overflow-y-auto w-full">
+            {/* Background design - diagonal lines */}
+            <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(110deg, transparent, transparent 30px, rgba(255,255,255,0.03) 30px, rgba(255,255,255,0.03) 32px)' }}></div>
+            
+            <div className="relative z-10 w-full max-w-lg mx-auto min-h-[100dvh] flex flex-col px-6 py-12 justify-center">
+              <div className="flex justify-between items-center mb-10 absolute top-6 left-6 right-6">
+                 {/* Logo placeholder */}
+                 <div className="flex items-center">
+                   <div className="flex items-center justify-center">
+                     <svg width="48" height="24" viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                       <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#0ea5e9"/>
+                       <path d="M26 12L36 7L46 12L36 17L26 12Z" fill="#0ea5e9"/>
+                       <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                     </svg>
+                   </div>
+                 </div>
+                 <button className="text-zinc-500 hover:text-white transition-colors" onClick={() => setShowAuthModal(false)}>
+                   <X className="w-8 h-8" />
+                 </button>
               </div>
 
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-black mb-1">
-                  เข้าสู่ระบบ
-                </h3>
-                <p className="text-sm text-gray-500">
-                  กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ
+              <div className="mb-10 text-center flex flex-col items-center">
+                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-4">
+                  <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#0ea5e9"/>
+                  <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <h2 className="text-3xl font-bold text-white mb-2">
+                  {authMode === "login" ? "เข้าสู่ระบบ" : authMode === "forgot" ? "ส่วนลืมรหัสผ่าน" : "สมัครสมาชิก"}
+                </h2>
+                <p className="text-zinc-400 font-sans text-xl">
+                  {authMode === "login" ? "Login" : authMode === "forgot" ? "Forgot Password" : "Register"}
                 </p>
               </div>
 
-              <form onSubmit={handleAuthSubmit} className="space-y-4">
-                <div>
-                  <label className="text-[14px] font-bold text-black block mb-2">
-                    อีเมลหรือชื่อผู้ใช้
-                  </label>
-                  <input
-                    type="text"
-                    value={authUsername}
-                    onChange={(e) => {
-                      setAuthUsername(e.target.value);
-                      setAuthError('');
-                    }}
-                    placeholder="username หรือ email"
-                    required
-                    autoFocus
-                    autoComplete="username"
-                    className="w-full bg-white border border-gray-300 text-black px-4 py-3 rounded-lg focus:outline-none focus:border-[#0ea5e9] transition-all text-sm placeholder-gray-400 font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[14px] font-bold text-black block mb-2">
-                    รหัสผ่าน
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showAuthPassword ? 'text' : 'password'}
-                      value={authPassword}
-                      onChange={(e) => {
-                        setAuthPassword(e.target.value);
-                        setAuthError('');
-                      }}
-                      placeholder="........"
-                      required
-                      autoComplete="current-password"
-                      className="w-full bg-white border border-gray-300 text-black px-4 py-3 rounded-lg focus:outline-none focus:border-[#0ea5e9] transition-all text-sm placeholder-gray-400 font-medium pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowAuthPassword(!showAuthPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showAuthPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mt-4 mb-2">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <div className="relative flex items-center justify-center">
-                      <input
-                        type="checkbox"
-                        checked={rememberAuth}
-                        onChange={(e) => setRememberAuth(e.target.checked)}
-                        className="appearance-none w-4 h-4 rounded border border-gray-300 bg-white checked:bg-[#0ea5e9] checked:border-[#0ea5e9] transition-colors cursor-pointer"
-                      />
-                      <Check className={`w-3 h-3 text-white absolute pointer-events-none transition-opacity ${rememberAuth ? 'opacity-100' : 'opacity-0'}`} />
-                    </div>
-                    <span className="text-sm text-gray-500 font-medium select-none">จดจำฉันไว้</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMode('forgot');
-                      setAuthError('');
-                    }}
-                    className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
-                  >
-                    ลืมรหัสผ่าน?
-                  </button>
-                </div>
-
-                {authError && (
-                  <div className="text-sm text-red-500 text-center bg-red-50 p-2 rounded-lg border border-red-200 mt-2 mb-2">
-                    {authError}
-                  </div>
-                )}
-
-                <FakeTurnstile />
-
-                <button
-                  type="submit"
-                  className="w-full py-3.5 px-4 rounded-lg bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-bold cursor-pointer transition-all mt-4"
-                >
-                  เข้าสู่ระบบ
-                </button>
-
-                <div className="text-center mt-6 text-sm">
-                  <span className="text-gray-500">ยังไม่มีบัญชี? </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMode('register');
-                      setAuthError('');
-                    }}
-                    className="text-black font-bold hover:underline ml-1"
-                  >
-                    สมัครสมาชิก
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-  ) : (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowAuthModal(false)}
-              className="absolute inset-0 bg-zinc-900 "
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative max-w-sm w-full rounded-2xl border border-zinc-800 bg-transparent p-6 shadow-2xl z-10"
-            >
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-100 p-1 rounded-md hover:bg-zinc-900 transition-colors"
-                onClick={() => setShowAuthModal(false)}
-              >
-                <X className="w-5 h-5" />
-              </motion.button>
-
-              <div className="text-center space-y-2 mb-5">
-                <div className="w-12 h-12 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-500">
-                  <Shield className="w-6 h-6 animate-pulse" />
-                </div>
-                <div>
-                  <h3 className="font-display text-base font-bold text-zinc-100">
-                    {authMode === "login"
-                      ? "เข้าสู่ระบบบัญชีของคุณ"
-                      : authMode === "forgot"
-                        ? "รีเซ็ตรหัสผ่าน"
-                        : "สมัครสมาชิกใหม่"}
-                  </h3>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    ระบบตัวแทนใช้งานและผู้ดูแลคลังสินค้า
-                  </p>
-                </div>
-              </div>
-
               {authMode !== "forgot" && authMode !== "forgot_verify_otp" && (
-                <div className="flex gap-2 w-full p-1 bg-zinc-900 shadow-sm border border-zinc-800 rounded-2xl mb-5 border border-zinc-800">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
+                <div className="flex gap-2 w-full p-2 bg-zinc-900/50 shadow-sm border border-zinc-800 rounded-xl mb-6 hidden">
+                  <button
                     type="button"
                     onClick={() => {
                       setAuthMode("login");
                       setAuthError("");
                     }}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${authMode === "login" ? "bg-zinc-800 text-zinc-100 shadow-md" : "text-zinc-500 hover:text-zinc-400"}`}
+                    className={"flex-1 py-3 text-sm font-bold rounded-lg transition-colors cursor-pointer " + (authMode === "login" ? "bg-zinc-800 text-white shadow-md border border-zinc-700" : "text-zinc-500 hover:text-zinc-300")}
                   >
                     เข้าสู่ระบบ
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
+                  </button>
+                  <button
                     type="button"
                     onClick={() => {
                       setAuthMode("register");
                       setAuthError("");
                     }}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${authMode === "register" ? "bg-zinc-800 text-zinc-100 shadow-md" : "text-zinc-500 hover:text-zinc-400"}`}
+                    className={"flex-1 py-3 text-sm font-bold rounded-lg transition-colors cursor-pointer " + (authMode === "register" ? "bg-zinc-800 text-white shadow-md border border-zinc-700" : "text-zinc-500 hover:text-zinc-300")}
                   >
                     สมัครสมาชิก
-                  </motion.button>
+                  </button>
                 </div>
               )}
 
-              <form onSubmit={handleAuthSubmit} className="space-y-4 font-display tracking-tight">
-                <div className="space-y-3">
-                  {authMode !== "forgot" &&
-                    authMode !== "forgot_verify_otp" && (
-                      <div>
-                        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
-                          ชื่อผู้ใช้งาน (Username)
-                        </label>
-                        <input
-                          type="text"
-                          value={authUsername}
-                          onChange={(e) => {
-                            setAuthUsername(e.target.value);
-                            setAuthError("");
-                          }}
-                          placeholder="เช่น Kuwashii_member"
-                          required={
-                            authMode === "login" || authMode === "register"
-                          }
-                          autoFocus={
-                            authMode === "login" || authMode === "register"
-                          }
-                          autoComplete="username"
-                          className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 px-3.5 py-2.5 rounded-2xl focus:outline-none focus:border-indigo-500 transition-all text-xs placeholder-zinc-600 font-medium"
-                        />
-                      </div>
-                    )}
+              <form onSubmit={handleAuthSubmit} className="space-y-6 font-sans">
+                {authMode !== "forgot" && authMode !== "forgot_verify_otp" && (
+                  <div>
+                    <label className="text-[17px] font-bold text-white block mb-3">
+                     ชื่อผู้ใช้ / Username
+                    </label>
+                    <input
+                      type="text"
+                      value={authUsername}
+                      onChange={(e) => {
+                        setAuthUsername(e.target.value);
+                        setAuthError("");
+                      }}
+                      placeholder="กรอกชื่อผู้ใช้"
+                      required={authMode === "login" || authMode === "register"}
+                      autoFocus={authMode === "login" || authMode === "register"}
+                      autoComplete="username"
+                      className="w-full bg-[#151515] border border-zinc-800 text-white px-5 py-4 rounded-xl focus:outline-none focus:border-[#0ea5e9] transition-all text-base placeholder-zinc-500 placeholder:font-medium"
+                    />
+                  </div>
+                )}
 
-                  {(authMode === "register" ||
-                    authMode === "forgot" ||
-                    authMode === "forgot_verify_otp") && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                    >
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1 mt-3">
-                        อีเมล (Email){" "}
-                        <span className="text-emerald-500">*จำเป็น</span>
-                      </label>
+                {(authMode === "register" ||
+                  authMode === "forgot" ||
+                  authMode === "forgot_verify_otp") && (
+                  <div>
+                    <label className="text-[17px] font-bold text-white block mb-3">
+                      อีเมล / Email <span className="text-red-500">*จำเป็น</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={authEmail}
+                      onChange={(e) => {
+                        setAuthEmail(e.target.value);
+                        setAuthError("");
+                      }}
+                      placeholder="กรอกที่อยู่อีเมล"
+                      required
+                      autoComplete="email"
+                      readOnly={authMode === "forgot_verify_otp"}
+                      className={"w-full bg-[#151515] border border-zinc-800 text-white px-5 py-4 rounded-xl focus:outline-none focus:border-[#0ea5e9] transition-all text-base placeholder-zinc-500 " + (authMode === "forgot_verify_otp" ? "opacity-70 cursor-not-allowed" : "")}
+                    />
+                  </div>
+                )}
+
+                {authMode === "forgot_verify_otp" && (
+                  <div>
+                    <label className="text-[17px] font-bold text-[#ff8f00] block mb-3">
+                      ข้อความถูกส่งแล้ว ใส่รหัสตามข้อความนั้น 6 หลัก
+                    </label>
+                    <input
+                      type="text"
+                      value={authOtpCode}
+                      onChange={(e) => {
+                        setAuthOtpCode(e.target.value);
+                        setAuthError("");
+                      }}
+                      placeholder="รหัส 6 หลัก"
+                      required
+                      className="w-full bg-[#151515] border border-zinc-800 text-white px-5 py-4 rounded-xl focus:outline-none focus:border-[#0ea5e9] transition-all text-base placeholder-zinc-500 text-center tracking-[1em]"
+                    />
+                  </div>
+                )}
+
+                {(authMode === "login" ||
+                  authMode === "register" ||
+                  authMode === "forgot_verify_otp") && (
+                  <div>
+                    <label className="text-[17px] font-bold text-white block mb-3 mt-4">
+                      รหัสผ่าน / Password
+                    </label>
+                    <div className="relative">
                       <input
-                        type="email"
-                        value={authEmail}
+                        type={showAuthPassword ? "text" : "password"}
+                        value={authPassword}
                         onChange={(e) => {
-                          setAuthEmail(e.target.value);
+                          setAuthPassword(e.target.value);
                           setAuthError("");
                         }}
-                        placeholder={
-                          authMode === "forgot" ||
-                          authMode === "forgot_verify_otp"
-                            ? "อีเมลที่ใช้สมัครบัญชี"
-                            : "สำหรับใช้รีเซ็ตรหัสผ่านหากลืม"
-                        }
+                        placeholder="กรอกรหัสผ่าน"
                         required
-                        autoComplete="email"
-                        readOnly={authMode === "forgot_verify_otp"}
-                        className={`w-full bg-zinc-950 border border-zinc-800 text-zinc-200 px-3.5 py-2.5 rounded-2xl focus:outline-none focus:border-indigo-500 transition-all text-xs placeholder-zinc-600 font-medium ${authMode === "forgot_verify_otp" ? "opacity-70 cursor-not-allowed" : ""}`}
+                        autoComplete="current-password"
+                        className="w-full bg-[#151515] border border-zinc-800 text-white px-5 py-4 rounded-xl focus:outline-none focus:border-[#0ea5e9] transition-all text-base placeholder-zinc-500 pr-12"
                       />
-                    </motion.div>
-                  )}
-
-                  {authMode === "forgot_verify_otp" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                    >
-                      <label className="text-[11px] font-bold text-amber-500 uppercase tracking-wider block mb-1 mt-3">
-                        ข้อความถูกส่งแล้ว ใส่รหัสตามข้อความนั้น 6 หลัก
-                      </label>
-                      <input
-                        type="text"
-                        value={authOtpCode}
-                        onChange={(e) => {
-                          setAuthOtpCode(e.target.value);
-                          setAuthError("");
-                        }}
-                        placeholder="123456"
-                        required
-                        className="w-full bg-zinc-900 border border-amber-500/50 text-amber-100 px-3.5 py-2.5 rounded-2xl focus:outline-none focus:border-amber-500 transition-all text-sm placeholder-zinc-600 font-mono tracking-widest font-bold text-center"
-                        maxLength={6}
-                      />
-                    </motion.div>
-                  )}
-
-                  {authMode !== "forgot" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                    >
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1 mt-3">
-                        {authMode === "forgot_verify_otp"
-                          ? "รหัสผ่านใหม่ (New Password)"
-                          : "รหัสผ่าน (Password)"}
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showAuthPassword ? "text" : "password"}
-                          value={authPassword}
-                          onChange={(e) => {
-                            setAuthPassword(e.target.value);
-                            setAuthError("");
-                          }}
-                          placeholder={
-                            authMode === "forgot_verify_otp"
-                              ? "รหัสผ่านใหม่..."
-                              : "ป้อนรหัสผ่าน..."
-                          }
-                          required={authMode !== "forgot"}
-                          autoComplete={
-                            authMode === "login"
-                              ? "current-password"
-                              : "new-password"
-                          }
-                          className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 px-3.5 py-2.5 rounded-2xl focus:outline-none focus:border-indigo-500 transition-all text-xs placeholder-zinc-600 font-mono tracking-wider font-semibold pr-10"
-                        />
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          type="button"
-                          onClick={() => setShowAuthPassword(!showAuthPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-400 transition-colors"
-                        >
-                          {showAuthPassword ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </motion.button>
-                      </div>
-                      {authMode === "login" && (
-                        <label className="flex items-center gap-2 mt-3 cursor-pointer group w-fit text-[11px] text-zinc-500">
-                          <div className="relative flex items-center justify-center">
-                            <input
-                              type="checkbox"
-                              checked={rememberAuth}
-                              onChange={(e) =>
-                                setRememberAuth(e.target.checked)
-                              }
-                              className="appearance-none w-3.5 h-3.5 rounded border border-zinc-700 bg-zinc-900 checked:bg-indigo-500 checked:border-indigo-500 transition-colors cursor-pointer"
-                            />
-                            <Check
-                              className={`w-2.5 h-2.5 text-zinc-100 absolute pointer-events-none transition-opacity ${rememberAuth ? "opacity-100" : "opacity-0"}`}
-                            />
-                          </div>
-                          <span className="group-hover:text-zinc-400 transition-colors">
-                            จดจำการเข้าสู่ระบบไว้
-                          </span>
-                        </label>
-                      )}
-                    </motion.div>
-                  )}
-
-                  {authMode === "register" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                    >
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1 mt-3">
-                        ยืนยันรหัสผ่าน (Confirm Password){" "}
-                        <span className="text-emerald-500">*จำเป็น</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showAuthConfirmPassword ? "text" : "password"}
-                          value={authConfirmPassword}
-                          onChange={(e) => {
-                            setAuthConfirmPassword(e.target.value);
-                            setAuthError("");
-                          }}
-                          placeholder="ยืนยันรหัสผ่านอีกครั้ง..."
-                          required={authMode === "register"}
-                          autoComplete="new-password"
-                          className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 px-3.5 py-2.5 rounded-2xl focus:outline-none focus:border-indigo-500 transition-all text-xs placeholder-zinc-600 font-mono tracking-wider font-semibold pr-10"
-                        />
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          type="button"
-                          onClick={() =>
-                            setShowAuthConfirmPassword(!showAuthConfirmPassword)
-                          }
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-400 transition-colors"
-                        >
-                          {showAuthConfirmPassword ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {authMode === "login" && (
-                    <div className="flex justify-end pt-1">
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
+                      <button
                         type="button"
-                        onClick={() => {
-                          setAuthMode("forgot");
+                        onClick={() => setShowAuthPassword(!showAuthPassword)}
+                        className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                      >
+                        {showAuthPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {authMode === "register" && (
+                  <div>
+                    <label className="text-[17px] font-bold text-white block mb-3 mt-4">
+                      ยืนยันรหัสผ่าน / Confirm Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showAuthConfirmPassword ? "text" : "password"}
+                        value={authConfirmPassword}
+                        onChange={(e) => {
+                          setAuthConfirmPassword(e.target.value);
                           setAuthError("");
                         }}
-                        className="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium underline-offset-2 hover:underline cursor-pointer"
+                        placeholder="กรอกรหัสผ่านอีกครั้ง"
+                        required
+                        autoComplete="new-password"
+                        className="w-full bg-[#151515] border border-zinc-800 text-white px-5 py-4 rounded-xl focus:outline-none focus:border-[#0ea5e9] transition-all text-base placeholder-zinc-500 pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAuthConfirmPassword(!showAuthConfirmPassword)}
+                        className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
                       >
-                        ลืมรหัสผ่าน? (รีเซ็ตด้วยอีเมล)
-                      </motion.button>
+                        {showAuthConfirmPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+                      </button>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {authError && (
-                    <p className="text-[11px] text-red-500 text-center font-display tracking-tight mt-2.5 flex items-center justify-center gap-1 leading-normal bg-red-950/15 py-1.5 px-3 rounded-lg border border-red-900/35">
-                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span>{authError}</span>
-                    </p>
-                  )}
+                {authMode === "login" && (
+                  <div className="flex items-center gap-3 mt-6">
+                    <input
+                      type="checkbox"
+                      id="rememberAuth"
+                      checked={rememberAuth}
+                      onChange={(e) => setRememberAuth(e.target.checked)}
+                      className="w-6 h-6 rounded border-zinc-700 bg-zinc-800 border accent-[#0ea5e9] cursor-pointer"
+                    />
+                    <label htmlFor="rememberAuth" className="text-base font-medium text-white cursor-pointer select-none">
+                      จดจำการเข้าสู่ระบบ
+                    </label>
+                  </div>
+                )}
+
+                <FakeTurnstile key={authMode} onSuccess={() => setIsCaptchaVerified(true)} />
+
+                {authError && (
+                  <div className="text-sm text-red-500 text-center bg-red-500/10 p-4 rounded-xl border border-red-500/20">
+                    {authError}
+                  </div>
+                )}
+
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={!isCaptchaVerified}
+                    className="w-full py-4 rounded-xl bg-[#008ff7] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed active:bg-blue-700 text-white font-bold cursor-pointer transition-all shadow-xl shadow-[#008ff7]/20 text-lg flex justify-center"
+                  >
+                    {authMode === "login" ? "เข้าสู่ระบบ" : authMode === "forgot" ? "ส่งรหัสยืนยัน" : authMode === "forgot_verify_otp" ? "เปลี่ยนรหัสผ่าน" : "สมัครสมาชิก"}
+                  </button>
                 </div>
 
-                <div className="flex gap-2 pt-1">
-                  {authMode === "forgot" || authMode === "forgot_verify_otp" ? (
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
+                {authMode === "login" && (
+                  <div className="text-center mt-6">
+                    <span className="text-sm text-zinc-400 mr-2">ยังไม่มีบัญชี?</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode("register");
+                        setAuthError("");
+                      }}
+                      className="text-sm text-[#0ea5e9] hover:underline font-bold transition-colors"
+                    >
+                      สมัครสมาชิก
+                    </button>
+                    <div className="mt-4">
+                       <button
+                         type="button"
+                         onClick={() => {
+                           setAuthMode("forgot");
+                           setAuthError("");
+                         }}
+                         className="text-sm text-zinc-500 hover:text-white transition-colors"
+                       >
+                         ลืมรหัสผ่าน?
+                       </button>
+                    </div>
+                  </div>
+                )}
+                
+                {authMode === "register" && (
+                  <div className="text-center mt-6">
+                    <span className="text-sm text-zinc-400 mr-2">มีบัญชีแล้ว?</span>
+                    <button
                       type="button"
                       onClick={() => {
                         setAuthMode("login");
                         setAuthError("");
-                        setAuthOtpCode("");
                       }}
-                      className="w-1/2 py-2 px-4 rounded-2xl border border-zinc-800 text-zinc-500 hover:text-zinc-100 bg-transparent text-xs font-semibold cursor-pointer transition-colors"
+                      className="text-sm text-[#0ea5e9] hover:underline font-bold transition-colors"
                     >
-                      กลับไปหน้าเข้าสู่ระบบ
-                    </motion.button>
-                  ) : (
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      type="button"
-                      onClick={() => setShowAuthModal(false)}
-                      className="w-1/2 py-2 px-4 rounded-2xl border border-zinc-800 text-zinc-500 hover:text-zinc-100 bg-transparent text-xs font-semibold cursor-pointer transition-colors"
-                    >
-                      ยกเลิก
-                    </motion.button>
-                  )}
-                  {authMode === "forgot_verify_otp" ? (
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      type="submit"
-                      className="w-1/2 py-2 px-4 rounded-2xl bg-amber-600 hover:bg-amber-500 text-zinc-100 border-none text-[11px] font-extrabold cursor-pointer transition-all active:scale-95 leading-tight"
-                    >
-                      ยืนยัน OTP และเปลี่ยนรหัสผ่าน
-                    </motion.button>
-                  ) : (
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      type="submit"
-                      className={`w-1/2 py-2 px-4 rounded-2xl ${authMode === "login" ? "bg-indigo-600 hover:bg-indigo-500" : authMode === "forgot" ? "bg-amber-600 hover:bg-amber-500" : "bg-emerald-600 hover:bg-emerald-500"} text-zinc-100 border-none text-xs font-extrabold cursor-pointer transition-all active:scale-95`}
-                    >
-                      {authMode === "login"
-                        ? "เข้าสู่ระบบ"
-                        : authMode === "forgot"
-                          ? "ขอรับรหัส OTP"
-                          : "ลงทะเบียน"}
-                    </motion.button>
-                  )}
-                </div>
+                      เข้าสู่ระบบ
+                    </button>
+                  </div>
+                )}
+                
+                {(authMode === "forgot" || authMode === "forgot_verify_otp") && (
+                   <div className="text-center pt-2">
+                     <button
+                       type="button"
+                       onClick={() => {
+                         setAuthMode("login");
+                         setAuthError("");
+                       }}
+                       className="text-sm text-zinc-400 hover:text-white transition-colors flex items-center justify-center gap-2 mx-auto"
+                     >
+                       <ChevronLeft className="w-4 h-4" /> กลับไปหน้าเข้าสู่ระบบ
+                     </button>
+                   </div>
+                )}
               </form>
-            </motion.div>
-          </div>
-        
-    </div>
-  )
-)}
-      </AnimatePresence>
-
-      {/* Top Up Modal */}
-      <AnimatePresence>
-        {showTopupModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-zinc-900 "
-              onClick={() => {
-                setShowTopupModal(false);
-                setTopupModalStep("select");
-                setTopupCode("");
-                setTosAccepted(false);
-              }}
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-transparent border border-zinc-800 rounded-3xl shadow-2xl p-5 w-full max-w-sm relative z-10 max-h-[85vh] overflow-y-auto custom-scrollbar"
-            >
-              <div className="text-center mb-5">
-                <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-500 mb-2">
-                  <Wallet className="w-5 h-5" />
-                </div>
-                <h3 className="font-display text-lg font-bold text-zinc-100 mb-1">
-                  เลือกช่องทาง <span className="text-red-500">ชำระเงิน</span>
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  ทำรายการผ่านช่องทางที่ท่านสะดวก
-                </p>
-              </div>
-              <div className="mb-6 border-l-4 border-amber-500 bg-amber-500/10 rounded-r-xl p-4">
-                <div className="flex gap-3">
-                  <span className="text-xl leading-none">⚠️</span>
-                  <div>
-                    <h4 className="text-amber-500 font-bold text-sm mb-1">ข้อควรระวังก่อนทำรายการ</h4>
-                    <p className="text-amber-500/80 text-[11px] leading-relaxed">
-                      ระบบกระเป๋าเงินของคุณสามารถใช้งานได้ทุกบริการ<br/>
-                      เครดิตที่ทำการเติมจะเข้าสู่กระเป๋าเกมนั้นๆ โดยตรง และ <b className="text-red-400">ไม่สามารถโอนย้ายข้ามเกมได้</b>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {topupModalStep === "select" ? (
-                <div className="space-y-4">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSelectedTopupChannel("angpao")}
-                    disabled={!tosAccepted}
-                    className={`w-full bg-zinc-900 border ${selectedTopupChannel === "angpao" ? "border-red-500 bg-red-500/10" : "border-zinc-800 hover:border-red-500/50 hover:bg-zinc-900"} rounded-2xl p-4 flex items-center gap-4 transition-all text-left group ${!tosAccepted ? "opacity-50 cursor-not-allowed grayscale" : ""}`}
-                  >
-                    <div className="w-14 h-14 bg-red-500 rounded-2xl flex items-center justify-center shadow-inner pt-1 pl-1 rotate-[-5deg] group-hover:rotate-[-2deg] transition-transform">
-                      <Gift className="w-8 h-8 text-zinc-100/90 drop-shadow-md" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-zinc-100 text-base">
-                        เติมผ่านซองอั่งเปา
-                      </h4>
-                      <p className="text-[11px] text-zinc-500 mt-0.5">
-                        เติมเงินผ่านระบบซองอั่งเปา
-                        <br />
-                        ของทรูมันนี่วอลเลท
-                      </p>
-                    </div>
-                  </motion.button>
-
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSelectedTopupChannel("bank")}
-                    disabled={!tosAccepted}
-                    className={`w-full relative bg-zinc-900 border ${selectedTopupChannel === "bank" ? "border-blue-500 bg-blue-900/200/10" : "border-zinc-800 hover:border-indigo-500/50 hover:bg-zinc-900"} rounded-2xl p-4 flex items-center gap-4 transition-all text-left ${!tosAccepted ? "opacity-50 cursor-not-allowed grayscale" : ""}`}
-                  >
-                    <div className="absolute -top-3 -right-3 bg-blue-900/200/10 border border-blue-500/30 text-blue-400 text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg  z-10">
-                      <Star className="w-3 h-3" /> แนะนำ
-                    </div>
-                    <div className="w-14 h-14 bg-blue-900/200 rounded-2xl flex items-center justify-center shadow-inner">
-                      <Landmark className="w-8 h-8 text-zinc-100/90 drop-shadow-md" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-zinc-100 text-base">
-                        เติมผ่านธนาคาร (รองรับทุกธนาคาร)
-                      </h4>
-                      <p className="text-[11px] text-zinc-500 mt-0.5">
-                        โอนเงินมาที่บัญชีธนาคารกสิกรไทย
-                        <br />
-                        รองรับสลิปจากทุกธนาคารชั้นนำ
-                      </p>
-                    </div>
-                  </motion.button>
-
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSelectedTopupChannel("coupon")}
-                    disabled={!tosAccepted}
-                    className={`w-full bg-zinc-900 border ${selectedTopupChannel === "coupon" ? "border-emerald-500 bg-emerald-500/10" : "border-zinc-800 hover:border-emerald-500/50 hover:bg-zinc-900"} rounded-2xl p-4 flex items-center gap-4 transition-all text-left ${!tosAccepted ? "opacity-50 cursor-not-allowed grayscale" : ""}`}
-                  >
-                    <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-inner">
-                      <Ticket className="w-8 h-8 text-zinc-100/90 drop-shadow-md" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-zinc-100 text-base">คูปอง</h4>
-                      <p className="text-[11px] text-zinc-500 mt-0.5">
-                        เติมเงินผ่านรหัสคูปอง
-                        <br />
-                        หรือโค้ดส่วนลดพิเศษ
-                      </p>
-                    </div>
-                  </motion.button>
-
-                  <div className="pt-4 border-t border-zinc-800 space-y-4">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <div className="relative flex items-center justify-center">
-                        <input
-                          type="checkbox"
-                          checked={tosAccepted}
-                          onChange={(e) => {
-                            setTosAccepted(e.target.checked);
-                            if (!e.target.checked)
-                              setSelectedTopupChannel(null);
-                          }}
-                          className="peer appearance-none w-5 h-5 border-2 border-zinc-700 rounded bg-zinc-900 checked:bg-red-500 checked:border-red-500 transition-all"
-                        />
-                        <svg
-                          className="absolute w-3 h-3 text-zinc-100 pointer-events-none opacity-0 peer-checked:opacity-100"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={3}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-[11px] text-zinc-500 group-hover:text-zinc-400 transition-colors select-none">
-                        ยอมรับ{" "}
-                        <span
-                          className="text-red-500 font-medium hover:underline"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setShowTopupTos(true);
-                          }}
-                        >
-                          ข้อกำหนดในการให้บริการ
-                        </span>
-                      </span>
-                    </label>
-
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        if (!tosAccepted) {
-                          showToast(
-                            "กรุณายอมรับข้อกำหนดในการให้บริการก่อน",
-                            "error",
-                          );
-                        } else if (!selectedTopupChannel) {
-                          showToast(
-                            "กรุณาเลือกช่องทางการชำระเงินที่ต้องการใช้",
-                            "error",
-                          );
-                        } else {
-                          setTopupModalStep(selectedTopupChannel);
-                        }
-                      }}
-                      className="w-full py-3 px-4 rounded-2xl bg-zinc-300 hover:bg-zinc-200 text-black text-sm font-bold opacity-80 hover:opacity-100 flex justify-center items-center gap-2 transition-all"
-                    >
-                      ถัดไป <span>→</span>
-                    </motion.button>
-                  </div>
-                </div>
-              ) : topupModalStep === "success" ? (
-                <div className="text-center py-6">
-                  <div className="w-16 h-16 bg-emerald-500/20 border-2 border-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 scale-110">
-                    <CheckCircle className="w-8 h-8 text-emerald-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-zinc-100 mb-2">
-                    ทำรายการสำเร็จ!
-                  </h3>
-                  <div className="text-emerald-300 text-sm mb-6 px-4 leading-relaxed font-mono tracking-wide flex flex-col gap-2">
-                    {topupSuccessMessage ? (
-                      topupSuccessMessage.split("\n").map((line, idx) => (
-                        <p
-                          key={idx}
-                          className={
-                            line.includes("จากซองของ:")
-                              ? "text-amber-400 font-bold bg-amber-500/10 py-1.5 px-2 rounded-lg"
-                              : ""
-                          }
-                        >
-                          {line}
-                        </p>
-                      ))
-                    ) : (
-                      <p>ยอดเครดิตของคุณได้รับการอัปเดตเรียบร้อยแล้ว</p>
-                    )}
-                  </div>
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setShowTopupModal(false);
-                      setTopupModalStep("select");
-                      setTopupSuccessMessage("");
-                      setTosAccepted(false);
-                    }}
-                    className="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-zinc-100 text-sm font-extrabold cursor-pointer transition-all shadow-lg"
-                  >
-                    ตกลง
-                  </motion.button>
-                </div>
-              ) : (
-                <form onSubmit={handleTopupSubmit} className="space-y-4">
-                  <div className="flex items-center gap-3 mb-5 p-3 rounded-2xl bg-zinc-900 shadow-sm border border-zinc-800">
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      type="button"
-                      onClick={() => {
-                        setTopupModalStep("select");
-                        setTopupCode("");
-                      }}
-                      className="text-zinc-500 hover:text-zinc-100"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </motion.button>
-                    <h4 className="font-bold text-sm text-zinc-400">
-                      {topupModalStep === "angpao"
-                        ? "กรอกลิ้งค์ซองอั่งเปา"
-                        : topupModalStep === "bank"
-                          ? "แจ้งสลิปโอนเงินเข้า K BANK"
-                          : "กรอกโค้ดคูปอง"}
-                    </h4>
-                  </div>
-
-                  {topupModalStep === "angpao" && (
-                    <div className="mb-4 bg-red-500/10 border border-red-500/20 p-4 rounded-2xl text-center">
-                      <p className="text-xs text-red-300 mb-2 leading-relaxed">
-                        สร้างซองของขวัญจากแอป{" "}
-                        <strong className="text-red-400">
-                          TrueMoney Wallet
-                        </strong>{" "}
-                        แบ่งจำนวนเงินเท่ากัน และระบุจำนวนคนที่รับซองเป็น 1 คน
-                      </p>
-                      <p className="text-[11px] text-red-400/70">
-                        ยอดเงินจะถูกแปลงเป็นเครดิตตามมูลค่าในซอง (ขั้นต่ำ 10
-                        บาท, ค่าธรรมเนียม 2.9%)
-                      </p>
-
-                      <div className="mt-4 bg-zinc-900 shadow-sm border border-zinc-800 p-3 rounded-lg border border-[#5865F2]/20 flex flex-col gap-2">
-                        <p className="text-[11px] text-zinc-400 leading-relaxed text-left">
-                          หากลูกค้าเติมเงินไปแล้วไม่เข้า ให้เปิดทิกเก็ตใน{" "}
-                          <strong className="text-[#5865F2]">Discord</strong>{" "}
-                          ได้เลย พร้อมแนบลิงค์ซองอั่งเปาที่เติมไปด้วย
-                        </p>
-                        <a
-                          href="https://discord.gg/AQKtJpvyva"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-full bg-[#5865F2] hover:bg-[#4752C4] shadow-md shadow-[#5865F2]/20 transition-colors py-2 rounded-lg text-zinc-100 text-xs font-bold flex items-center justify-center gap-2 mt-1"
-                        >
-                          <svg
-                            className="w-3.5 h-3.5"
-                            fill="currentColor"
-                            viewBox="0 0 127.14 96.36"
-                          >
-                            <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a67.58,67.58,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.2,46,96.09,53,91,65.69,84.69,65.69Z" />
-                          </svg>
-                          เข้าดิสคอร์ด
-                        </a>
-                      </div>
-                    </div>
-                  )}
-
-                  {topupModalStep === "bank" && (
-                    <div className="mb-2 bg-blue-900/200/10 border border-blue-500/20 p-2.5 rounded-2xl flex flex-col items-center text-center">
-                      <div className="flex flex-col items-center justify-center gap-1.5">
-                        <p className="text-[11px] text-blue-300">
-                          {false ? "กรุณาโอนเงินมาที่ (กสิกร/QR Code):" : "กรุณาโอนเงินมาที่บัญชี (QR Code):"}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-base md:text-lg font-bold text-zinc-100 tracking-widest font-mono">
-                            {false ? "184-8-29946-0" : "213-3-81446-1"}
-                          </p>
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            type="button"
-                            onClick={() => {
-                              const textToCopy = false ? "1848299460" : "2133814461";
-                              navigator.clipboard.writeText(textToCopy);
-                              showToast(false ? "คัดลอกเลขบัญชีกสิกรแล้ว" : "คัดลอกเลขบัญชีแล้ว", "success");
-                            }}
-                            className="p-1 justify-center bg-blue-900/200/20 text-blue-400 hover:bg-blue-900/200/40 rounded transition-colors duration-200"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </motion.button>
-                        </div>
-                        <p className="text-sm md:text-base font-semibold text-blue-400">
-                          {false ? "ด.ช. รัชชานนท์ เรืองสวัสดิ์" : "นายธีรเทพ ทองเกตุ"}
-                        </p>
-                      </div>
-
-                      <a
-                        href={false ? "https://img2.pic.in.th/1000108463.jpg" : "https://img2.pic.in.th/1000098251.jpg"}
-                        download
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block w-full max-w-[150px] border-2 border-blue-500/30 rounded-lg overflow-hidden my-2 hover:opacity-90 transition-opacity bg-zinc-900"
-                      >
-                        <img
-                          src={false ? "https://img2.pic.in.th/1000108463.jpg" : "https://img2.pic.in.th/1000098251.jpg"}
-                          alt="Bank QR"
-                          className="w-full h-auto"
-                        />
-                      </a>
-
-                      <div className="w-full space-y-2 mt-2">
-                        <p className="text-xs text-blue-400/90 border-t border-blue-500/20 pt-2 leading-tight">
-                          คลิกที่รูปเพื่อดูรูปใหญ่ หรือดาวน์โหลดเก็บไว้
-                          <br />
-                          เมื่อโอนเสร็จสิ้น ให้อัปโหลด "ภาพสลิปโอนเงิน" ด้านล่าง
-                        </p>
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2 text-xs md:text-sm text-red-500 font-bold leading-tight inline-block shadow-sm">
-                          ⚠️ โปรดอัปโหลดสลิปภายใน 5 นาที หลังจากโอนเสร็จสิ้น
-                        </div>
-                      </div>
-
-                      <div className="w-full mt-3 bg-zinc-900 shadow-sm border border-zinc-800 p-3 rounded-lg border border-[#5865F2]/20 flex flex-col gap-2">
-                        <p className="text-[11px] text-zinc-400 leading-relaxed text-left">
-                          หากลูกค้าโอนเงินไปแล้วนำรูปมาอัพโหลดไม่ได้หรือเกินเวลา
-                          ให้เปิดทิกเก็ตใน{" "}
-                          <strong className="text-[#5865F2]">Discord</strong>{" "}
-                          ได้เลย พร้อมแนบสลิปที่โอนไป
-                        </p>
-                        <a
-                          href="https://discord.gg/AQKtJpvyva"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-full bg-[#5865F2] hover:bg-[#4752C4] shadow-md shadow-[#5865F2]/20 transition-colors py-2 rounded-lg text-zinc-100 text-xs font-bold flex items-center justify-center gap-2 mt-1"
-                        >
-                          <svg
-                            className="w-3.5 h-3.5"
-                            fill="currentColor"
-                            viewBox="0 0 127.14 96.36"
-                          >
-                            <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a67.58,67.58,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.2,46,96.09,53,91,65.69,84.69,65.69Z" />
-                          </svg>
-                          เข้าดิสคอร์ด
-                        </a>
-                      </div>
-                    </div>
-                  )}
-
-                  {topupModalStep === "coupon" && (
-                    <div className="mb-4 bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl text-center">
-                      <p className="text-xs text-emerald-300 mb-2 leading-relaxed">
-                        กรอกรหัสคูปองที่คุณได้รับจากโปรโมชั่นหรือกิจกรรม
-                        เพื่อแลกรับเครดิตเข้าสู่ระบบฟรี
-                      </p>
-                      <p className="text-[11px] text-emerald-400/70">
-                        คูปอง 1 รหัส สามารถใช้งานได้เพียง 1 ครั้งเท่านั้น
-                      </p>
-                    </div>
-                  )}
-
-                  {topupError && (
-                    <div className="mb-4 bg-red-500/20 border-2 border-red-500 text-red-200 text-xs p-3 rounded-lg text-center break-words shadow-sm shadow-red-500/10">
-                      {topupError}
-                    </div>
-                  )}
-
-                  <div>
-                    {topupModalStep === "bank" ? (
-                      <label className="flex flex-col items-center justify-center w-full min-h-[5rem] py-2 border-2 border-dashed border-zinc-700 rounded-2xl cursor-pointer hover:border-blue-500 hover:bg-blue-900/200/5 transition-colors bg-zinc-900 group">
-                        <div className="flex flex-col items-center justify-center pt-2 pb-2 px-4 text-center">
-                          <UploadCloud className="w-5 h-5 text-zinc-500 mb-1 group-hover:text-blue-400 transition-colors" />
-                          <p className="text-[9px] text-zinc-500 font-mono break-all max-w-full">
-                            {slipFile ? (
-                              <img
-                                src={URL.createObjectURL(slipFile)}
-                                alt="slip"
-                                className="max-h-24 object-contain rounded"
-                              />
-                            ) : (
-                              "คลิกเพื่ออัปโหลดรูปภาพสลิป"
-                            )}
-                          </p>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files[0])
-                              setSlipFile(e.target.files[0]);
-                          }}
-                        />
-                      </label>
-                    ) : (
-                      <input
-                        type="text"
-                        value={topupCode}
-                        onChange={(e) => setTopupCode(e.target.value)}
-                        placeholder={
-                          topupModalStep === "angpao"
-                            ? "https://gift.truemoney.com/campaign/..."
-                            : "กรอกโค้ดที่นี่..."
-                        }
-                        required
-                        className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 px-3.5 py-3 rounded-2xl focus:outline-none focus:border-red-500 transition-all text-xs font-mono placeholder-zinc-600"
-                      />
-                    )}
-                  </div>
-
-                  <div className="pt-2">
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      type="submit"
-                      disabled={isProcessingTopup}
-                      className="w-full py-3 px-4 rounded-2xl bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-100 text-sm font-extrabold flex justify-center items-center gap-2 transition-all shadow-lg"
-                    >
-                      {isProcessingTopup ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />{" "}
-                          กำลังดำเนินการ...
-                        </>
-                      ) : (
-                        "ยืนยันการทำรายการ"
-                      )}
-                    </motion.button>
-                    {isProcessingTopup && (
-                      <p className="text-center text-[11px] text-amber-400 mt-2 font-semibold animate-pulse tracking-wide font-display tracking-tight">
-                        ⚠️ ห้าม ปิด/ออก หน้านี้จนกว่าทำรายการสำเร็จ
-                      </p>
-                    )}
-                  </div>
-                </form>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Topup Terms Modal */}
-      <AnimatePresence>
-        {showTopupTos && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-zinc-900 "
-              onClick={() => setShowTopupTos(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-transparent border border-zinc-800 rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-sm relative z-10"
-            >
-              <div className="text-center mb-6">
-                <h3 className="font-display text-lg font-bold text-zinc-100 mb-2">
-                  ข้อกำหนดในการให้บริการ
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  กรุณาอ่านและทำความเข้าใจก่อนทำรายการ
-                </p>
-              </div>
-              <div className="bg-zinc-900 shadow-sm border border-zinc-800 p-4 rounded-2xl border border-zinc-800/80 mb-6 space-y-3">
-                <p className="text-[11px] text-zinc-400 leading-relaxed text-center">
-                  การทำรายการเติมเงินเข้าระบบทุกช่องทาง (ทั้งซองอั่งเปา, ธนาคาร,
-                  หรือคูปอง){" "}
-                  <strong className="text-red-400">
-                    จะไม่สามารถขอคืนเงินได้ในทุกกรณี
-                  </strong>
-                </p>
-                <p className="text-[11px] text-zinc-500 leading-relaxed text-center">
-                  เมื่อท่านทำการยืนยัน
-                  ถือว่าท่านยอมรับข้อตกลงนี้และเข้าใจว่ายอดเงินจะถูกเพิ่มเข้าเป็นเครดิตในระบบทันที
-                </p>
-              </div>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowTopupTos(false)}
-                className="w-full py-3 px-4 rounded-2xl bg-zinc-300 hover:bg-zinc-200 text-black text-sm font-bold flex justify-center items-center transition-all"
-              >
-                รับทราบและปิดหน้าต่าง
-              </motion.button>
-            </motion.div>
+            </div>
           </div>
         )}
       </AnimatePresence>
@@ -3355,6 +2609,7 @@ export default function App() {
       {/* Admin modal for Adding/Editing stock items */}
       <AdminModal
         isOpen={isFormOpen}
+        globalStats={globalStats}
         onClose={() => {
           setIsFormOpen(false);
           setEditingItem(null);
@@ -3410,6 +2665,7 @@ export default function App() {
       {(currentUser || viewingUserHistory) && (
         <HistoryModal
           isOpen={showHistoryModal || !!viewingUserHistory}
+          initialTab={historyTab}
           onClose={() => {
             setShowHistoryModal(false);
             setViewingUserHistory(null);
@@ -3417,6 +2673,25 @@ export default function App() {
           username={viewingUserHistory || currentUser?.username || ""}
         />
       )}
+
+      <TopupTosModal 
+        isOpen={showTopupTos} 
+        onClose={() => setShowTopupTos(false)} 
+      />
+
+      <PaymentSettingsModal
+        isOpen={isPaymentConfigOpen}
+        onClose={() => setIsPaymentConfigOpen(false)}
+        globalStats={globalStats}
+        setGlobalStats={setGlobalStats}
+      />
+      
+      <CategoryManagerModal
+        isOpen={isCategoryManagerOpen}
+        onClose={() => setIsCategoryManagerOpen(false)}
+        globalStats={globalStats}
+        setGlobalStats={setGlobalStats}
+      />
     </>
   );
 
@@ -3503,6 +2778,15 @@ export default function App() {
               กรุณาอดทนรอและระบบจะเปิดให้ใช้งานอีกครั้งโดยอัตโนมัติเมื่อเสร็จสิ้น!
               ขออภัยในความไม่สะดวกครับ
             </p>
+            <button
+               onClick={() => {
+                 setAuthMode("LOGIN");
+                 setShowAuthModal(true);
+               }}
+               className="mt-4 px-4 py-2 text-xs font-bold bg-zinc-800 text-zinc-400 rounded-lg border border-zinc-700 hover:text-white"
+            >
+               สำหรับแอดมิน
+            </button>
             <div className="flex justify-center space-x-2 pb-2">
               <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce"></div>
               <div
@@ -3520,9 +2804,12 @@ export default function App() {
                 setShowAuthModal(true);
                 setAuthMode("login");
               }}
-              className="absolute bottom-4 right-4 text-[11px] text-zinc-700 hover:text-zinc-500 transition-colors"
+              className="mt-6 text-[12px] font-bold text-zinc-600 hover:text-zinc-300 transition-colors bg-zinc-800/50 hover:bg-zinc-800 px-4 py-2 rounded-lg border border-zinc-700/50"
             >
-              Admin Login
+              <span className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                เข้าสู่ระบบผู้ดูแลระบบ
+              </span>
             </motion.button>
           </div>
           {renderModals()}
@@ -3533,76 +2820,90 @@ export default function App() {
     
 
     if (appScreen === "SELECT") {
+      const getBgGlow = () => {
+        switch (hoveredGame) {
+          case "AOTR": return "from-amber-900/30 via-red-900/10 to-transparent";
+          case "ASTD": return "from-indigo-900/30 via-purple-900/10 to-transparent";
+          case "ROV": return "from-emerald-900/30 via-teal-900/10 to-transparent";
+          default: return "from-zinc-800/10 via-zinc-900/5 to-transparent";
+        }
+      };
+
       return (
         <motion.div
           key="select"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.99 }}
-          transition={{ duration: 0.15, ease: "easeOut" }}
-          className="min-h-[100vh] min-h-[100dvh] bg-transparent flex flex-col items-center p-6 sm:p-10 relative w-full overflow-y-auto text-zinc-100"
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="min-h-[100vh] min-h-[100dvh] bg-zinc-950 flex flex-col items-center p-6 sm:p-10 relative w-full overflow-y-auto text-zinc-100"
         >
+          {/* Dynamic Background */}
           <div
-            className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-50 z-0"
+            className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 z-0 transition-opacity duration-1000"
             style={{
               backgroundImage:
                 "url('https://s.imgz.io/2026/05/31/1000098494b68242f76bd7e2f7.gif')",
             }}
           />
-          <div className="absolute inset-0 bg-transparent/60 z-0 pointer-events-none" />
-          <div className="absolute top-0 left-0 w-full h-[30rem] bg-gradient-to-b from-purple-900/20 to-transparent filter blur-3xl pointer-events-none z-0" />
+          <div className="absolute inset-0 bg-zinc-950/80 z-0 pointer-events-none transition-colors duration-700" />
+          
+          <div className={`absolute top-0 left-0 w-full h-[40rem] bg-gradient-to-b ${getBgGlow()} filter blur-[100px] pointer-events-none z-0 transition-all duration-1000`} />
 
-          <div className="z-10 w-full max-w-5xl relative m-auto">
+          <div className="z-10 w-full max-w-6xl relative m-auto flex flex-col justify-center min-h-[80vh]">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
               className="text-center mb-16"
             >
-              <h1 className="font-display text-xl sm:text-3xl font-display font-medium tracking-tighter glowing-text text-zinc-100 tracking-wide">
-                เลือกเกมที่
-                <span className="bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
+              <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tighter text-zinc-50 mb-4 drop-shadow-sm">
+                เลือกเกมที่คุณ
+                <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent ml-2">
                   สนใจ
                 </span>
                 ได้เลย 🎮
               </h1>
-              <p className="text-zinc-500 mt-2 text-[11px] sm:text-sm max-w-xl mx-auto">
-                สวัสดีค้าบ 🙏 สนใจเกมไหนดูก่อนได้เลยน้า
-                ร้านเรามีของให้เลือกเพียบ แถมมีระบบสุ่มกล่องด้วย
-                ทักเข้ามาสอบถามได้ตลอดเลยค้าบผม!
+              <p className="text-zinc-400 text-sm sm:text-base max-w-2xl mx-auto font-medium leading-relaxed">
+                สวัสดีค้าบ 🙏 สนใจเกมไหนดูก่อนได้เลยน้า <br className="hidden sm:block" />
+                ร้านเรามีของให้เลือกเพียบ แถมมีระบบสุ่มกล่องด้วย ทักเข้ามาสอบถามได้ตลอดเลยค้าบผม!
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 w-full max-w-5xl mx-auto px-4">
               {/* AOT Revolution */}
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 100 }}
+                onHoverStart={() => setHoveredGame("AOTR")}
+                onHoverEnd={() => setHoveredGame(null)}
                 onClick={() => {
                   setTargetScreen("AOTR");
                   setAppScreen("TRANSITION");
                 }}
-                className="group relative rounded-3xl border border-zinc-800 bg-zinc-900 p-3 shadow-2xl  cursor-pointer hover:border-amber-500/50 transition-all duration-500 overflow-hidden shadow-xl shadow-black/40"
+                className="group relative rounded-[2rem] border border-zinc-800/50 bg-zinc-900/40 p-3 sm:p-4 cursor-pointer hover:border-amber-500/30 transition-all duration-500 overflow-hidden shadow-xl hover:shadow-amber-500/10 hover:-translate-y-2 backdrop-blur-sm"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-600/10 to-red-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="aspect-video w-full rounded-2xl overflow-hidden relative mb-4">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-600/5 to-red-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative mb-5 shadow-inner">
                   <img
                     src="https://img1.pic.in.th/images/1000109791.png"
                     alt="Attack on Titan"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-50 group-hover:opacity-90"
+                    className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
                   />
-                  <div className="absolute inset-0 bg-zinc-900" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/20 to-transparent opacity-80" />
                   <div className="absolute bottom-4 left-4 z-20">
-                    <span className="px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-400 text-[11px] font-black uppercase tracking-widest backdrop-blur border border-amber-500/30">
-                      Attack on titan Revolution
+                    <span className="px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-bold uppercase tracking-widest backdrop-blur-md border border-amber-500/20 shadow-lg">
+                      Attack on Titan
                     </span>
                   </div>
                 </div>
-                <div className="px-3 pb-3 relative z-10 text-left">
-                  <h3 className="text-xl font-black text-zinc-100 group-hover:text-amber-400 transition-colors uppercase tracking-tight">
+                <div className="px-2 pb-2 relative z-10 text-left">
+                  <h3 className="text-xl font-bold text-zinc-200 group-hover:text-amber-400 transition-colors uppercase tracking-tight mb-1">
                     สินค้า ATOR โดย Kuwashii El
                   </h3>
-                  <p className="text-sm text-zinc-500 mt-1 font-mono">
+                  <p className="text-sm text-zinc-500 font-mono group-hover:text-amber-200/60 transition-colors">
                     Connect to the Paradis terminal.
                   </p>
                 </div>
@@ -3610,34 +2911,37 @@ export default function App() {
 
               {/* ASTD */}
               <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 100 }}
+                onHoverStart={() => setHoveredGame("ASTD")}
+                onHoverEnd={() => setHoveredGame(null)}
                 onClick={() => {
                   setTargetScreen("ASTD");
                   setAppScreen("TRANSITION");
                 }}
-                className="group relative rounded-3xl border border-zinc-800 bg-zinc-900 p-3 shadow-2xl  cursor-pointer hover:border-emerald-500/50 transition-all duration-500 overflow-hidden shadow-xl shadow-black/40"
+                className="group relative rounded-[2rem] border border-zinc-800/50 bg-zinc-900/40 p-3 sm:p-4 cursor-pointer hover:border-indigo-500/30 transition-all duration-500 overflow-hidden shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-2 backdrop-blur-sm"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/10 to-cyan-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="aspect-video w-full rounded-2xl overflow-hidden relative mb-4">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/5 to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative mb-5 shadow-inner">
                   <img
                     src="https://img2.pic.in.th/1000098143.jpg"
                     alt="All Star Tower Defense"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-50 group-hover:opacity-90"
+                    className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
                   />
-                  <div className="absolute inset-0 bg-zinc-900" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/20 to-transparent opacity-80" />
                   <div className="absolute bottom-4 left-4 z-20">
-                    <span className="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-400 text-[11px] font-black uppercase tracking-widest backdrop-blur border border-emerald-500/30">
+                    <span className="px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase tracking-widest backdrop-blur-md border border-indigo-500/20 shadow-lg">
                       All Star Tower Defense
                     </span>
                   </div>
                 </div>
-                <div className="px-3 pb-3 relative z-10 text-left">
-                  <h3 className="text-xl font-black text-zinc-100 group-hover:text-emerald-400 transition-colors uppercase tracking-tight">
-                    
+                <div className="px-2 pb-2 relative z-10 text-left">
+                  <h3 className="text-xl font-bold text-zinc-200 group-hover:text-indigo-400 transition-colors uppercase tracking-tight mb-1">
+                    สินค้า ASTD เพียบ
                   </h3>
-                  <p className="text-sm text-zinc-500 mt-1 font-mono">
+                  <p className="text-sm text-zinc-500 font-mono group-hover:text-indigo-200/60 transition-colors">
                     Connect to the Multiverse defense grid.
                   </p>
                 </div>
@@ -3645,34 +2949,38 @@ export default function App() {
 
               {/* ROV */}
               <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="group relative rounded-3xl border border-zinc-800 bg-zinc-900 p-3 shadow-2xl  hover:bg-zinc-900 hover:border-emerald-500/50 cursor-pointer transition-all duration-500 overflow-hidden shadow-xl shadow-black/40 hover:-translate-y-1 hover:shadow-emerald-900/20"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ delay: 0.4, duration: 0.5, type: "spring", stiffness: 100 }}
+                onHoverStart={() => setHoveredGame("ROV")}
+                onHoverEnd={() => setHoveredGame(null)}
                 onClick={() => {
                   setTargetScreen("ROV");
                   setAppScreen("TRANSITION");
                 }}
+                className="group relative rounded-[2rem] border border-zinc-800/50 bg-zinc-900/40 p-3 sm:p-4 cursor-pointer hover:border-emerald-500/30 transition-all duration-500 overflow-hidden shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-2 backdrop-blur-sm"
               >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
-                <div className="aspect-video w-full rounded-2xl overflow-hidden relative mb-4">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-teal-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-colors duration-700" />
+                <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative mb-5 shadow-inner">
                   <img
                     src="https://img2.pic.in.th/1000099558.jpg"
                     alt="ROV"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80 group-hover:opacity-100"
+                    className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
                   />
-                  <div className="absolute inset-0 bg-zinc-900" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/20 to-transparent opacity-80" />
                   <div className="absolute bottom-4 left-4 z-20">
-                    <span className="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 text-[11px] font-black uppercase tracking-widest backdrop-blur border border-emerald-500/30">
-                      ROV
+                    <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-widest backdrop-blur-md border border-emerald-500/20 shadow-lg">
+                      Arena of Valor
                     </span>
                   </div>
                 </div>
-                <div className="px-3 pb-3 relative z-10 text-left">
-                  <h3 className="text-xl font-black text-zinc-100 group-hover:text-amber-400 transition-colors uppercase tracking-tight">
+                <div className="px-2 pb-2 relative z-10 text-left">
+                  <h3 className="text-xl font-bold text-zinc-200 group-hover:text-emerald-400 transition-colors uppercase tracking-tight mb-1">
                     สินค้า ROV โดย sokay0419
                   </h3>
-                  <p className="text-sm text-zinc-500 mt-1 font-mono">
+                  <p className="text-sm text-zinc-500 font-mono group-hover:text-emerald-200/60 transition-colors">
                     Arena of Valor accounts and codes.
                   </p>
                 </div>
@@ -3684,19 +2992,30 @@ export default function App() {
       );
     }
 
-    if (appScreen === "SHOP") {
+    if (["SHOP", "TOPUP", "LOGIN", "AOTR", "ASTD", "ROV"].includes(appScreen)) {
       return (
         <motion.div
-          key="astd"
+          key={appScreen}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.99 }}
           transition={{ duration: 0.15, ease: "easeOut" }}
           className="min-h-[100vh] min-h-[100dvh] flex flex-col bg-transparent text-zinc-200 font-display tracking-tight selection:bg-indigo-500 selection:text-zinc-100 pb-20 sm:pb-0 relative w-full"
         >
-        <ShopHeader toggleSidebar={() => setIsAstdMenuOpen(true)} onSearchToggle={() => {}} currentUser={currentUser} onLoginClick={() => { setShowAuthModal(true); setAuthMode("login"); }} />
-          <MarqueeAnnouncement appScreen={appScreen} />
-          <AnnouncementPopup appScreen={appScreen} />
+          <ShopHeader 
+            toggleSidebar={() => setIsAstdMenuOpen(true)} 
+            onSearchToggle={() => {}} 
+            currentUser={currentUser} 
+            onLoginClick={() => { setAppScreen("LOGIN"); setAuthMode("login"); }} 
+            setAppScreen={setAppScreen}
+            currentScreen={appScreen}
+          />
+          {appScreen === 'SHOP' && (
+            <>
+              <MarqueeAnnouncement appScreen={appScreen} />
+              <AnnouncementPopup appScreen={appScreen} />
+            </>
+          )}
           
 
           {/* Dynamic Floating Toast Notification */}
@@ -3728,13 +3047,117 @@ export default function App() {
           </AnimatePresence>
 
           {/* Hero Header Section */}
-          <ShopBanner globalStats={globalStats} />
+          {(appScreen !== "TOPUP" && appScreen !== "LOGIN" && selectedCategory === "all") && <ShopBanner globalStats={globalStats} items={items} />}
 
           {/* Main Container */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 flex-grow w-full">
 
-            {/* Category Cards Section */}
-            <CategoryList />
+            {appScreen === "LOGIN" ? (
+               <AuthPage
+                 authMode={authMode}
+                 setAuthMode={setAuthMode}
+                 authUsername={authUsername}
+                 setAuthUsername={setAuthUsername}
+                 authEmail={authEmail}
+                 setAuthEmail={setAuthEmail}
+                 authPassword={authPassword}
+                 setAuthPassword={setAuthPassword}
+                 authConfirmPassword={authConfirmPassword}
+                 setAuthConfirmPassword={setAuthConfirmPassword}
+                 showAuthPassword={showAuthPassword}
+                 setShowAuthPassword={setShowAuthPassword}
+                 showAuthConfirmPassword={showAuthConfirmPassword}
+                 setShowAuthConfirmPassword={setShowAuthConfirmPassword}
+                 authOtpCode={authOtpCode}
+                 setAuthOtpCode={setAuthOtpCode}
+                 rememberAuth={rememberAuth}
+                 setRememberAuth={setRememberAuth}
+                 authError={authError}
+                 setAuthError={setAuthError}
+                 handleAuthSubmit={handleAuthSubmit}
+                 isProcessing={false}
+               />
+            ) : appScreen === "TOPUP" ? (
+               <TopupPage 
+                 tosAccepted={tosAccepted}
+                 setTosAccepted={setTosAccepted}
+                 topupModalStep={topupModalStep}
+                 setTopupModalStep={setTopupModalStep}
+                 angpaoCode={topupCode}
+                 setAngpaoCode={setTopupCode}
+                 setSlipFile={setSlipFile}
+                 setShowTopupTos={setShowTopupTos}
+                 isProcessingTopup={isProcessingTopup}
+                 handleTopup={handleTopupSubmit}
+                 setAppScreen={setAppScreen}
+                 globalStats={globalStats}
+                 topupTargetWallet={topupTargetWallet}
+                 setTopupTargetWallet={setTopupTargetWallet}
+               />
+            ) : (
+              <>
+                {/* Category Cards Section */}
+                {selectedCategory === "all" ? (
+                  <CategoryList selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} globalStats={globalStats} />
+                ) : (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="max-w-7xl mx-auto mb-6 w-full flex flex-col gap-2 mt-2"
+                  >
+                     <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 mb-1">
+                       <button onClick={() => setSelectedCategory("all")} className="hover:text-[#0ea5e9] transition-colors cursor-pointer text-[#0ea5e9]">รายการหมวดหมู่</button>
+                       <span className="text-zinc-600">&gt;</span>
+                       <motion.span 
+                         initial={{ opacity: 0, x: -10 }}
+                         animate={{ opacity: 1, x: 0 }}
+                         transition={{ delay: 0.1 }}
+                         className="text-white uppercase"
+                       >
+                         {selectedCategory}
+                       </motion.span>
+                     </div>
+                     
+                     <div className="flex flex-row justify-between items-center gap-3">
+                         <div className="flex items-center gap-3">
+                           <button 
+                             onClick={() => setSelectedCategory("all")} 
+                             className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer flex-shrink-0"
+                             title="ย้อนกลับ"
+                           >
+                             <ChevronLeft className="w-5 h-5" />
+                           </button>
+                           <motion.h2 
+                             initial={{ opacity: 0, scale: 0.95 }}
+                             animate={{ opacity: 1, scale: 1 }}
+                             transition={{ delay: 0.15, type: "spring", stiffness: 200 }}
+                             className="text-2xl md:text-3xl font-black text-[#0ea5e9] tracking-tight uppercase leading-tight font-display line-clamp-1"
+                           >
+                             {selectedCategory}
+                           </motion.h2>
+                         </div>
+                         <motion.div 
+                           initial={{ opacity: 0, scale: 0.8 }}
+                           animate={{ opacity: 1, scale: 1 }}
+                           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                           className="flex items-center justify-center gap-1 bg-[#002f5d] border border-[#0ea5e9]/30 rounded-full px-2.5 py-1 shadow-md shadow-[#0ea5e9]/10 whitespace-nowrap shrink-0"
+                         >
+                            <Star className="w-3 h-3 fill-[#0ea5e9] text-[#0ea5e9]" />
+                            <span className="text-[#0ea5e9] text-[10px] font-bold">แนะนำ</span>
+                         </motion.div>
+                     </div>
+
+                     <div className="flex items-center justify-between pt-1 mt-1">
+                        <h3 className="text-sm font-bold text-[#0ea5e9]">
+                          สินค้าในหมวดหมู่นี้
+                        </h3>
+                        <div className="text-zinc-300 font-bold text-xs">
+                          ทั้งหมด {items.filter(i => (i.category || "") === selectedCategory).length} สินค้า
+                        </div>
+                     </div>
+                  </motion.div>
+                )}
 
             
             {/* Admin Tools ASTD */}
@@ -3789,6 +3212,20 @@ export default function App() {
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsPaymentConfigOpen(true)}
+                      className="py-2 px-4 rounded-2xl bg-blue-500/20 text-blue-400 hover:text-zinc-100 border border-blue-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
+                    >
+                      <Wallet className="w-4 h-4" /> จัดการช่องทางชำระเงิน
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsCategoryManagerOpen(true)}
+                      className="py-2 px-4 rounded-2xl bg-rose-500/20 text-rose-400 hover:text-zinc-100 border border-rose-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-rose-500/10"
+                    >
+                      <FolderPlus className="w-4 h-4" /> จัดการหมวดหมู่
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => setIsStockManagerOpen(true)}
                       className="py-2 px-4 rounded-2xl bg-indigo-500/20 text-indigo-400 hover:text-zinc-100 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
                     >
@@ -3821,7 +3258,7 @@ export default function App() {
 
             {/* Item Grid */}
             {isLoadingStock ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4">
                 {Array.from({ length: 8 }).map((_, idx) => (
                   <ItemCardSkeleton key={`astd-skel-${idx}`} />
                 ))}
@@ -3836,12 +3273,12 @@ export default function App() {
             ) : (
               <motion.div
                 layout
-                className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4"
               >
                 <AnimatePresence mode="popLayout">
                   {sortedItems.map((item) => (
                     <ItemCard
-                    appScreen={appScreen}
+                      appScreen={appScreen}
                       key={item.id}
                       item={item}
                       isAdmin={isAdmin}
@@ -3854,6 +3291,10 @@ export default function App() {
                       onInquire={() => setInquiringItem(item)}
                       onBuy={handleBuyItem}
                       onTogglePin={handleTogglePin}
+                      onCategoryClick={(cat) => {
+                        setSelectedCategory(cat);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
                     />
                   ))}
                 </AnimatePresence>
@@ -3861,6 +3302,8 @@ export default function App() {
             )}
 
             <DiscordBanner />
+            </>
+            )}
           </main>
 
           {/* Custom Footer */}
@@ -3877,17 +3320,19 @@ export default function App() {
                   </strong>
                 </p>
               </div>
-                  <MobileDrawer
-        isOpen={isAstdMenuOpen}
-        onClose={() => setIsAstdMenuOpen(false)}
-        currentUser={currentUser}
-        onLoginClick={() => { setShowAuthModal(true); setAuthMode('login'); }}
-        onLogoutClick={handleLogout}
-        setPage={setAppScreen}
-        setShowTopupModal={setShowTopupModal}
-      />
-</div>
+            </div>
           </footer>
+
+          <MobileDrawer
+            isOpen={isAstdMenuOpen}
+            onClose={() => setIsAstdMenuOpen(false)}
+            currentUser={currentUser}
+            onLoginClick={() => { setAppScreen('LOGIN'); setAuthMode('login'); }}
+            onLogoutClick={handleLogout}
+            setPage={setAppScreen}
+            setShowTopupModal={setShowTopupModal}
+            openHistoryModal={openHistoryModal}
+          />
 
           {renderModals()}
         </motion.div>
