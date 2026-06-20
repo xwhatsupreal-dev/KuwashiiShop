@@ -187,8 +187,6 @@ const SEED_ITEMS = [
   }
 ];
 
-const DATA_FILE = path.join(process.cwd(), "items_db.json");
-
 // Helpers for encoding/decoding extra properties within description to bypass schema restrictions without altering Supabase table
 function packExtraData(item: any): any {
   const packed = { ...item };
