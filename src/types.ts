@@ -46,7 +46,6 @@ export interface UserData {
   password?: string;
   avatar?: string;
   balance: number;
-  balance_rov?: number;
   joinDate: string;
   purchases: PurchaseRecord[];
   topups?: TopupRecord[];

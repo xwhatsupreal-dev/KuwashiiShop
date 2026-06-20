@@ -530,7 +530,6 @@ export default function App() {
   >("select");
   const [topupSuccessMessage, setTopupSuccessMessage] = useState("");
   const [topupError, setTopupError] = useState("");
-  const [topupTargetWallet, setTopupTargetWallet] = useState<'balance' | 'balance_rov'>('balance');
   const [topupCode, setTopupCode] = useState("");
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [tosAccepted, setTosAccepted] = useState(false);
@@ -800,29 +799,17 @@ export default function App() {
         localStorage.setItem("KUWASHII_COUPONS", JSON.stringify(coupons));
 
             const configData = await getSystemConfig();
-            if (topupTargetWallet === "balance") {
-              const currentFree = configData
-                ? Number(configData.global_free_astd || 0)
-                : 0;
-              await supabase
-                .from("system_config")
-                .upsert({
-                  id: "main",
-                  global_free_astd: currentFree + coupon.amount,
-                });
-            } else if (topupTargetWallet === "balance_rov") {
-              const currentFree = configData
-                ? Number(configData.global_free_credits_aotr || 0)
-                : 0;
-              await supabase
-                .from("system_config")
-                .upsert({
-                  id: "main",
-                  global_free_credits_aotr: currentFree + coupon.amount,
-                });
-            }
+            const currentFree = configData
+              ? Number(configData.global_free_astd || 0)
+              : 0;
+            await supabase
+              .from("system_config")
+              .upsert({
+                id: "main",
+                global_free_astd: currentFree + coupon.amount,
+              });
 
-        const balanceField = topupTargetWallet;
+        const balanceField = 'balance';
         const userBalance = Number(liveUser[balanceField] || 0);
         const newBalance = userBalance + coupon.amount;
         await supabase
@@ -874,8 +861,9 @@ export default function App() {
           const res = await fetch("/api/topup/true-wallet", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ gift_link: topupCode.trim(), game: appScreen, target_wallet: topupTargetWallet }),
+            body: JSON.stringify({ gift_link: topupCode.trim(), game: appScreen }),
           });
+
           const data = await res.json();
           if (data.status === "success") {
             const rawAmount = parseFloat(data.amount) || 0;
@@ -902,9 +890,8 @@ export default function App() {
                   global_revenue_aotr: currentRev + amount,
                 });
             }
-            // If ROV, we do nothing to system_config because we don't track global_revenue_rov currently.
 
-            const balanceField = topupTargetWallet;
+            const balanceField = 'balance';
             const userBalance = Number(liveUser[balanceField] || 0);
             const newBalance = userBalance + amount;
             await supabase
@@ -945,6 +932,12 @@ export default function App() {
               true,
               appScreen
             );
+            
+            // รอ 2 วินาทีแล้วโหลดกลับหน้าหลัก
+            setTimeout(() => {
+              setTopupModalStep("select");
+              setAppScreen("SHOP");
+            }, 2000);
           } else {
             let errorMsg =
               String(data.message || "ซองของขวัญไม่ถูกต้องหรือถูกใช้งานไปแล้ว");
@@ -963,7 +956,7 @@ export default function App() {
               activeUsername,
               0,
               "angpao",
-              (liveUser[appScreen === 'ROV' ? 'balance_rov' : 'balance'] || 0),
+              (liveUser.balance || 0),
               false,
               appScreen
             );
@@ -1027,11 +1020,7 @@ export default function App() {
             if (typeof settingsObj === 'string') {
                try { settingsObj = JSON.parse(settingsObj); } catch(e) {}
             }
-            if (topupTargetWallet === 'balance_rov') {
-                configName = (settingsObj.topup_qrcode_name_rov || "").trim();
-            } else {
-                configName = (settingsObj.topup_qrcode_name || "").trim();
-            }
+            configName = (settingsObj.topup_qrcode_name || "").trim();
             
             if (configName && receiverName !== "ไม่ทราบชื่อ") {
                // simple include check to handle prefix
@@ -1058,7 +1047,7 @@ export default function App() {
                 activeUsername,
                 0,
                 "bank",
-                (liveUser[appScreen === 'ROV' ? 'balance_rov' : 'balance'] || 0),
+                (liveUser.balance || 0),
                 false,
                 appScreen
               );
@@ -1086,7 +1075,7 @@ export default function App() {
             }
             // If ROV, we do nothing to system_config because we don't track global_revenue_rov currently.
 
-            const balanceField = topupTargetWallet;
+            const balanceField = 'balance';
             const userBalance = Number(liveUser[balanceField] || 0);
             const newBalance = userBalance + amount;
             await supabase
@@ -1128,6 +1117,12 @@ export default function App() {
               true,
               appScreen
             );
+
+            // รอ 2 วินาทีแล้วโหลดกลับหน้าหลัก
+            setTimeout(() => {
+              setTopupModalStep("select");
+              setAppScreen("SHOP");
+            }, 2000);
           } else {
             let finalErr = String(data.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้");
             if (finalErr.includes("ติดต่อผู้ดูแลระบบ")) {
@@ -1145,7 +1140,7 @@ export default function App() {
               activeUsername,
               0,
               "bank",
-              (liveUser[appScreen === 'ROV' ? 'balance_rov' : 'balance'] || 0),
+              (liveUser.balance || 0),
               false,
               appScreen
             );
@@ -1383,7 +1378,6 @@ export default function App() {
           email: authEmail.trim(),
           password: authPassword,
           balance: 0,
-          balance_rov: 0,
         },
       ]);
 
@@ -1394,7 +1388,6 @@ export default function App() {
             username: targetUsername,
             password: authPassword,
             balance: 0,
-          balance_rov: 0,
           },
         ]);
       }
@@ -1670,7 +1663,7 @@ export default function App() {
     }
 
     const totalPrice = item.price * purchaseQty;
-    const balanceField = (item.category === "All Star" || item.category === "ALL STAR") ? "balance" : "balance_rov";
+    const balanceField = "balance";
     const userBalance = Number(user[balanceField] || 0);
     if (userBalance < totalPrice) {
       showToast(
@@ -3143,8 +3136,6 @@ export default function App() {
                  handleTopup={handleTopupSubmit}
                  setAppScreen={setAppScreen}
                  globalStats={globalStats}
-                 topupTargetWallet={topupTargetWallet}
-                 setTopupTargetWallet={setTopupTargetWallet}
                />
             ) : (
               <>

@@ -61,7 +61,7 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
             >
               <div className="flex flex-col items-end hidden sm:flex">
                 <span className="text-xs font-bold text-zinc-200">{currentUser.username}</span>
-                <span className="text-[10px] text-[#0ea5e9] font-semibold">ALL STAR: ฿{(currentUser.balance || 0).toLocaleString()} | ATOR/GAG2: ฿{(currentUser.balance_rov || 0).toLocaleString()}</span>
+                <span className="text-[10px] text-[#0ea5e9] font-semibold">ยอดคงเหลือ: ฿{(currentUser.balance || 0).toLocaleString()}</span>
               </div>
               <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
                 {currentUser.avatar_url || currentUser.avatar ? (

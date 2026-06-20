@@ -37,8 +37,8 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
             Kuwashii Shop จำหน่ายสินค้าเเมพ&เกมต่างๆ สะดวกใช้งานง่าย รับประกันได้ของ100%
           </p>
           <div className="flex gap-2 mt-4">
-            <button className="px-4 py-2 text-sm font-medium border border-zinc-800 rounded-lg text-zinc-300 hover:bg-zinc-800 transition-colors">สินค้ายอดฮิต</button>
-            <button className="px-4 py-2 text-sm font-medium border border-zinc-800 rounded-lg text-zinc-300 hover:bg-zinc-800 transition-colors">ติดต่อแอดมิน</button>
+            <button className="px-4 py-2 text-sm font-medium border border-zinc-800 rounded-lg text-zinc-300 hover:bg-zinc-800 transition-colors cursor-default">สินค้ายอดฮิต</button>
+            <button onClick={() => window.open('https://discord.gg/AQKtJpvyva', '_blank')} className="px-4 py-2 text-sm font-medium border border-zinc-800 rounded-lg text-zinc-300 hover:bg-zinc-800 transition-colors">ติดต่อแอดมิน</button>
           </div>
         </div>
       </div>

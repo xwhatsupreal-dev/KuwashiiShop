@@ -61,10 +61,7 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
                           <div className="flex flex-col gap-1.5">
                             <div className="flex items-center gap-2">
                               <span className="px-2 py-1 rounded-md bg-[#0ea5e9]/10 border border-[#0ea5e9]/20 text-[#0ea5e9] text-[10px] font-bold tracking-tighter flex items-center gap-1">
-                                <Wallet className="w-3 h-3" /> All Star: ฿{(currentUser.balance || 0).toLocaleString()}
-                              </span>
-                              <span className="px-2 py-1 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-bold tracking-tighter flex items-center gap-1">
-                                <Wallet className="w-3 h-3" /> ATOR/GAG2: ฿{(currentUser.balance_rov || 0).toLocaleString()}
+                                <Wallet className="w-3 h-3" /> ยอดคงเหลือ: ฿{(currentUser.balance || 0).toLocaleString()}
                               </span>
                             </div>
                             <div>
@@ -98,7 +95,7 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
                         </div>
                         <span className="text-[11px] font-semibold text-zinc-500 group-hover:text-zinc-300">เติมเงิน</span>
                       </button>
-                      <button onClick={() => { setPage?.('PROFILE'); onClose(); }} className="flex flex-col items-center gap-2 group relative">
+                      <button onClick={() => { openHistoryModal?.('purchases'); onClose(); }} className="flex flex-col items-center gap-2 group relative">
                         <div className="w-[3.25rem] h-[3.25rem] rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:bg-pink-500/10 group-hover:border-pink-500/50 transition-all group-active:scale-95 shadow-sm">
                           <History className="w-5 h-5 text-zinc-400 group-hover:text-pink-500 transition-colors" />
                         </div>
@@ -131,18 +128,20 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
                         <h5 className="text-[13px] font-bold text-zinc-500 uppercase tracking-widest">ช่วยเหลือ & ชุมชน</h5>
                       </div>
                       <div className="grid grid-cols-2 gap-3 mb-3">
-                        <a href="#" className="flex flex-col items-center justify-center gap-2 py-4 px-3 border border-zinc-800/80 bg-zinc-900/40 rounded-2xl hover:bg-blue-500/10 hover:border-blue-500/30 transition-colors group shadow-sm">
+                        <a href="https://discord.gg/AQKtJpvyva" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center gap-2 py-4 px-3 border border-zinc-800/80 bg-zinc-900/40 rounded-2xl hover:bg-blue-500/10 hover:border-blue-500/30 transition-colors group shadow-sm">
                           <Facebook className="w-6 h-6 text-zinc-400 group-hover:text-blue-500 transition-colors" />
                           <span className="text-[11px] font-bold text-zinc-400 group-hover:text-blue-400 mt-1">Facebook</span>
                         </a>
-                        <a href="#" className="flex flex-col items-center justify-center gap-2 py-4 px-3 border border-zinc-800/80 bg-zinc-900/40 rounded-2xl hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-colors group shadow-sm">
+                        <a href="https://discord.gg/AQKtJpvyva" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center gap-2 py-4 px-3 border border-zinc-800/80 bg-zinc-900/40 rounded-2xl hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-colors group shadow-sm">
                           <MessageSquare className="w-6 h-6 text-zinc-400 group-hover:text-indigo-400 transition-colors" />
                           <span className="text-[11px] font-bold text-zinc-400 group-hover:text-indigo-400 mt-1">Discord</span>
                         </a>
                       </div>
                       <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm">
                         <MenuListItem icon={<HelpCircle className="w-[18px] h-[18px] text-amber-400" />} title="คำถามที่พบบ่อย" />
-                        <MenuListItem icon={<Phone className="w-[18px] h-[18px] text-pink-400" />} title="ติดต่อแอดมิน" />
+                        <div onClick={() => window.open('https://discord.gg/AQKtJpvyva', '_blank')}>
+                          <MenuListItem icon={<Phone className="w-[18px] h-[18px] text-pink-400" />} title="ติดต่อแอดมิน" />
+                        </div>
                       </div>
                     </div>
 

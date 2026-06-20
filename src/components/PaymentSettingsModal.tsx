@@ -13,7 +13,6 @@ interface Props {
 export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalStats, setGlobalStats }) => {
   const [angpaoActive, setAngpaoActive] = useState(true);
   const [qrActive, setQrActive] = useState(true);
-  const [targetWallet, setTargetWallet] = useState<'all' | 'balance' | 'balance_rov'>('all');
   
   // ALL STAR configurations
   const [angpaoPhone, setAngpaoPhone] = useState('');
@@ -22,14 +21,7 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
   const [bankAccountNo, setBankAccountNo] = useState('');
   const [bankName, setBankName] = useState('');
 
-  // ATOR/GAG2 configurations
-  const [angpaoPhoneRov, setAngpaoPhoneRov] = useState('');
-  const [qrNameRov, setQrNameRov] = useState('');
-  const [bankQrImageRov, setBankQrImageRov] = useState('');
-  const [bankAccountNoRov, setBankAccountNoRov] = useState('');
-  const [bankNameRov, setBankNameRov] = useState('');
-
-  const [activeTab, setActiveTab] = useState<'allstar' | 'rov' | 'general'>('general');
+  const [activeTab, setActiveTab] = useState<'allstar' | 'general'>('general');
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -40,19 +32,12 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
       }
       setAngpaoActive(ann.topup_angpao_status !== false);
       setQrActive(ann.topup_qrcode_status !== false);
-      setTargetWallet(ann.topup_target_wallet || 'all');
       
       setAngpaoPhone(ann.topup_angpao_phone || '');
       setQrName(ann.topup_qrcode_name || '');
       setBankQrImage(ann.topup_bank_qr_image || '');
       setBankAccountNo(ann.topup_bank_account_no || '');
       setBankName(ann.topup_bank_name || 'K BANK');
-
-      setAngpaoPhoneRov(ann.topup_angpao_phone_rov || '');
-      setQrNameRov(ann.topup_qrcode_name_rov || '');
-      setBankQrImageRov(ann.topup_bank_qr_image_rov || '');
-      setBankAccountNoRov(ann.topup_bank_account_no_rov || '');
-      setBankNameRov(ann.topup_bank_name_rov || 'K BANK');
     }
   }, [globalStats, isOpen]);
 
@@ -70,19 +55,12 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
          ...currentSettings,
          topup_angpao_status: angpaoActive,
          topup_qrcode_status: qrActive,
-         topup_target_wallet: targetWallet,
 
          topup_angpao_phone: angpaoPhone,
          topup_qrcode_name: qrName,
          topup_bank_qr_image: bankQrImage,
          topup_bank_account_no: bankAccountNo,
          topup_bank_name: bankName,
-
-         topup_angpao_phone_rov: angpaoPhoneRov,
-         topup_qrcode_name_rov: qrNameRov,
-         topup_bank_qr_image_rov: bankQrImageRov,
-         topup_bank_account_no_rov: bankAccountNoRov,
-         topup_bank_name_rov: bankNameRov
       };
 
       const { data, error } = await supabase
@@ -213,13 +191,7 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
                  onClick={() => setActiveTab('allstar')} 
                  className={`flex-1 py-3 text-sm font-bold ${activeTab === 'allstar' ? 'text-amber-400 border-b-2 border-amber-400' : 'text-zinc-500'}`}
                >
-                 บัญชี ALL STAR
-               </button>
-               <button 
-                 onClick={() => setActiveTab('rov')} 
-                 className={`flex-1 py-3 text-sm font-bold ${activeTab === 'rov' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-zinc-500'}`}
-               >
-                 บัญชี ATOR/GAG2
+                 บัญชีชำระเงิน
                </button>
             </div>
 
@@ -266,25 +238,10 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
                      </div>
                    </div>
 
-                   <div className="space-y-4 pt-4 border-t border-zinc-900">
-                       <div className="space-y-2">
-                           <label className="text-xs font-bold text-zinc-400">บังคับบัญชีเครดิตที่ได้รับเริ่มต้น</label>
-                           <select 
-                             value={targetWallet} 
-                             onChange={(e: any) => setTargetWallet(e.target.value)}
-                             className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
-                           >
-                             <option value="all">ให้ผู้ใช้งานเลือกเอง (เลือกได้ทั้ง 2 เครดิต)</option>
-                             <option value="balance">บังคับรับเครดิต ALL STAR เท่านั้น</option>
-                             <option value="balance_rov">บังคับรับเครดิต ATOR/GAG2 เท่านั้น</option>
-                           </select>
-                       </div>
-                   </div>
-                 </div>
+                  </div>
                )}
 
-               {activeTab === 'allstar' && ConfigForm({ title: "สำหรับเครดิต ALL STAR", prefix: "", isRov: false })}
-               {activeTab === 'rov' && ConfigForm({ title: "สำหรับเครดิต ATOR/GAG2", prefix: "_rov", isRov: true })}
+               {activeTab === 'allstar' && ConfigForm({ title: "สำหรับเติมเครดิต", prefix: "", isRov: false })}
             </div>
   
             <div className="p-4 border-t border-zinc-800 bg-zinc-900/50 flex justify-end gap-3 shrink-0">

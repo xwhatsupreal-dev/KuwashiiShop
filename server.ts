@@ -1094,7 +1094,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
         await fetchQuery("UPDATE profiles SET email = ?, avatar_url = ?, discord_id = ? WHERE username = ?", [email, avatarUrl, discordId, targetUsername]);
       } else {
         // Insert user
-        await fetchQuery("INSERT INTO profiles (username, password, email, avatar_url, discord_id, balance, balance_rov, is_admin) VALUES (?, ?, ?, ?, ?, 0, 0, false)", 
+        await fetchQuery("INSERT INTO profiles (username, password, email, avatar_url, discord_id, balance, is_admin) VALUES (?, ?, ?, ?, ?, 0, false)", 
           [username, "discord_oauth", email, avatarUrl, discordId]);
       }
     }

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle, AlertTriangle, ChevronRight, HelpCircle, X, ChevronLeft, ArrowRight, Wallet, QrCode, ScanLine, FileBoxIcon as FileBox, Plus, Send, Gift } from 'lucide-react';
+import { CheckCircle, AlertTriangle, ChevronRight, HelpCircle, X, ChevronLeft, ArrowRight, Wallet, QrCode, ScanLine, FileBoxIcon as FileBox, Plus, Send, Gift, Copy, Download } from 'lucide-react';
 
 export const TopupPage = ({ 
   tosAccepted, 
@@ -14,9 +14,7 @@ export const TopupPage = ({
   isProcessingTopup,
   handleTopup,
   setAppScreen,
-  globalStats,
-  topupTargetWallet,
-  setTopupTargetWallet
+  globalStats
 }: any) => {
 
   let parsedSettings = globalStats?.announcement_settings || {};
@@ -26,14 +24,6 @@ export const TopupPage = ({
 
   const angpaoActive = parsedSettings.topup_angpao_status !== false;
   const qrActive = parsedSettings.topup_qrcode_status !== false;
-
-  useEffect(() => {
-    if (parsedSettings.topup_target_wallet === 'balance') {
-       setTopupTargetWallet('balance');
-    } else if (parsedSettings.topup_target_wallet === 'balance_rov') {
-       setTopupTargetWallet('balance_rov');
-    }
-  }, [parsedSettings.topup_target_wallet, setTopupTargetWallet]);
 
   return (
     <motion.div 
@@ -75,7 +65,7 @@ export const TopupPage = ({
             <h3 className="text-xl font-bold mb-3 font-display">ข้อตกลงและเงื่อนไข</h3>
             <div className="bg-black/50 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-400 mb-6 text-left max-h-40 overflow-y-auto space-y-3 font-sans">
               <p>1. ทางร้านขอสงวนสิทธิ์ไม่รับเคลมทุกกรณี หากเกิดข้อผิดพลาดจากการกรอกข้อมูลผิด</p>
-              <p>2. หากพบปัญหาในการเติมเงิน โปรดติดต่อแอดมินทันที</p>
+              <p>2. หากพบปัญหาในการเติมเงิน โปรด<a href="https://discord.gg/AQKtJpvyva" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">ติดต่อแอดมิน</a>ทันที</p>
             </div>
             <motion.button 
               whileHover={{ scale: 1.02 }}
@@ -229,50 +219,81 @@ export const TopupPage = ({
 
           <div>
              <form onSubmit={(e) => { e.preventDefault(); handleTopup(e); }}>
-             
-             {(topupModalStep === "angpao" || topupModalStep === "bank" || topupModalStep === "coupon") && (
-                <div className="mb-5">
-                   <p className="text-sm font-bold mb-2 text-zinc-300">เลือกบัญชีที่ต้องการเติมเงิน (ได้รับเครดิตตามบัญชีที่เลือก):</p>
-                   <div className="grid grid-cols-2 gap-3">
-                     {(!parsedSettings.topup_target_wallet || parsedSettings.topup_target_wallet === 'all' || parsedSettings.topup_target_wallet === 'balance') && (
-                       <button type="button" onClick={() => setTopupTargetWallet("balance")} className={`py-3 px-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${topupTargetWallet === 'balance' ? 'bg-[#0ea5e9]/20 border-[#0ea5e9] text-white' : 'bg-zinc-800/50 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'} ${parsedSettings.topup_target_wallet === 'balance' ? 'col-span-2' : ''}`}>
-                         <Wallet className="w-4 h-4" /> <span className="font-bold font-sans text-xs sm:text-[13px]">ALL STAR</span>
-                       </button>
-                     )}
-                     {(!parsedSettings.topup_target_wallet || parsedSettings.topup_target_wallet === 'all' || parsedSettings.topup_target_wallet === 'balance_rov') && (
-                       <button type="button" onClick={() => setTopupTargetWallet("balance_rov")} className={`py-3 px-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${topupTargetWallet === 'balance_rov' ? 'bg-purple-500/20 border-purple-500 text-white' : 'bg-zinc-800/50 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'} ${parsedSettings.topup_target_wallet === 'balance_rov' ? 'col-span-2' : ''}`}>
-                         <Wallet className="w-4 h-4" /> <span className="font-bold font-sans text-xs sm:text-[13px]">ATOR/GAG2</span>
-                       </button>
-                     )}
-                   </div>
-                </div>
-             )}
 
              {topupModalStep === "bank" && (
                 <div className="mb-5 bg-zinc-800/50 p-6 rounded-2xl border border-zinc-700/50 flex flex-col items-center text-center">
                   {(() => {
-                    const qrUrl = topupTargetWallet === 'balance_rov' ? parsedSettings.topup_bank_qr_image_rov : parsedSettings.topup_bank_qr_image;
-                    const bName = topupTargetWallet === 'balance_rov' ? parsedSettings.topup_bank_name_rov : parsedSettings.topup_bank_name;
-                    const bAcc = topupTargetWallet === 'balance_rov' ? parsedSettings.topup_bank_account_no_rov : parsedSettings.topup_bank_account_no;
-                    const bAccName = topupTargetWallet === 'balance_rov' ? parsedSettings.topup_qrcode_name_rov : parsedSettings.topup_qrcode_name;
+                    const qrUrl = parsedSettings.topup_bank_qr_image;
+                    const bName = parsedSettings.topup_bank_name;
+                    const bAcc = parsedSettings.topup_bank_account_no;
+                    const bAccName = parsedSettings.topup_qrcode_name;
 
                     return (
                       <>
                         {qrUrl ? (
-                          <div className="w-48 h-48 bg-white p-2 rounded-xl mb-4 relative group">
-                            <img src={qrUrl} alt="QR Code" className="w-full h-full object-cover rounded-lg" />
+                          <div className="flex flex-col items-center gap-3 mb-4">
+                            <div className="w-48 h-48 bg-white p-2 rounded-xl relative overflow-hidden border-2 border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+                              <img src={qrUrl} alt="QR Code" className="w-full h-full object-contain rounded-lg" />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                try {
+                                  const response = await fetch(qrUrl);
+                                  if (!response.ok) throw new Error('Network response was not ok');
+                                  const blob = await response.blob();
+                                  const url = window.URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.download = 'qrcode_bank.jpg';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  window.URL.revokeObjectURL(url);
+                                } catch (error) {
+                                  console.error("Failed to download QR code directly, falling back...", error);
+                                  const link = document.createElement('a');
+                                  link.href = qrUrl;
+                                  link.download = 'qrcode_bank.jpg';
+                                  link.target = '_blank';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                }
+                              }}
+                              className="px-4 py-2 bg-zinc-800 hover:bg-emerald-600 text-white text-xs sm:text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 border border-zinc-700 hover:border-emerald-500"
+                            >
+                              <Download className="w-4 h-4" /> บันทึก QR Code
+                            </button>
                           </div>
                         ) : (
                           <ScanLine className="w-12 h-12 text-emerald-500/80 mx-auto mb-3" />
                         )}
                         <h3 className="text-white font-bold mb-1 text-sm sm:text-base">รับชำระผ่าน {bName || 'ธนาคาร / QR Code'}</h3>
                         {(bAcc || bAccName) && (
-                          <div className="flex flex-col text-sm text-zinc-400 mb-2 mt-1 bg-black/30 w-full py-2 rounded-lg">
-                             {bAcc && <span>เลขบัญชี: <span className="text-emerald-400 font-mono tracking-wider font-bold">{bAcc}</span></span>}
-                             {bAccName && <span>ชื่อบัญชี: <span className="text-white">{bAccName}</span></span>}
+                          <div className="flex flex-col text-sm text-zinc-400 mb-2 mt-1 bg-black/40 border border-zinc-800 w-full py-2.5 rounded-xl gap-1">
+                             {bAcc && (
+                               <div className="flex items-center justify-center gap-2">
+                                 <span>เลขบัญชี: <span className="text-emerald-400 font-mono tracking-wider font-bold text-base">{bAcc}</span></span>
+                                 <button
+                                   type="button"
+                                   onClick={(e) => {
+                                     e.preventDefault();
+                                     navigator.clipboard.writeText(bAcc);
+                                     alert('คัดลอกเลขบัญชีแล้ว');
+                                   }}
+                                   title="คัดลอกเลขบัญชี"
+                                   className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md transition-colors text-zinc-300 hover:text-white border border-zinc-700"
+                                 >
+                                   <Copy className="w-3.5 h-3.5" />
+                                 </button>
+                               </div>
+                             )}
+                             {bAccName && <span>ชื่อบัญชี: <span className="text-white font-medium">{bAccName}</span></span>}
                           </div>
                         )}
-                        <p className="text-amber-500 text-[11px] sm:text-xs mt-1 px-3 py-1.5 bg-amber-500/10 rounded-full inline-flex items-center gap-1.5 font-medium"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> ต้องโอนจำนวนเงินตามสลิปที่แนบมาเป๊ะๆ</p>
+                        <p className="text-amber-500 text-[11px] sm:text-xs mt-1 px-3 py-1.5 bg-amber-500/10 rounded-full inline-flex items-center gap-1.5 font-medium"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> หลังจากโอนเสร็จให้อัพโหลดสลิปภายใน 5 นาที</p>
                       </>
                     )
                   })()}
@@ -280,13 +301,19 @@ export const TopupPage = ({
              )}
 
              {topupModalStep === "angpao" && (
-               <input 
-                 type="text" 
-                 value={angpaoCode}
-                 onChange={(e) => setAngpaoCode(e.target.value)}
-                 className="w-full bg-black/50 border border-zinc-800 rounded-xl px-4 sm:px-5 py-3 sm:py-4 focus:outline-none focus:border-[#0ea5e9] focus:ring-1 focus:ring-[#0ea5e9] transition-all text-center mb-5 text-sm sm:text-base placeholder-zinc-600"
-                 placeholder="https://gift.truemoney.com/campaign/?v=..."
-               />
+                <div className="flex flex-col items-center">
+                  <input 
+                    type="text" 
+                    value={angpaoCode}
+                    onChange={(e) => setAngpaoCode(e.target.value)}
+                    className="w-full bg-black/50 border border-zinc-800 rounded-xl px-4 sm:px-5 py-3 sm:py-4 focus:outline-none focus:border-[#0ea5e9] focus:ring-1 focus:ring-[#0ea5e9] transition-all text-center mb-3 text-sm sm:text-base placeholder-zinc-600"
+                    placeholder="https://gift.truemoney.com/campaign/?v=..."
+                  />
+                  <p className="text-amber-500 text-[11px] sm:text-xs mb-5 px-3 py-1.5 bg-amber-500/10 rounded-full inline-flex items-center gap-1.5 font-medium">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    หักค่าธรรมเนียม 2.9% จากยอดเติม
+                  </p>
+                </div>
              )}
              
              {topupModalStep === "coupon" && (

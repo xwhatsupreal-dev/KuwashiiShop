@@ -143,10 +143,6 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
                     <span className="text-xs text-indigo-300 font-medium whitespace-nowrap">ยอดคงเหลือ</span>
                     <span className="text-indigo-400 font-bold">฿{(currentUser?.balance || 0).toLocaleString()}</span>
                  </div>
-                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex justify-between items-center">
-                    <span className="text-xs text-emerald-300 font-medium whitespace-nowrap">ยอดเกมลิง</span>
-                    <span className="text-emerald-400 font-bold">฿{(currentUser?.balance_rov || 0).toLocaleString()}</span>
-                 </div>
               </div>
            </div>
 

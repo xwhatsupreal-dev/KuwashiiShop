@@ -84,7 +84,7 @@ export async function fetchUser(username: string) {
 
 export async function createUser(username: string, passwordHash: string) {
   const { data, error } = await supabase.from('profiles').insert([
-    { username, password: passwordHash, balance: 0, balance_rov: 0, is_admin: false }
+    { username, password: passwordHash, balance: 0, is_admin: false }
   ]).select().single();
   if (error) throw error;
   return data;
