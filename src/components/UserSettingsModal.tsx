@@ -31,11 +31,11 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
 
   useEffect(() => {
     if (isOpen && currentUser) {
-      setEditUsername(currentUser.username);
+      setEditUsername(currentUser.username || '');
       supabase.from('profiles').select('email').eq('username', currentUser.username).single().then(({ data }) => {
         if (data && data.email) {
-          setUserEmail(data.email);
-          setEditEmail(data.email);
+          setUserEmail(data.email || '-');
+          setEditEmail(data.email || '');
         } else {
           setUserEmail('-');
           setEditEmail('');

@@ -12,18 +12,40 @@ export async function fetchItems() {
     return [];
   }
   return data.map((d: any) => {
-    let pool = d.gacha_pool;
+    let parsedPool = d.gacha_pool;
+    if (typeof d.gacha_pool === 'string') {
+      try {
+        parsedPool = JSON.parse(d.gacha_pool);
+      } catch (e) {
+        // Leave as string if not JSON, handled below or it isn't JSON
+      }
+    }
+
+    let pool = parsedPool;
     let initialQty = d.initial_quantity;
     let pieces = d.pieces_per_unit;
     let accCreds = undefined;
     let pinned = d.is_pinned || false;
+    let jsonSaleFormat = undefined;
 
-    if (d.gacha_pool && !Array.isArray(d.gacha_pool) && typeof d.gacha_pool === 'object') {
-      pool = d.gacha_pool.pool || undefined;
-      accCreds = d.gacha_pool.accountCredentials || undefined;
-      if (initialQty === undefined) initialQty = d.gacha_pool.initialQuantity;
-      if (pieces === undefined) pieces = d.gacha_pool.piecesPerUnit;
-      if (d.gacha_pool.isPinned) pinned = d.gacha_pool.isPinned;
+    if (parsedPool && !Array.isArray(parsedPool) && typeof parsedPool === 'object') {
+      pool = parsedPool.pool || undefined;
+      accCreds = parsedPool.accountCredentials || undefined;
+      jsonSaleFormat = parsedPool.saleFormat;
+      if (initialQty === undefined) initialQty = parsedPool.initialQuantity;
+      if (pieces === undefined) pieces = parsedPool.piecesPerUnit;
+      if (parsedPool.isPinned) pinned = parsedPool.isPinned;
+    } else if (typeof parsedPool === 'string') {
+       // if it failed to parse and is still a string
+       try {
+         pool = JSON.parse(parsedPool);
+         if (!Array.isArray(pool)) {
+            jsonSaleFormat = pool.saleFormat;
+            pool = undefined;
+         }
+       } catch(e) {
+         pool = undefined;
+       }
     }
 
     let imgUrls: string[] = [];
@@ -37,14 +59,15 @@ export async function fetchItems() {
 
     return {
       ...d,
+      saleFormat: jsonSaleFormat || d.rarity || d.saleFormat || 'ขายรหัส',
       imageUrl: imgUrls.length > 0 ? imgUrls[0] : undefined,
       imageUrls: imgUrls.length > 0 ? imgUrls : undefined,
       gachaPool: pool,
       accountCredentials: accCreds,
       initialQuantity: initialQty,
       piecesPerUnit: pieces,
-      isPopular: d.popular || d.isPopular || false,
-      isPinned: pinned,
+      isPopular: d.popular === true || d.popular === "true" || d.popular === 1 || d.isPopular === true || d.isPopular === "true" || d.isPopular === 1,
+      isPinned: d.is_pinned === true || d.is_pinned === "true" || d.is_pinned === 1 || pinned === true || pinned === "true" || false,
       updatedAt: d.created_at
     };
   }) as StockItem[];

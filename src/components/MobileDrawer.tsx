@@ -98,7 +98,7 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
                         </div>
                         <span className="text-[11px] font-semibold text-zinc-500 group-hover:text-zinc-300">เติมเงิน</span>
                       </button>
-                      <button onClick={() => { if (openHistoryModal) openHistoryModal('purchases'); onClose(); }} className="flex flex-col items-center gap-2 group relative">
+                      <button onClick={() => { setPage?.('PROFILE'); onClose(); }} className="flex flex-col items-center gap-2 group relative">
                         <div className="w-[3.25rem] h-[3.25rem] rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:bg-pink-500/10 group-hover:border-pink-500/50 transition-all group-active:scale-95 shadow-sm">
                           <History className="w-5 h-5 text-zinc-400 group-hover:text-pink-500 transition-colors" />
                         </div>
@@ -110,22 +110,14 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
                     <div className="mb-8">
                       <div className="flex items-center gap-2 mb-3 px-2">
                         <History className="w-4 h-4 text-zinc-500" />
-                        <h5 className="text-[13px] font-bold text-zinc-500 uppercase tracking-widest">ประวัติการทำรายการ</h5>
+                        <h5 className="text-[13px] font-bold text-zinc-500 uppercase tracking-widest">การตั้งค่า</h5>
                       </div>
                       <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl overflow-hidden divide-y divide-zinc-800/50 shadow-sm">
                         <MenuListItem 
-                           icon={<Receipt className="w-[18px] h-[18px] text-[#0ea5e9]" />} 
-                           title="ประวัติการสั่งซื้อ" 
+                           icon={<Settings className="w-[18px] h-[18px] text-zinc-400" />} 
+                           title="ข้อมูลส่วนตัวและการตั้งค่า" 
                            onClick={() => {
-                             if (openHistoryModal) openHistoryModal('purchases');
-                             onClose();
-                           }} 
-                        />
-                        <MenuListItem 
-                           icon={<Wallet className="w-[18px] h-[18px] text-emerald-400" />} 
-                           title="ประวัติการเติมเงิน"
-                           onClick={() => {
-                             if (openHistoryModal) openHistoryModal('topups');
+                             setPage?.('PROFILE');
                              onClose();
                            }} 
                         />

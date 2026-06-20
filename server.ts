@@ -800,7 +800,10 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
         balance INTEGER DEFAULT 0,
         balance_rov INTEGER DEFAULT 0,
         is_admin BOOLEAN DEFAULT FALSE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        email TEXT,
+        avatar_url TEXT,
+        discord_id TEXT
       );
       CREATE TABLE IF NOT EXISTS activities (
         id TEXT PRIMARY KEY,
@@ -849,7 +852,17 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
         gacha_pool TEXT,
         pieces_per_unit INTEGER,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        game TEXT
+      );
+      CREATE TABLE IF NOT EXISTS claimed_jackpots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id TEXT NOT NULL,
+        stock_trigger INTEGER NOT NULL,
+        reward_name TEXT NOT NULL,
+        username TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(item_id, stock_trigger)
       );
       CREATE TABLE IF NOT EXISTS system_config (
         id TEXT PRIMARY KEY,
@@ -885,6 +898,40 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
       body: JSON.stringify({ sql: "ALTER TABLE system_config ADD COLUMN announcement_settings TEXT;" })
     });
     
+    // Add columns to profiles for discord integration
+    const alterProfilesStrs = [
+      "ALTER TABLE profiles ADD COLUMN email TEXT;",
+      "ALTER TABLE profiles ADD COLUMN avatar_url TEXT;",
+      "ALTER TABLE profiles ADD COLUMN discord_id TEXT;"
+    ];
+    for (const sqlStr of alterProfilesStrs) {
+      await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ sql: sqlStr })
+      });
+    }
+    
+    // Add game column to existing items table
+    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: "ALTER TABLE items ADD COLUMN game TEXT;" })
+    });
+    
+    // Add claimed_jackpots table explicitly
+    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: "CREATE TABLE IF NOT EXISTS claimed_jackpots (id INTEGER PRIMARY KEY AUTOINCREMENT, item_id TEXT NOT NULL, stock_trigger INTEGER NOT NULL, reward_name TEXT NOT NULL, username TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(item_id, stock_trigger));" })
+    });
+
     // Also insert main system config if not exists
     await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
       method: "POST",
@@ -950,6 +997,134 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
   } catch (err: any) {
     console.error("D1 Proxy Error:", err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/auth/discord/login', (req, res) => {
+  const host = req.get('X-Forwarded-Host') || req.get('host');
+  const protocol = req.get('X-Forwarded-Proto') || req.protocol;
+  const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
+
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  if (!clientId) {
+    return res.status(500).send("DISCORD_CLIENT_ID not configured in Settings -> Secrets.");
+  }
+
+  const oauthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20email`;
+  res.redirect(oauthUrl);
+});
+
+app.get('/api/auth/discord/url', (req, res) => {
+  const host = req.get('X-Forwarded-Host') || req.get('host');
+  const protocol = req.get('X-Forwarded-Proto') || req.protocol;
+  const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
+
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  if (!clientId) {
+    return res.status(500).json({ error: "DISCORD_CLIENT_ID not configured in Settings -> Secrets." });
+  }
+
+  const oauthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20email`;
+  res.json({ url: oauthUrl });
+});
+
+app.get('/api/auth/discord/callback', async (req, res) => {
+  const code = req.query.code as string;
+  if (!code) return res.send("No code provided.");
+
+  const host = req.get('X-Forwarded-Host') || req.get('host');
+  const protocol = req.get('X-Forwarded-Proto') || req.protocol;
+  const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
+
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+  
+  if (!clientId || !clientSecret) return res.status(500).send("Discord credentials not configured.");
+  
+  const accountId = process.env.CF_ACCOUNT_ID?.trim();
+  let dbId = process.env.CF_DATABASE_ID?.trim();
+  if (dbId && dbId.includes("dash.cloudflare.com")) {
+    const match = dbId.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
+    if (match) dbId = match[0];
+  }
+  const token = process.env.CF_API_TOKEN?.trim();
+
+  try {
+    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri
+      }).toString()
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok) return res.send(`Token Error: ${JSON.stringify(tokenData)}`);
+
+    const userRes = await fetch("https://discord.com/api/users/@me", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    });
+    const userData = await userRes.json();
+    if (!userRes.ok) return res.send(`User Error: ${JSON.stringify(userData)}`);
+
+    const avatarUrl = userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : '';
+    const email = userData.email || '';
+    const username = `Discord_${userData.id}`; // using ID to avoid username conflicts
+    const discordId = userData.id;
+
+    if (accountId && dbId && token) {
+      // Upsert into D1 using standard REST
+      const fetchQuery = async (query: string, params: any[]) => {
+        return fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ sql: query, params })
+        }).then(r => r.json());
+      };
+
+      // Check if user exists
+      const existing = await fetchQuery("SELECT username FROM profiles WHERE username = ? OR discord_id = ? LIMIT 1", [username, discordId]);
+      
+      if (existing.result && existing.result[0] && existing.result[0].results.length > 0) {
+        // Update user
+        const targetUsername = existing.result[0].results[0].username;
+        await fetchQuery("UPDATE profiles SET email = ?, avatar_url = ?, discord_id = ? WHERE username = ?", [email, avatarUrl, discordId, targetUsername]);
+      } else {
+        // Insert user
+        await fetchQuery("INSERT INTO profiles (username, password, email, avatar_url, discord_id, balance, balance_rov, is_admin) VALUES (?, ?, ?, ?, ?, 0, 0, false)", 
+          [username, "discord_oauth", email, avatarUrl, discordId]);
+      }
+    }
+
+    const payload = JSON.stringify({
+      username: username,
+      email: email,
+      avatar: avatarUrl
+    });
+
+    res.send(`
+      <html>
+        <body>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({ 
+                type: 'OAUTH_AUTH_SUCCESS',
+                payload: ${payload}
+              }, '*');
+              window.close();
+            } else {
+              window.location.href = '/?discord_login=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&avatar=${encodeURIComponent(avatarUrl)}';
+            }
+          </script>
+          <p>Authentication successful. This window should close automatically.</p>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    res.send("Internal error: " + err);
   }
 });
 

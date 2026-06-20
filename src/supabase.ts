@@ -127,12 +127,13 @@ class MockQueryBuilder {
       const rows = this.dataToInsertOrUpdate;
       if (rows.length === 0) return { data: [], error: null };
       
-      const keys = Object.keys(rows[0]);
       for(let r of rows) {
-          if (this.table !== 'profiles' && this.table !== 'system_config' && !r.id) {
+          if (this.table !== 'profiles' && this.table !== 'system_config' && this.table !== 'claimed_jackpots' && !r.id) {
               r.id = uuidv4();
           }
       }
+      
+      const keys = Object.keys(rows[0]);
 
       const valuesStrs = rows.map((r: any) => {
         keys.forEach(k => {

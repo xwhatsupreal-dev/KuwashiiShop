@@ -77,7 +77,6 @@ import { AdminModal } from "./components/AdminModal";
 import { StockManagerModal } from "./components/StockManagerModal";
 import { CustomerDatabaseModal } from "./components/CustomerDatabaseModal";
 import { HistoryModal } from "./components/HistoryModal";
-import { UserSettingsModal } from "./components/UserSettingsModal";
 import { CouponManagerModal } from "./components/CouponManagerModal";
 import { AnnouncementManagerModal } from "./components/AnnouncementManagerModal";
 import { AnnouncementPopup } from "./components/AnnouncementPopup";
@@ -90,6 +89,7 @@ import { TopupTosModal } from "./components/TopupTosModal";
 import { PaymentSettingsModal } from "./components/PaymentSettingsModal";
 import { CategoryManagerModal } from "./components/CategoryManagerModal";
 import { AuthPage } from "./components/AuthPage";
+import { UserProfileDashboard } from "./components/UserProfileDashboard";
 import jsQR from "jsqr";
 
 const readQRFromImage = (file: File): Promise<string | null> => {
@@ -185,6 +185,47 @@ export default function App() {
   const [targetScreen, setTargetScreen] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [hoveredGame, setHoveredGame] = useState<string | null>(null);
+
+  // Route handlers for Discord Auth redirection parameters
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const discordLogin = params.get('discord_login');
+    const discordEmail = params.get('email');
+    const discordAvatar = params.get('avatar');
+    
+    if (discordLogin) {
+      const userPayload = { username: discordLogin, discord_email: discordEmail, avatar: discordAvatar };
+      setCurrentUser(userPayload);
+      localStorage.setItem("KUWASHII_CURRENT_USER", JSON.stringify(userPayload));
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // Popup Message Listener for Discord Auth
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Validate origin is from AI Studio preview or localhost
+      const origin = event.origin;
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('studio.google.com')) {
+        return;
+      }
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS' && event.data.payload) {
+        const payload = event.data.payload;
+        const userPayload = { 
+          username: payload.username, 
+          discord_email: payload.email, 
+          avatar: payload.avatar 
+        };
+        setCurrentUser(userPayload);
+        localStorage.setItem("KUWASHII_CURRENT_USER", JSON.stringify(userPayload));
+        setAppScreen("SHOP"); // Go to shop screen after login
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   // User & Admin Authentications
   const [currentUser, setCurrentUser] = useState<{ username: string } | null>(
     () => {
@@ -306,6 +347,11 @@ export default function App() {
             .select("*", { count: "exact", head: true });
           if (!pError && purchaseCount !== null) {
             config.total_purchases = purchaseCount;
+          }
+          
+          const { data: allTopups } = await supabase.from('topups').select('amount');
+          if (allTopups) {
+            config.total_topups = allTopups.reduce((acc, topup) => acc + (parseFloat(topup.amount) || 0), 0);
           }
         } catch (e) {}
 
@@ -505,7 +551,6 @@ export default function App() {
   const [isPaymentConfigOpen, setIsPaymentConfigOpen] = useState(false);
   const [isAnnouncementManagerOpen, setIsAnnouncementManagerOpen] =
     useState(false);
-  const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyTab, setHistoryTab] = useState<'purchases' | 'topups'>('purchases');
 
@@ -640,7 +685,7 @@ export default function App() {
         }
         setIsServerQuotaExceeded(false);
       } catch (e: any) {
-        console.warn("Error loading items from Supabase", e);
+        console.warn("Error loading items from Database", e);
         setItems(migrateItems(DEFAULT_PRESETS));
       } finally {
         setIsLoadingStock(false);
@@ -652,7 +697,7 @@ export default function App() {
   const saveItemsToStorage = async (newItems: StockItem[]) => {
     setItems(newItems);
 
-    // Save to Supabase
+    // Save to Supabase (chunked to avoid D1 100 param limit)
     try {
       const updates = newItems.map((item) => ({
         id: item.id,
@@ -667,6 +712,7 @@ export default function App() {
         popular: item.isPopular,
         gacha_pool: {
           pool: item.gachaPool || null,
+          saleFormat: item.saleFormat, // securely save format here
           initialQuantity: item.initialQuantity,
           piecesPerUnit: item.piecesPerUnit,
           accountCredentials: item.accountCredentials || null,
@@ -674,7 +720,13 @@ export default function App() {
         },
         created_at: item.updatedAt || new Date().toISOString(),
       }));
-      await supabase.from("items").upsert(updates);
+      
+      // Cloudflare D1 / SQLite parameter limit per query is often 100 max. Each item has 12 fields = max 8 items per chunk
+      const chunkSize = 8;
+      for (let i = 0; i < updates.length; i += chunkSize) {
+        const chunk = updates.slice(i, i + chunkSize);
+        await supabase.from("items").upsert(chunk);
+      }
     } catch (e) {
       console.error("Error saving items", e);
     }
@@ -1664,7 +1716,7 @@ export default function App() {
 
       // Load claimed jackpots to prevent duplicate giving of the exact same stock trigger
       let claimedJackpots: any[] = [];
-      let usingSupabaseClaims = false;
+      let usingDbClaims = false;
       try {
         const { data: dbClaims, error: claimsErr } = await supabase
           .from("claimed_jackpots")
@@ -1675,7 +1727,7 @@ export default function App() {
             itemId: c.item_id,
             stockTrigger: c.stock_trigger,
           }));
-          usingSupabaseClaims = true;
+          usingDbClaims = true;
         } else {
           throw new Error("Fallback to local");
         }
@@ -1718,7 +1770,7 @@ export default function App() {
             );
             if (!isClaimed) {
               dropped = guaranteedReward;
-              if (usingSupabaseClaims) {
+              if (usingDbClaims) {
                 // Perform atomic insert FIRST
                 const { error: claimErr } = await supabase
                   .from("claimed_jackpots")
@@ -1731,7 +1783,7 @@ export default function App() {
                     },
                   ]);
 
-                if (claimErr && claimErr.code === "23505") {
+                if (claimErr && (claimErr.code === "23505" || (claimErr.message && claimErr.message.includes("UNIQUE")))) {
                   // UNIQUE constraint violation
                   // Someone else beat us to this jackpot!
                   dropped = null; // Turn to salt
@@ -1766,7 +1818,7 @@ export default function App() {
         }
       }
 
-      if (!usingSupabaseClaims) {
+      if (!usingDbClaims) {
         // Update Claimed Jackpots Local Cache
         localStorage.setItem(
           "KUWASHII_CLAIMED_JACKPOTS",
@@ -1869,7 +1921,7 @@ export default function App() {
             global_sales_rov: currentSales + purchaseQty,
           });
         // Error will pop up in console if column doesn't exist, but won't crash user app thanks to no strict throw.
-        if (error) console.warn("Supabase update for ROV sales failed (likely missing column global_sales_rov)", error);
+        if (error) console.warn("Database update for ROV sales failed (likely missing column global_sales_rov)", error);
       }
 
       // Reduce Stock natively handled earlier for creds or via fallback
@@ -2368,14 +2420,13 @@ export default function App() {
                     </label>
                     <input
                       type="text"
-                      value={authUsername}
+                      value={authUsername || ''}
                       onChange={(e) => {
                         setAuthUsername(e.target.value);
                         setAuthError("");
                       }}
                       placeholder="กรอกชื่อผู้ใช้"
                       required={authMode === "login" || authMode === "register"}
-                      autoFocus={authMode === "login" || authMode === "register"}
                       autoComplete="username"
                       className="w-full bg-[#151515] border border-zinc-800 text-white px-5 py-4 rounded-xl focus:outline-none focus:border-[#0ea5e9] transition-all text-base placeholder-zinc-500 placeholder:font-medium"
                     />
@@ -2391,7 +2442,7 @@ export default function App() {
                     </label>
                     <input
                       type="email"
-                      value={authEmail}
+                      value={authEmail || ''}
                       onChange={(e) => {
                         setAuthEmail(e.target.value);
                         setAuthError("");
@@ -2412,7 +2463,7 @@ export default function App() {
                     </label>
                     <input
                       type="text"
-                      value={authOtpCode}
+                      value={authOtpCode || ''}
                       onChange={(e) => {
                         setAuthOtpCode(e.target.value);
                         setAuthError("");
@@ -2434,7 +2485,7 @@ export default function App() {
                     <div className="relative">
                       <input
                         type={showAuthPassword ? "text" : "password"}
-                        value={authPassword}
+                        value={authPassword || ''}
                         onChange={(e) => {
                           setAuthPassword(e.target.value);
                           setAuthError("");
@@ -2463,7 +2514,7 @@ export default function App() {
                     <div className="relative">
                       <input
                         type={showAuthConfirmPassword ? "text" : "password"}
-                        value={authConfirmPassword}
+                        value={authConfirmPassword || ''}
                         onChange={(e) => {
                           setAuthConfirmPassword(e.target.value);
                           setAuthError("");
@@ -2489,7 +2540,7 @@ export default function App() {
                     <input
                       type="checkbox"
                       id="rememberAuth"
-                      checked={rememberAuth}
+                      checked={!!rememberAuth}
                       onChange={(e) => setRememberAuth(e.target.checked)}
                       className="w-6 h-6 rounded border-zinc-700 bg-zinc-800 border accent-[#0ea5e9] cursor-pointer"
                     />
@@ -2653,15 +2704,6 @@ export default function App() {
         onClose={() => setIsAnnouncementManagerOpen(false)}
       />
 
-      <UserSettingsModal
-        isOpen={isAccountSettingsOpen}
-        onClose={() => setIsAccountSettingsOpen(false)}
-        currentUser={currentUser}
-        onChangePassword={handleChangePassword}
-        onChangeUsername={handleChangeUsername}
-        onChangeEmail={handleChangeEmail}
-      />
-
       {(currentUser || viewingUserHistory) && (
         <HistoryModal
           isOpen={showHistoryModal || !!viewingUserHistory}
@@ -2780,7 +2822,7 @@ export default function App() {
             </p>
             <button
                onClick={() => {
-                 setAuthMode("LOGIN");
+                 setAuthMode("login");
                  setShowAuthModal(true);
                }}
                className="mt-4 px-4 py-2 text-xs font-bold bg-zinc-800 text-zinc-400 rounded-lg border border-zinc-700 hover:text-white"
@@ -2992,7 +3034,7 @@ export default function App() {
       );
     }
 
-    if (["SHOP", "TOPUP", "LOGIN", "AOTR", "ASTD", "ROV"].includes(appScreen)) {
+    if (["SHOP", "TOPUP", "LOGIN", "PROFILE", "AOTR", "ASTD", "ROV"].includes(appScreen)) {
       return (
         <motion.div
           key={appScreen}
@@ -3003,6 +3045,7 @@ export default function App() {
           className="min-h-[100vh] min-h-[100dvh] flex flex-col bg-transparent text-zinc-200 font-display tracking-tight selection:bg-indigo-500 selection:text-zinc-100 pb-20 sm:pb-0 relative w-full"
         >
           <ShopHeader 
+            globalStats={globalStats}
             toggleSidebar={() => setIsAstdMenuOpen(true)} 
             onSearchToggle={() => {}} 
             currentUser={currentUser} 
@@ -3012,7 +3055,6 @@ export default function App() {
           />
           {appScreen === 'SHOP' && (
             <>
-              <MarqueeAnnouncement appScreen={appScreen} />
               <AnnouncementPopup appScreen={appScreen} />
             </>
           )}
@@ -3047,7 +3089,7 @@ export default function App() {
           </AnimatePresence>
 
           {/* Hero Header Section */}
-          {(appScreen !== "TOPUP" && appScreen !== "LOGIN" && selectedCategory === "all") && <ShopBanner globalStats={globalStats} items={items} />}
+          {(appScreen !== "TOPUP" && appScreen !== "LOGIN" && appScreen !== "PROFILE" && selectedCategory === "all") && <ShopBanner globalStats={globalStats} items={items} />}
 
           {/* Main Container */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 flex-grow w-full">
@@ -3076,6 +3118,16 @@ export default function App() {
                  setAuthError={setAuthError}
                  handleAuthSubmit={handleAuthSubmit}
                  isProcessing={false}
+                 isCaptchaVerified={isCaptchaVerified}
+                 setIsCaptchaVerified={setIsCaptchaVerified}
+               />
+            ) : appScreen === "PROFILE" ? (
+               <UserProfileDashboard 
+                 currentUser={currentUser}
+                 setAppScreen={setAppScreen}
+                 onChangePassword={handleChangePassword}
+                 onChangeUsername={handleChangeUsername}
+                 onChangeEmail={handleChangeEmail}
                />
             ) : appScreen === "TOPUP" ? (
                <TopupPage 
@@ -3275,7 +3327,7 @@ export default function App() {
                 layout
                 className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4"
               >
-                <AnimatePresence mode="popLayout">
+                <AnimatePresence>
                   {sortedItems.map((item) => (
                     <ItemCard
                       appScreen={appScreen}

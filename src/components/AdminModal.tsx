@@ -56,22 +56,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
   useEffect(() => {
     if (editingItem) {
-      setName(editingItem.name);
+      setName(editingItem.name || '');
       setCategory(editingItem.category || 'Grow A Garden 2');
       setSaleFormat(editingItem.saleFormat || 'ขายรหัส');
-      setQuantity(editingItem.quantity);
-      setInitialQuantity(editingItem.initialQuantity !== undefined ? editingItem.initialQuantity : editingItem.quantity);
-      setPiecesPerUnit(editingItem.piecesPerUnit !== undefined ? editingItem.piecesPerUnit : '');
-      setPrice(editingItem.price);
-      setOriginalPrice(editingItem.originalPrice !== undefined ? editingItem.originalPrice : '');
-      setDescription(editingItem.description);
+      setQuantity(editingItem.quantity !== undefined && editingItem.quantity !== null ? editingItem.quantity : '');
+      setInitialQuantity(editingItem.initialQuantity !== undefined && editingItem.initialQuantity !== null ? editingItem.initialQuantity : (editingItem.quantity || ''));
+      setPiecesPerUnit(editingItem.piecesPerUnit !== undefined && editingItem.piecesPerUnit !== null ? editingItem.piecesPerUnit : '');
+      setPrice(editingItem.price !== undefined && editingItem.price !== null ? editingItem.price : '');
+      setOriginalPrice(editingItem.originalPrice !== undefined && editingItem.originalPrice !== null ? editingItem.originalPrice : '');
+      setDescription(editingItem.description || '');
       setIsPinned(!!editingItem.isPinned);
       setIsPopular(!!editingItem.isPopular);
-      setGachaPool(editingItem.gachaPool || []);
+      setGachaPool(Array.isArray(editingItem.gachaPool) ? editingItem.gachaPool : []);
       setAccountCredentialsText(editingItem.accountCredentials ? editingItem.accountCredentials.join('\n') : '');
       
       const fetchClaims = async () => {
-        if (editingItem.category === 'สุ่มตัวละคร - ออสตา' || (editingItem.gachaPool && editingItem.gachaPool.length > 0)) {
+        if (editingItem.category === 'สุ่มตัวละคร - ออสตา' || (Array.isArray(editingItem.gachaPool) && editingItem.gachaPool.length > 0)) {
           const { data } = await supabase.from('claimed_jackpots').select('*').eq('item_id', editingItem.id);
           if (data) setClaimedJackpots(data);
         }
@@ -570,15 +570,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   </motion.button>
                 </div>
                 
-                {gachaPool.length > 0 ? (
+                {gachaPool && gachaPool.length > 0 ? (
                   <div className="space-y-2">
-                    {gachaPool.map((reward, index) => (
+                    {(Array.isArray(gachaPool) ? gachaPool : []).map((reward, index) => (
                       <div key={reward.id} className="flex flex-col gap-2 p-2 bg-zinc-800 rounded-lg border border-white/5">
                         <div className="flex items-center gap-2">
                           <input
                             type="text"
                             placeholder="ชื่อตัวละคร/ไอเทม..."
-                            value={reward.name}
+                            value={reward.name || ''}
                             onChange={(e) => {
                               const newPool = [...gachaPool];
                               newPool[index].name = e.target.value;

@@ -21,7 +21,7 @@ export const FakeTurnstile = ({ onSuccess }: { onSuccess?: () => void }) => {
     >
       <div className="flex items-center gap-3 sm:gap-4">
         <div className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0">
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence>
             {status === 'idle' && (
               <motion.div 
                 key="idle"

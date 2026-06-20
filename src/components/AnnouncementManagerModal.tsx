@@ -22,6 +22,15 @@ export interface AnnouncementSettings {
   marqueeSpeed?: number;
   marqueeBgColor?: string;
   marqueeTextColor?: string;
+  
+  shopLogoUrl?: string;
+  shopBannerUrl?: string;
+  showStatsBlock?: boolean;
+  showStatUsers?: boolean;
+  showStatCategories?: boolean;
+  showStatItems?: boolean;
+  showStatSold?: boolean;
+  showStatTopup?: boolean;
 }
 
 const DEFAULT_SETTINGS: AnnouncementSettings = {
@@ -37,6 +46,15 @@ const DEFAULT_SETTINGS: AnnouncementSettings = {
   marqueeSpeed: 15,
   marqueeBgColor: '#f59e0b',
   marqueeTextColor: '#000000',
+  
+  shopLogoUrl: 'https://img1.pic.in.th/images/1000109791.png',
+  shopBannerUrl: 'https://img1.pic.in.th/images/1000109791.png',
+  showStatsBlock: true,
+  showStatUsers: true,
+  showStatCategories: true,
+  showStatItems: true,
+  showStatSold: true,
+  showStatTopup: true,
 };
 
 export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> = ({ isOpen, onClose }) => {
@@ -125,7 +143,7 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
             <label className="flex items-center gap-3 p-4 bg-zinc-900 border border-white/5 rounded-2xl cursor-pointer hover:bg-zinc-800 transition-colors">
               <input
                 type="checkbox"
-                checked={settings.enabled}
+                checked={!!settings.enabled}
                 onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
                 className="w-5 h-5 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500"
               />
@@ -138,7 +156,7 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
               </label>
               <input
                 type="text"
-                value={settings.imageUrl}
+                value={settings.imageUrl || ''}
                 onChange={(e) => setSettings({ ...settings, imageUrl: e.target.value })}
                 placeholder="https://..."
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-amber-500 transition-all text-sm font-sans mb-3"
@@ -148,7 +166,7 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
               </label>
               <input
                 type="text"
-                value={settings.linkUrl}
+                value={settings.linkUrl || ''}
                 onChange={(e) => setSettings({ ...settings, linkUrl: e.target.value })}
                 placeholder="https://... (เว้นว่างได้)"
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-amber-500 transition-all text-sm font-sans"
@@ -182,7 +200,7 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
               <label className="flex items-center gap-3 p-3 bg-zinc-900 border border-white/5 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors">
                 <input
                   type="checkbox"
-                  checked={settings.showInATOR}
+                  checked={!!settings.showInATOR}
                   onChange={(e) => setSettings({ ...settings, showInATOR: e.target.checked })}
                   className="w-4 h-4 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500"
                 />
@@ -192,7 +210,7 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
               <label className="flex items-center gap-3 p-3 bg-zinc-900 border border-white/5 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors">
                 <input
                   type="checkbox"
-                  checked={settings.showInASTD}
+                  checked={!!settings.showInASTD}
                   onChange={(e) => setSettings({ ...settings, showInASTD: e.target.checked })}
                   className="w-4 h-4 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500"
                 />
@@ -287,6 +305,67 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
                     </div>
                   </div>
                 </>
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-white/5/50">
+              <h3 className="text-sm font-bold text-amber-500 mb-4 flex items-center gap-2"><ImageIcon className="w-4 h-4"/> ตั้งค่าร้านค้า (Shop Settings)</h3>
+              
+              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                ลิงก์โลโก้ร้าน (Shop Logo URL)
+              </label>
+              <input
+                type="text"
+                value={settings.shopLogoUrl || ''}
+                onChange={(e) => setSettings({ ...settings, shopLogoUrl: e.target.value })}
+                placeholder="https://..."
+                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-amber-500 transition-all text-sm font-sans mb-3"
+              />
+
+              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                ลิงก์แบนเนอร์ร้าน (Shop Banner URL)
+              </label>
+              <input
+                type="text"
+                value={settings.shopBannerUrl || ''}
+                onChange={(e) => setSettings({ ...settings, shopBannerUrl: e.target.value })}
+                placeholder="https://..."
+                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-amber-500 transition-all text-sm font-sans mb-4"
+              />
+
+              <label className="flex items-center gap-3 p-3 bg-zinc-900 border border-white/5 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors mb-3">
+                <input
+                  type="checkbox"
+                  checked={settings.showStatsBlock !== false}
+                  onChange={(e) => setSettings({ ...settings, showStatsBlock: e.target.checked })}
+                  className="w-4 h-4 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500"
+                />
+                <span className="text-white font-bold text-xs flex-1">แสดงบล็อกสถิติรวม</span>
+              </label>
+
+              {settings.showStatsBlock !== false && (
+                <div className="grid grid-cols-2 gap-2 pl-4 border-l-2 border-zinc-800 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800 p-2 rounded-lg transition-colors">
+                    <input type="checkbox" checked={settings.showStatUsers !== false} onChange={e => setSettings({...settings, showStatUsers: e.target.checked})} className="w-3.5 h-3.5 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500" />
+                    <span className="text-zinc-400 text-xs">ผู้ใช้งานทั้งหมด</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800 p-2 rounded-lg transition-colors">
+                    <input type="checkbox" checked={settings.showStatCategories !== false} onChange={e => setSettings({...settings, showStatCategories: e.target.checked})} className="w-3.5 h-3.5 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500" />
+                    <span className="text-zinc-400 text-xs">จำนวนหมวดหมู่</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800 p-2 rounded-lg transition-colors">
+                    <input type="checkbox" checked={settings.showStatItems !== false} onChange={e => setSettings({...settings, showStatItems: e.target.checked})} className="w-3.5 h-3.5 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500" />
+                    <span className="text-zinc-400 text-xs">สินค้าพร้อมจำหน่าย</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800 p-2 rounded-lg transition-colors">
+                    <input type="checkbox" checked={settings.showStatSold !== false} onChange={e => setSettings({...settings, showStatSold: e.target.checked})} className="w-3.5 h-3.5 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500" />
+                    <span className="text-zinc-400 text-xs">จำหน่ายไปแล้ว</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800 p-2 rounded-lg transition-colors">
+                    <input type="checkbox" checked={settings.showStatTopup !== false} onChange={e => setSettings({...settings, showStatTopup: e.target.checked})} className="w-3.5 h-3.5 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500" />
+                    <span className="text-zinc-400 text-xs">ยอดเติมทั้งหมด</span>
+                  </label>
+                </div>
               )}
             </div>
 

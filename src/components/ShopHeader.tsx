@@ -1,21 +1,23 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet } from 'lucide-react';
+import { MarqueeAnnouncement } from './MarqueeAnnouncement';
 
-export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, setAppScreen, currentScreen }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string }) => {
+export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, setAppScreen, currentScreen, globalStats }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any }) => {
   return (
     <motion.header 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50"
+      className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 flex flex-col"
     >
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <MarqueeAnnouncement appScreen={currentScreen || 'SHOP'} />
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between w-full">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setAppScreen?.("SHOP")}>
             {/* Logo Placeholder */}
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-blue-900/40 flex items-center justify-center bg-blue-900/20 overflow-hidden">
-              <img src="https://img1.pic.in.th/images/1000109791.png" alt="Logo" className="w-full h-full object-cover" />
+              <img src={globalStats?.announcement_settings?.shopLogoUrl || "https://img1.pic.in.th/images/1000109791.png"} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-zinc-100 font-bold tracking-tight hidden sm:block">STORE</span>
           </div>
@@ -53,13 +55,20 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
           <div className="h-5 w-[1px] bg-zinc-700 hidden sm:block mx-1"></div>
 
           {currentUser ? (
-            <div className="flex items-center gap-3 bg-blue-900/20 border border-blue-900/40 px-3 py-1.5 rounded-full cursor-pointer hover:bg-blue-900/20 transition-colors">
+            <div 
+              onClick={() => setAppScreen?.("PROFILE")}
+              className="flex items-center gap-3 bg-blue-900/20 border border-blue-900/40 px-3 py-1.5 rounded-full cursor-pointer hover:bg-blue-900/20 transition-colors"
+            >
               <div className="flex flex-col items-end hidden sm:flex">
                 <span className="text-xs font-bold text-zinc-200">{currentUser.username}</span>
                 <span className="text-[10px] text-[#0ea5e9] font-semibold">ALL STAR: ฿{(currentUser.balance || 0).toLocaleString()} | ATOR/GAG2: ฿{(currentUser.balance_rov || 0).toLocaleString()}</span>
               </div>
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                <User className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
+                {currentUser.avatar_url || currentUser.avatar ? (
+                  <img src={currentUser.avatar_url || currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-4 h-4" />
+                )}
               </div>
             </div>
           ) : (
