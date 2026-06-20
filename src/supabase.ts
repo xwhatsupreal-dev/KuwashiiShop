@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 class MockQueryBuilder {
   table: string;
+
   queryType: 'select' | 'insert' | 'update' | 'upsert' | 'delete' = 'select';
   selectCols: string = '*';
   wheres: { col: string, op: string, val: any }[] = [];
@@ -205,3 +206,4 @@ export const supabase = {
 
 // Initialize D1 once
 fetch('/api/d1/init', { method: 'POST' }).catch(console.error);
+
