@@ -89,6 +89,7 @@ import { TopupTosModal } from "./components/TopupTosModal";
 import { PaymentSettingsModal } from "./components/PaymentSettingsModal";
 import { CategoryManagerModal } from "./components/CategoryManagerModal";
 import { AuthPage } from "./components/AuthPage";
+import { GlobalLoadingScreen } from "./components/GlobalLoadingScreen";
 import { UserProfileDashboard } from "./components/UserProfileDashboard";
 import jsQR from "jsqr";
 
@@ -1445,11 +1446,13 @@ export default function App() {
   const handleLogout = () => {
     setIsAdmin(false);
     setCurrentUser(null);
+    setCurrentUserData(null);
     setIsCaptchaVerified(false);
     localStorage.removeItem("KUWASHII_IS_ADMIN");
     localStorage.removeItem("KUWASHII_CURRENT_USER");
     sessionStorage.removeItem("KUWASHII_IS_ADMIN");
     sessionStorage.removeItem("KUWASHII_CURRENT_USER");
+    setAppScreen("SHOP");
     showToast("ออกจากระบบแล้ว", "info");
   };
 
@@ -3437,5 +3440,10 @@ export default function App() {
     return null;
   }; // end renderAppScreen
 
-  return <AnimatePresence mode="wait">{renderAppScreen()}</AnimatePresence>;
+  return (
+    <>
+      <GlobalLoadingScreen isLoading={isLoadingStock || appScreen === "LOADING" || appScreen === "TRANSITION"} progress={loadingProgress} />
+      <AnimatePresence mode="wait">{renderAppScreen()}</AnimatePresence>
+    </>
+  );
 }

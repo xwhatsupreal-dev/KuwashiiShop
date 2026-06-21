@@ -22,8 +22,6 @@ export const AnnouncementPopup: React.FC<AnnouncementPopupProps> = ({ appScreen 
       
       // Check if disabled globally or for this screen
       if (!parsed.enabled) return;
-      if ((appScreen === 'ATOR' || appScreen === 'AOTR') && !parsed.showInATOR) return;
-      if (appScreen === 'ASTD' && !parsed.showInASTD) return;
 
       const allAnnouncements = [
         { image: parsed.imageUrl || 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e', link: parsed.linkUrl }

@@ -31,8 +31,6 @@ export const MarqueeAnnouncement: React.FC<MarqueeAnnouncementProps> = ({ appScr
   const marqueeItems = settings?.marqueeTexts?.filter(t => t.trim() !== '') || (settings?.marqueeText ? [settings.marqueeText] : []);
 
   if (!settings?.marqueeEnabled || marqueeItems.length === 0) return null;
-  if (appScreen === 'AOTR' && !settings.showInATOR) return null;
-  if (appScreen === 'ASTD' && !settings.showInASTD) return null;
 
   return (
     <div 

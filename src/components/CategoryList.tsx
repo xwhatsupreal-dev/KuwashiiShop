@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Gamepad2, Star, Sparkles, Folders } from 'lucide-react';
+import { ChevronRight, Gamepad2, Folders, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export const CategoryList = ({ selectedCategory, setSelectedCategory, globalStats }: { selectedCategory: string, setSelectedCategory: (v: string) => void, globalStats?: any }) => {
@@ -9,68 +9,86 @@ export const CategoryList = ({ selectedCategory, setSelectedCategory, globalStat
   if (displayCategories.length === 0) return null;
 
   return (
-    <div className="max-w-7xl mx-auto mb-8 w-full">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
-          <h2 className="text-lg md:text-xl font-black text-white tracking-tight uppercase">หมวดหมู่แนะนำ</h2>
-        </div>
-        <button className="hidden sm:flex items-center gap-1 px-3 py-1.5 text-xs font-bold border border-zinc-700/50 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all">
-          ดูทั้งหมด <ChevronRight className="w-3 h-3" />
-        </button>
+    <div className="max-w-7xl mx-auto mb-10 w-full relative z-20">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-1.5 h-7 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
+        <h2 className="text-xl md:text-2xl font-black text-white tracking-tight uppercase font-display">หมวดหมู่เกมส์</h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {displayCategories.map((category: any, index: number) => (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ delay: index * 0.1, duration: 0.4 }}
-            key={index} 
-            onClick={() => setSelectedCategory(category.title)}
-            className={`group relative border border-zinc-800 rounded-2xl overflow-hidden bg-zinc-900/50 backdrop-blur-sm transition-all duration-300 ${category.borderColor} hover:shadow-[0_0_30px_-5px_rgba(0,0,0,0.5)] cursor-pointer`}
-          >
-            {/* Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-
-            {/* Banner Section */}
-            <div className="w-full h-28 sm:h-32 relative overflow-hidden bg-zinc-800">
-                <div className="absolute inset-0 bg-black/20 z-10 group-hover:bg-transparent transition-colors duration-500" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-5">
+        {displayCategories.map((category: any, index: number) => {
+          const isSelected = selectedCategory === category.title;
+          
+          return (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -4, scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ delay: index * 0.1, duration: 0.3 }}
+              key={index} 
+              onClick={() => setSelectedCategory(category.title)}
+              className={`group relative h-[180px] sm:h-[200px] rounded-[24px] overflow-hidden cursor-pointer transition-all duration-300
+                ${isSelected ? 'ring-2 ring-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.2)]' : 'ring-1 ring-white/5 hover:ring-white/20 shadow-xl'}`}
+            >
+              {/* Background Image */}
+              <div className="absolute inset-0 bg-zinc-900 overflow-hidden">
                 {category.image ? (
                   <img 
                     src={category.image} 
                     alt={category.title} 
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" 
+                    className={`w-full h-full object-cover transition-transform duration-700 ease-out 
+                      ${isSelected ? 'scale-110' : 'group-hover:scale-110'}`} 
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center transform group-hover:scale-105 transition-transform duration-700 ease-out">
-                    <Folders className="w-10 h-10 text-zinc-600" />
+                  <div className="w-full h-full flex items-center justify-center bg-zinc-800/50">
+                    <Folders className="w-10 h-10 text-zinc-700" />
                   </div>
                 )}
-            </div>
+              </div>
 
-            {/* Info Section */}
-            <div className="p-4 relative z-20 flex flex-col justify-between">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    {category.icon ? React.cloneElement(category.icon as React.ReactElement, { className: 'w-4 h-4' } as any) : <Gamepad2 className="w-4 h-4 text-zinc-400" />}
-                    <h3 className="text-base font-black text-white tracking-wide">{category.title}</h3>
+              {/* Gradient Overlays */}
+              <div className={`absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-900/40 to-transparent transition-opacity duration-300 ${isSelected ? 'opacity-90' : 'opacity-80 group-hover:opacity-100'}`} />
+              
+              {/* Custom Category Color Glow */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-30 transition-opacity duration-500 mix-blend-overlay`} />
+              {isSelected && <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-40 mix-blend-overlay`} />}
+
+              {/* Content Segment */}
+              <div className="absolute inset-0 p-5 flex flex-col justify-end z-20">
+                {/* Selection Indicator */}
+                <div className="absolute top-4 right-4">
+                  {isSelected && (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -45 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      className="w-8 h-8 rounded-full bg-indigo-500/90 backdrop-blur-sm border border-indigo-400 flex items-center justify-center text-white shadow-lg"
+                    >
+                      <CheckCircle2 className="w-5 h-5 drop-shadow-md" />
+                    </motion.div>
+                  )}
+                </div>
+
+                <div className="transform translate-y-1 group-hover:-translate-y-1 transition-transform duration-300">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className={`p-1.5 rounded-lg bg-black/40 backdrop-blur-md shadow-inner border border-white/5 ${isSelected ? 'text-indigo-400' : 'text-zinc-300 group-hover:text-white transition-colors'}`}>
+                      {category.icon ? React.cloneElement(category.icon as React.ReactElement, { className: 'w-4 h-4' } as any) : <Gamepad2 className="w-4 h-4" />}
+                    </div>
+                    <h3 className={`text-lg sm:text-xl font-black tracking-wide drop-shadow-lg ${isSelected ? 'text-white' : 'text-zinc-100 group-hover:text-white transition-colors'}`}>
+                      {category.title}
+                    </h3>
                   </div>
-                  <span className="text-xs text-zinc-400 font-medium ">{category.subtitle}</span>
+                  <p className="text-xs sm:text-sm text-zinc-400 font-medium line-clamp-1 mb-3 group-hover:text-zinc-300 transition-colors drop-shadow-lg">
+                    {category.subtitle}
+                  </p>
+                  
+                  <div className={`h-1 rounded-full transition-all duration-300 ease-out ${isSelected ? 'bg-indigo-500 w-16' : 'bg-white/10 group-hover:w-12 group-hover:bg-white/40 w-8'}`} />
                 </div>
               </div>
-              <button className={`w-full px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${category.btnColor}`}>
-                เลือกหมวดหมู่นี้
-              </button>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
-      <button className="flex w-full mt-4 justify-center sm:hidden items-center gap-1 px-4 py-2 text-sm font-bold border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all">
-          ดูหมวดหมู่ทั้งหมด <ChevronRight className="w-4 h-4" />
-      </button>
     </div>
   );
 };

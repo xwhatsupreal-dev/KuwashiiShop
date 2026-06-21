@@ -14,8 +14,6 @@ export interface AnnouncementSettings {
   linkUrl: string;
   imageUrl2: string;
   linkUrl2: string;
-  showInATOR: boolean;
-  showInASTD: boolean;
   marqueeEnabled?: boolean;
   marqueeText?: string; // Keep for backward compatibility
   marqueeTexts?: string[];
@@ -39,8 +37,6 @@ const DEFAULT_SETTINGS: AnnouncementSettings = {
   linkUrl: '',
   imageUrl2: '',
   linkUrl2: '',
-  showInATOR: true,
-  showInASTD: true,
   marqueeEnabled: false,
   marqueeTexts: [],
   marqueeSpeed: 15,
@@ -194,28 +190,6 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
                 placeholder="https://... (เว้นว่างได้)"
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-amber-500 transition-all text-sm font-sans"
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <label className="flex items-center gap-3 p-3 bg-zinc-900 border border-white/5 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={!!settings.showInATOR}
-                  onChange={(e) => setSettings({ ...settings, showInATOR: e.target.checked })}
-                  className="w-4 h-4 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500"
-                />
-                <span className="text-zinc-300 font-bold text-xs flex-1">แสดงในหน้า ATOR</span>
-              </label>
-
-              <label className="flex items-center gap-3 p-3 bg-zinc-900 border border-white/5 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={!!settings.showInASTD}
-                  onChange={(e) => setSettings({ ...settings, showInASTD: e.target.checked })}
-                  className="w-4 h-4 rounded bg-zinc-800 border-white/10 text-amber-500 focus:ring-amber-500"
-                />
-                <span className="text-zinc-300 font-bold text-xs flex-1">แสดงในหน้า ASTD</span>
-              </label>
             </div>
 
             <div className="pt-4 border-t border-white/5/50">
