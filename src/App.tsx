@@ -82,6 +82,7 @@ import { AnnouncementManagerModal } from "./components/AnnouncementManagerModal"
 import { AnnouncementPopup } from "./components/AnnouncementPopup";
 import { MarqueeAnnouncement } from "./components/MarqueeAnnouncement";
 import Snowfall from "./components/Snowfall";
+import { ShootingStars } from "./components/ShootingStars";
 import { ShopHeader } from "./components/ShopHeader";
 import { ShopBanner } from "./components/ShopBanner";
 import { TopupPage } from "./components/TopupPage";
@@ -411,30 +412,38 @@ export default function App() {
     };
   }, [currentUser]);
 
+  const [isLoaderTimerDone, setIsLoaderTimerDone] = useState(false);
+
   // Loading Screen Timer
   useEffect(() => {
     if (appScreen === "LOADING") {
       const timer = setTimeout(() => {
-        let finalScreen = "SELECT";
-        try {
-          const stored = localStorage.getItem("KUWASHII_LAST_SCREEN");
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            if (
-              parsed.expiry > Date.now() &&
-              ["ASTD", "AOTR", "ROV"].includes(parsed.screen)
-            ) {
-              finalScreen = parsed.screen;
-            } else {
-              localStorage.removeItem("KUWASHII_LAST_SCREEN");
-            }
-          }
-        } catch (e) {}
-        setAppScreen(finalScreen as any);
-      }, 3500);
+        setIsLoaderTimerDone(true);
+      }, 2500);
       return () => clearTimeout(timer);
     }
   }, [appScreen]);
+
+  useEffect(() => {
+    if (appScreen === "LOADING" && isLoaderTimerDone && !isLoadingStock && syncCounter > 0) {
+      let finalScreen = "SELECT";
+      try {
+        const stored = localStorage.getItem("KUWASHII_LAST_SCREEN");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (
+            parsed.expiry > Date.now() &&
+            ["ASTD", "AOTR", "ROV"].includes(parsed.screen)
+          ) {
+            finalScreen = parsed.screen;
+          } else {
+            localStorage.removeItem("KUWASHII_LAST_SCREEN");
+          }
+        }
+      } catch (e) {}
+      setAppScreen(finalScreen as any);
+    }
+  }, [appScreen, isLoaderTimerDone, isLoadingStock, syncCounter]);
 
   // Save Last Screen Strategy
   useEffect(() => {
@@ -1612,25 +1621,6 @@ export default function App() {
       sendDiscordStockUpdateEmbed(webhookUrl, itemData.name, addedQty, finalItem.quantity, itemData.imageUrl, itemData.game);
     }
     
-    // Save webhookUrl to system_config globally if changed
-    if (webhookUrl !== undefined) {
-      if (!globalStats?.announcement_settings || globalStats.announcement_settings.stock_webhook_url !== webhookUrl) {
-         try {
-           let ann = globalStats?.announcement_settings || {};
-           if (typeof ann === 'string') {
-              try { ann = JSON.parse(ann) } catch(e) { ann = {} }
-           }
-           if (webhookUrl) {
-             ann.stock_webhook_url = webhookUrl;
-           } else {
-             delete ann.stock_webhook_url;
-           }
-           await supabase.from('system_config').upsert({ id: 'main', announcement_settings: ann });
-           window.dispatchEvent(new Event('sync-announcement'));
-         } catch(e) {}
-      }
-    }
-
     // Update state to render instantly
     const updatedList =
       existingIndex >= 0
@@ -2921,7 +2911,7 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.99 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="min-h-[100vh] min-h-[100dvh] bg-zinc-950 flex flex-col items-center p-6 sm:p-10 relative w-full overflow-y-auto text-zinc-100"
+          className="min-h-[100vh] min-h-[100dvh] bg-transparent flex flex-col items-center p-6 sm:p-10 relative w-full overflow-y-auto text-zinc-100"
         >
           {/* Dynamic Background */}
           <div
@@ -3442,6 +3432,7 @@ export default function App() {
 
   return (
     <>
+      <ShootingStars />
       <GlobalLoadingScreen isLoading={isLoadingStock || appScreen === "LOADING" || appScreen === "TRANSITION"} progress={loadingProgress} />
       <AnimatePresence mode="wait">{renderAppScreen()}</AnimatePresence>
     </>

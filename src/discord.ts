@@ -89,20 +89,19 @@ export const sendDiscordStockUpdateEmbed = async (webhookUrl: string, itemName: 
   if (!webhookUrl) return;
   try {
     const embed = {
-      title: "🚀 แจ้งเตือนสินค้าเข้าใหม่!",
-      description: `มีการเติมสต๊อกสินค้า **${itemName}** เข้ามาในระบบ`,
+      title: `🚀 แจ้งเตือนสินค้าเข้าใหม่! > 🆕 ${itemName}`,
+      description: `เติมสต๊อกจำนวน **${quantityAdded}** ชิ้น`,
       color: 0x8b5cf6, 
       thumbnail: {
-        url: imageUrl || "https://cdn-icons-png.flaticon.com/512/3050/3050400.png"
+        url: imageUrl || "https://img2.pic.in.th/1000111145.png"
       },
       fields: [
-        { name: "📦 สินค้า", value: `**${itemName}**`, inline: true },
-        { name: "🎮 โซนเกม", value: `**${mapName || 'ASTD'}**`, inline: true },
-        { name: "🟢 จำนวนที่เพิ่ม", value: `\`+${quantityAdded}\` ชิ้น`, inline: false },
-        { name: "📋 สต๊อกทั้งหมด", value: `\`${totalStock}\` ชิ้น`, inline: false }
+        { name: "📥 Added", value: `\`+${quantityAdded}\` ชิ้น`, inline: true },
+        { name: "📦 In Stock", value: `\`${totalStock}\` ชิ้น`, inline: true }
       ],
       footer: {
-        text: "🟢 Kuwashii El Web App - ระบบอัตโนมัติ"
+        text: "Kuwashii Shop - ( kuwashii-shop.vercel.app )",
+        icon_url: "https://img2.pic.in.th/1000111145bb818044d3458be6.md.png"
       },
       timestamp: new Date().toISOString()
     };
@@ -111,8 +110,8 @@ export const sendDiscordStockUpdateEmbed = async (webhookUrl: string, itemName: 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        username: "Kuwashii Stock Bot",
-        avatar_url: "https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?w=200&q=80",
+        username: "KuwashiiShop - Stock",
+        avatar_url: "https://img2.pic.in.th/1000111145.png",
         embeds: [embed]
       })
     });

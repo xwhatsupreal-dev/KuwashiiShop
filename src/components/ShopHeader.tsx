@@ -11,7 +11,7 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 flex flex-col"
+      className="bg-black border-b border-white/5 sticky top-0 z-50 flex flex-col"
     >
       <MarqueeAnnouncement appScreen={currentScreen || 'SHOP'} />
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between w-full">

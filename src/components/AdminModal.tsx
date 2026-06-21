@@ -842,20 +842,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({
             </div>
 
             <div className="bg-zinc-900 border border-white/5 rounded-2xl p-4 mt-2 mb-2">
-              <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-indigo-400"/> เเจ้งเตือน Discord (Webhook)</h4>
-              <p className="text-xs text-zinc-400 mb-3">คุณสามารถให้ระบบแจ้งเตือนสต๊อกเข้าลงใน Discord ได้อัตโนมัติ</p>
+              <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-indigo-400"/> เเจ้งเตือน Discord</h4>
+              <p className="text-xs text-zinc-400 mb-3">เมื่อติ๊กเลือก ระบบจะส่งการแจ้งเตือนไปยัง Webhook ที่ตั้งไว้ในการตั้งค่า</p>
               
               <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 block mb-1">Webhook URL</label>
-                  <input
-                    type="text"
-                    placeholder="https://discord.com/api/webhooks/..."
-                    value={stockWebhookUrl}
-                    onChange={(e) => setStockWebhookUrl(e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/5 text-zinc-200 px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-500 font-mono"
-                  />
-                </div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input 
                     type="checkbox" 

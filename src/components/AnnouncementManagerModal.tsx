@@ -29,6 +29,7 @@ export interface AnnouncementSettings {
   showStatItems?: boolean;
   showStatSold?: boolean;
   showStatTopup?: boolean;
+  stock_webhook_url?: string;
 }
 
 const DEFAULT_SETTINGS: AnnouncementSettings = {
@@ -341,6 +342,19 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
                   </label>
                 </div>
               )}
+            </div>
+
+            <div className="pt-4 border-t border-zinc-800">
+              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                Webhook สำหรับแจ้งเตือนสต๊อก
+              </label>
+              <input
+                type="text"
+                value={settings.stock_webhook_url || ''}
+                onChange={(e) => setSettings({ ...settings, stock_webhook_url: e.target.value })}
+                placeholder="https://discord.com/api/webhooks/..."
+                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-amber-500 transition-all text-sm font-sans mb-4"
+              />
             </div>
 
             <motion.button whileTap={{ scale: 0.95 }}
