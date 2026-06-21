@@ -21,6 +21,13 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
   const [bankAccountNo, setBankAccountNo] = useState('');
   const [bankName, setBankName] = useState('');
 
+  // ROV configurations
+  const [angpaoPhoneRov, setAngpaoPhoneRov] = useState('');
+  const [qrNameRov, setQrNameRov] = useState('');
+  const [bankQrImageRov, setBankQrImageRov] = useState('');
+  const [bankAccountNoRov, setBankAccountNoRov] = useState('');
+  const [bankNameRov, setBankNameRov] = useState('');
+
   const [activeTab, setActiveTab] = useState<'allstar' | 'general'>('general');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -38,6 +45,12 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
       setBankQrImage(ann.topup_bank_qr_image || '');
       setBankAccountNo(ann.topup_bank_account_no || '');
       setBankName(ann.topup_bank_name || 'K BANK');
+
+      setAngpaoPhoneRov(ann.rov_topup_angpao_phone || '');
+      setQrNameRov(ann.rov_topup_qrcode_name || '');
+      setBankQrImageRov(ann.rov_topup_bank_qr_image || '');
+      setBankAccountNoRov(ann.rov_topup_bank_account_no || '');
+      setBankNameRov(ann.rov_topup_bank_name || 'K BANK');
     }
   }, [globalStats, isOpen]);
 
@@ -61,6 +74,12 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
          topup_bank_qr_image: bankQrImage,
          topup_bank_account_no: bankAccountNo,
          topup_bank_name: bankName,
+
+         rov_topup_angpao_phone: angpaoPhoneRov,
+         rov_topup_qrcode_name: qrNameRov,
+         rov_topup_bank_qr_image: bankQrImageRov,
+         rov_topup_bank_account_no: bankAccountNoRov,
+         rov_topup_bank_name: bankNameRov,
       };
 
       const { data, error } = await supabase
