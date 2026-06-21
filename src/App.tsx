@@ -800,8 +800,7 @@ export default function App() {
           {
             username: activeUsername,
             amount: coupon.amount,
-            method: `Coupon: ${coupon.code}`,
-            game: appScreen,
+            method: `Coupon: ${coupon.code}`
           },
         ]);
         if (topupError) {
@@ -882,8 +881,7 @@ export default function App() {
               {
                 username: activeUsername,
                 amount: amount,
-                method: `TrueMoney (Angpao) - ${topupCode.trim()}`,
-                game: appScreen,
+                method: `TrueMoney (Angpao) - ${topupCode.trim()}`
               },
             ]);
             if (topupError) {
@@ -1076,8 +1074,7 @@ export default function App() {
               {
                 username: activeUsername,
                 amount: amount,
-                method: `Slip: ${transRef}`,
-                game: appScreen,
+                method: `Slip: ${transRef}`
               },
             ]);
             if (topupError) {
