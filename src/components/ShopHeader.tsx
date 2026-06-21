@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet } from 'lucide-react';
 import { MarqueeAnnouncement } from './MarqueeAnnouncement';
 
 export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, setAppScreen, currentScreen, globalStats }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any }) => {
+  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+
   return (
     <motion.header 
       initial={{ opacity: 0, y: -20 }}
@@ -16,8 +18,15 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setAppScreen?.("SHOP")}>
             {/* Logo Placeholder */}
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-blue-900/40 flex items-center justify-center bg-blue-900/20 overflow-hidden">
-              <img src={globalStats?.announcement_settings?.shopLogoUrl || "https://img1.pic.in.th/images/1000109791.png"} alt="Logo" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-blue-900/40 flex items-center justify-center bg-transparent overflow-hidden shrink-0 relative">
+              {globalStats?.announcement_settings?.shopLogoUrl && (
+                <img 
+                  src={globalStats.announcement_settings.shopLogoUrl} 
+                  alt="Logo" 
+                  onLoad={() => setIsLogoLoaded(true)}
+                  className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-300 ${isLogoLoaded ? 'opacity-100' : 'opacity-0'}`} 
+                />
+              )}
             </div>
             <span className="text-zinc-100 font-bold tracking-tight hidden sm:block">STORE</span>
           </div>
@@ -83,7 +92,6 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
 
           <button onClick={toggleSidebar} className="p-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-900/20 rounded-full transition-colors relative md:hidden">
             <Menu className="w-6 h-6" />
-            {!currentUser && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>}
           </button>
         </div>
       </div>

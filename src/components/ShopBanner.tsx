@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Users, Layers, Package, CheckSquare, Wallet } from 'lucide-react';
 
 export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, items?: any[] }) => {
+  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+  const [isBannerLoaded, setIsBannerLoaded] = useState(false);
+
   const categoriesCount = new Set(items.map(i => i.category)).size;
   const availableItemsCount = items.filter(i => i.quantity > 0).length;
   const soldItemsCount = globalStats?.total_purchases || 0;
   const totalTopupCount = globalStats?.total_topups || 0;
   
   const settings = globalStats?.announcement_settings || {} as any;
-  const shopLogoUrl = settings.shopLogoUrl || 'https://img1.pic.in.th/images/1000109791.png';
-  const shopBannerUrl = settings.shopBannerUrl || 'https://img1.pic.in.th/images/1000109791.png';
+  const shopLogoUrl = settings.shopLogoUrl || '';
+  const shopBannerUrl = settings.shopBannerUrl || '';
   
   const showStatsBlock = settings.showStatsBlock !== false;
   const showStatUsers = settings.showStatUsers !== false;
@@ -28,8 +31,15 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
     >
       {/* Top Info section */}
       <div className="px-4 py-6 max-w-7xl mx-auto flex items-start gap-4">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-blue-900/40 flex items-center justify-center bg-zinc-900 flex-shrink-0 overflow-hidden shadow-sm">
-          <img src={shopLogoUrl} alt="Logo" className="w-full h-full object-cover" />
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-blue-900/40 flex items-center justify-center bg-transparent flex-shrink-0 overflow-hidden shadow-sm relative">
+          {shopLogoUrl && (
+            <img 
+              src={shopLogoUrl} 
+              alt="Logo" 
+              onLoad={() => setIsLogoLoaded(true)}
+              className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-300 ${isLogoLoaded ? 'opacity-100' : 'opacity-0'}`} 
+            />
+          )}
         </div>
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold text-[#0088ff] uppercase tracking-wide">Kuwashii Shop</h1>
@@ -44,13 +54,18 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
       </div>
 
       {/* Main Banner Image */}
-      {shopBannerUrl && (
-        <div className="px-4 max-w-7xl mx-auto mb-6">
-          <div className="w-full h-32 sm:h-48 rounded-xl overflow-hidden relative border border-white/5">
-            <img src={shopBannerUrl} alt="Banner" className="w-full h-full object-cover" />
-          </div>
+      <div className="px-4 max-w-7xl mx-auto mb-6">
+        <div className="w-full h-32 sm:h-48 rounded-xl overflow-hidden relative border border-white/5 bg-transparent">
+          {shopBannerUrl && (
+            <img 
+              src={shopBannerUrl} 
+              alt="Banner" 
+              onLoad={() => setIsBannerLoaded(true)}
+              className={`w-full h-full object-cover transition-opacity duration-500 ${isBannerLoaded ? 'opacity-100' : 'opacity-0'}`} 
+            />
+          )}
         </div>
-      )}
+      </div>
 
       {/* Stats Grid */}
       {showStatsBlock && (

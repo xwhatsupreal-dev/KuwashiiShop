@@ -660,29 +660,12 @@ export default function App() {
         if (dbItems && dbItems.length > 0) {
           setItems(migrateItems(dbItems));
         } else {
-          setItems(migrateItems(DEFAULT_PRESETS));
-
-          try {
-            const inserts = DEFAULT_PRESETS.map((item) => ({
-              id: item.id,
-              name: item.name,
-              description: item.description,
-              price: item.price,
-              quantity: item.quantity,
-              image: item.imageUrls ? JSON.stringify(item.imageUrls) : item.imageUrl,
-              game: item.game,
-              category: item.category,
-              rarity: item.saleFormat,
-              popular: item.isPopular,
-              gacha_pool: { pool: item.gachaPool, isPinned: item.isPinned || false },
-            }));
-            await supabase.from("items").insert(inserts);
-          } catch (e) {}
+          setItems([]);
         }
         setIsServerQuotaExceeded(false);
       } catch (e: any) {
         console.warn("Error loading items from Database", e);
-        setItems(migrateItems(DEFAULT_PRESETS));
+        setItems([]);
       } finally {
         setIsLoadingStock(false);
       }
@@ -3108,7 +3091,7 @@ export default function App() {
             globalStats={globalStats}
             toggleSidebar={() => setIsAstdMenuOpen(true)} 
             onSearchToggle={() => {}} 
-            currentUser={currentUser} 
+            currentUser={currentUserData || currentUser} 
             onLoginClick={() => { setAppScreen("LOGIN"); setAuthMode("login"); }} 
             setAppScreen={setAppScreen}
             currentScreen={appScreen}
@@ -3183,7 +3166,7 @@ export default function App() {
                />
             ) : appScreen === "PROFILE" ? (
                <UserProfileDashboard 
-                 currentUser={currentUser}
+                 currentUser={currentUserData || currentUser}
                  setAppScreen={setAppScreen}
                  onChangePassword={handleChangePassword}
                  onChangeUsername={handleChangeUsername}
@@ -3437,7 +3420,7 @@ export default function App() {
           <MobileDrawer
             isOpen={isAstdMenuOpen}
             onClose={() => setIsAstdMenuOpen(false)}
-            currentUser={currentUser}
+            currentUser={currentUserData || currentUser}
             onLoginClick={() => { setAppScreen('LOGIN'); setAuthMode('login'); }}
             onLogoutClick={handleLogout}
             setPage={setAppScreen}

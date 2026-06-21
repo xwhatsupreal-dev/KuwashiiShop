@@ -186,28 +186,6 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                     <span className="text-[10px] font-sans tracking-wide">ยอดฮิต</span>
                   </div>
                 )}
-                {item.quantity > 0 && item.quantity <= 5 && (
-                  <div className="bg-red-500/10 text-red-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-red-500/10 border border-red-500/20 backdrop-blur-sm animate-pulse">
-                    <Clock className="w-3 h-3 text-red-400" />
-                    <span className="text-[10px] font-sans tracking-wide">เหลือ {item.quantity}</span>
-                  </div>
-                )}
-                {(() => {
-                  try {
-                    const date = new Date(item.updatedAt);
-                    const diffDays = (new Date().getTime() - date.getTime()) / (1000 * 3600 * 24);
-                    // Considered new if updated in the last 3 days
-                    if (diffDays <= 3) {
-                      return (
-                        <div className="bg-blue-500/10 text-blue-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg border border-blue-500/20 backdrop-blur-sm">
-                          <Sparkles className="w-3 h-3 text-blue-400" />
-                          <span className="text-[10px] font-sans tracking-wide">ใหม่</span>
-                        </div>
-                      );
-                    }
-                  } catch (e) {}
-                  return null;
-                })()}
             </div>
           </div>
           

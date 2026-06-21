@@ -24,36 +24,8 @@ export const CategoryManagerModal: React.FC<Props> = ({ isOpen, onClose, globalS
     if (globalStats && globalStats.announcement_settings?.categories) {
       setCategories(globalStats.announcement_settings.categories);
     } else {
-      // Default categories if none exists
-      setCategories([
-        {
-          title: 'Grow A Garden 2',
-          subtitle: 'เกมปลูกผักสุดฮิตที่คุณไม่ควรพลาด',
-          image: 'https://img2.pic.in.th/1000109799.jpg',
-          iconName: 'Gamepad2',
-          color: 'from-emerald-500/20 to-emerald-900/5',
-          borderColor: 'group-hover:border-emerald-500/50',
-          btnColor: 'bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white',
-        },
-        {
-          title: 'ALL STAR',
-          subtitle: 'รวมตัวละครดังจากทุกมุมโลก',
-          image: 'https://img2.pic.in.th/1000109801.png',
-          iconName: 'Star',
-          color: 'from-blue-500/20 to-blue-900/5',
-          borderColor: 'group-hover:border-blue-500/50',
-          btnColor: 'bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white',
-        },
-        {
-          title: 'Coming Soon',
-          subtitle: 'หมวดหมู่ใหม่กำลังจะมา',
-          image: 'https://img2.pic.in.th/pic/1000098251.jpg',
-          iconName: 'Sparkles',
-          color: 'from-purple-500/20 to-purple-900/5',
-          borderColor: 'group-hover:border-purple-500/50',
-          btnColor: 'bg-purple-500/10 text-purple-400 group-hover:bg-purple-500 group-hover:text-white',
-        }
-      ]);
+      // Empty categories if none exists
+      setCategories([]);
     }
   }, [globalStats, isOpen]);
 

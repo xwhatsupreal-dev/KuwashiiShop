@@ -23,7 +23,7 @@ export const sendDiscordTopupEmbed = async (username: string, amount: number, ch
       timestamp: new Date().toISOString()
     };
 
-    fetch(DISCORD_WEBHOOK_URL_TOPUP, {
+    await fetch(DISCORD_WEBHOOK_URL_TOPUP, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -73,7 +73,7 @@ export const sendDiscordPurchaseEmbed = async (username: string, itemName: strin
       timestamp: new Date().toISOString()
     };
 
-    fetch(DISCORD_WEBHOOK_URL_PURCHASE, {
+    await fetch(DISCORD_WEBHOOK_URL_PURCHASE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -107,7 +107,7 @@ export const sendDiscordStockUpdateEmbed = async (webhookUrl: string, itemName: 
       timestamp: new Date().toISOString()
     };
 
-    fetch(webhookUrl, {
+    await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
