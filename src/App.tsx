@@ -3188,6 +3188,7 @@ export default function App() {
                  setTopupModalStep={setTopupModalStep}
                  angpaoCode={topupCode}
                  setAngpaoCode={setTopupCode}
+                 slipFile={slipFile}
                  setSlipFile={setSlipFile}
                  setShowTopupTos={setShowTopupTos}
                  isProcessingTopup={isProcessingTopup}
