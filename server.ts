@@ -244,7 +244,7 @@ function unpackExtraData(item: any): any {
 let aiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI {
   if (!aiClient) {
-    const key = process.env.GEMINI_API_KEY;
+    const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     if (!key) {
       throw new Error("GEMINI_API_KEY environment variable is not defined in the settings.");
     }
@@ -567,17 +567,20 @@ app.get("/api/health", (_req, res) => {
 app.post("/api/d1/init", async (req: express.Request, res: express.Response) => {
   console.log("HIT /api/d1/init endpoint!");
   try {
-    const accountId = process.env.CF_ACCOUNT_ID?.trim();
-    let dbIdRaw = process.env.CF_DATABASE_ID?.trim();
+    const rawAccountId = process.env.CF_ACCOUNT_ID || process.env.VITE_CF_ACCOUNT_ID;
+    const accountId = rawAccountId?.trim();
+    let dbIdRaw = process.env.CF_DATABASE_ID || process.env.VITE_CF_DATABASE_ID;
+    dbIdRaw = dbIdRaw?.trim();
     let dbId = dbIdRaw;
     if (dbIdRaw && dbIdRaw.includes("dash.cloudflare.com")) {
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    const token = process.env.CF_API_TOKEN?.trim();
+    const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+    const token = rawToken?.trim();
 
     if (!accountId || !dbId || !token) {
-      return res.status(400).json({ error: "Cloudflare D1 credentials not configured." });
+      return res.status(400).json({ error: "Cloudflare D1 credentials not configured.", envCheck: { accountId: !!accountId, dbId: !!dbId, token: !!token } });
     }
 
     const schemaStr = `
@@ -771,18 +774,21 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
 app.post("/api/d1", async (req: express.Request, res: express.Response) => {
   try {
     const { sql, params } = req.body;
-    const accountId = process.env.CF_ACCOUNT_ID?.trim();
-    let dbIdRaw = process.env.CF_DATABASE_ID?.trim();
+    const rawAccountId = process.env.CF_ACCOUNT_ID || process.env.VITE_CF_ACCOUNT_ID;
+    const accountId = rawAccountId?.trim();
+    let dbIdRaw = process.env.CF_DATABASE_ID || process.env.VITE_CF_DATABASE_ID;
+    dbIdRaw = dbIdRaw?.trim();
     let dbId = dbIdRaw;
     if (dbIdRaw && dbIdRaw.includes("dash.cloudflare.com")) {
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    const token = process.env.CF_API_TOKEN?.trim();
+    const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+    const token = rawToken?.trim();
 
     if (!accountId || !dbId || !token) {
-      console.warn("D1 Query Failed: Missing CF credentials");
-      return res.status(400).json({ error: "Cloudflare D1 credentials not configured." });
+      console.warn("D1 Query Failed: Missing CF credentials", { accountId: !!accountId, dbId: !!dbId, token: !!token });
+      return res.status(400).json({ error: "Cloudflare D1 credentials not configured.", envCheck: { accountId: !!accountId, dbId: !!dbId, token: !!token } });
     }
 
     const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
@@ -815,7 +821,7 @@ app.get('/api/auth/discord/login', (req, res) => {
   const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
   console.log("Discord OAuth Redirect URI:", redirectUri);
 
-  const clientId = process.env.DISCORD_CLIENT_ID;
+  const clientId = process.env.DISCORD_CLIENT_ID || process.env.VITE_DISCORD_CLIENT_ID;
   if (!clientId) {
     return res.status(500).send("DISCORD_CLIENT_ID not configured in Settings -> Secrets.");
   }
@@ -829,7 +835,7 @@ app.get('/api/auth/discord/url', (req, res) => {
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
 
-  const clientId = process.env.DISCORD_CLIENT_ID;
+  const clientId = process.env.DISCORD_CLIENT_ID || process.env.VITE_DISCORD_CLIENT_ID;
   if (!clientId) {
     return res.status(500).json({ error: "DISCORD_CLIENT_ID not configured in Settings -> Secrets." });
   }
@@ -846,18 +852,21 @@ app.get('/api/auth/discord/callback', async (req, res) => {
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
 
-  const clientId = process.env.DISCORD_CLIENT_ID;
-  const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+  const clientId = process.env.DISCORD_CLIENT_ID || process.env.VITE_DISCORD_CLIENT_ID;
+  const clientSecret = process.env.DISCORD_CLIENT_SECRET || process.env.VITE_DISCORD_CLIENT_SECRET;
   
   if (!clientId || !clientSecret) return res.status(500).send("Discord credentials not configured.");
   
-  const accountId = process.env.CF_ACCOUNT_ID?.trim();
-  let dbId = process.env.CF_DATABASE_ID?.trim();
+  const rawAccountId = process.env.CF_ACCOUNT_ID || process.env.VITE_CF_ACCOUNT_ID;
+  const accountId = rawAccountId?.trim();
+  let dbIdRaw = process.env.CF_DATABASE_ID || process.env.VITE_CF_DATABASE_ID;
+  let dbId = dbIdRaw?.trim();
   if (dbId && dbId.includes("dash.cloudflare.com")) {
     const match = dbId.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
     if (match) dbId = match[0];
   }
-  const token = process.env.CF_API_TOKEN?.trim();
+  const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+  const token = rawToken?.trim();
 
   try {
     const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
