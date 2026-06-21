@@ -1020,8 +1020,17 @@ export default function App() {
             configName = (settingsObj.topup_qrcode_name || "").trim();
             
             if (configName && receiverName !== "ไม่ทราบชื่อ") {
-               // simple include check to handle prefix
-               if (!receiverName.toLowerCase().includes(configName.toLowerCase())) {
+               const cleanReceiver = receiverName.toLowerCase().replace(/\s/g, '');
+               const cleanConfig = configName.toLowerCase().replace(/\s/g, '');
+               // Allow fallback for the specific name requested
+               const hardcodeName1 = "ด.ช.ธีรสิทธิ์สุวรรณศรี";
+               const hardcodeName2 = "ด.ช.ธีรสิทธิ์ส";
+               
+               if (!cleanReceiver.includes(cleanConfig) && 
+                   !cleanConfig.includes(cleanReceiver) && 
+                   !cleanReceiver.includes(hardcodeName1) && 
+                   !cleanReceiver.includes(hardcodeName2) &&
+                   !hardcodeName1.includes(cleanReceiver)) {
                   setTopupError(`ชื่อบัญชีผู้รับไม่ถูกต้อง (ต้องเป็น: ${configName})`);
                   showToast(`สลิปนี้ถูกโอนไปยัง: ${receiverName}`, "error");
                   setIsProcessingTopup(false);
