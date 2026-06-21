@@ -1162,6 +1162,10 @@ export default function App() {
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isCaptchaVerified) {
+      setAuthError("เกิดข้อผิดพลาด กรุณายืนยัน Turnstile");
+      return;
+    }
     if (isAuthLoading) return;
     setIsAuthLoading(true);
     setAuthError("");
@@ -2583,7 +2587,7 @@ export default function App() {
                 <div className="pt-4">
                   <button
                     type="submit"
-                    disabled={!isCaptchaVerified}
+                    disabled={isAuthLoading}
                     className="w-full py-4 rounded-xl bg-[#008ff7] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed active:bg-blue-700 text-white font-bold cursor-pointer transition-all shadow-xl shadow-[#008ff7]/20 text-lg flex justify-center"
                   >
                     {authMode === "login" ? "เข้าสู่ระบบ" : authMode === "forgot" ? "ส่งรหัสยืนยัน" : authMode === "forgot_verify_otp" ? "เปลี่ยนรหัสผ่าน" : "สมัครสมาชิก"}

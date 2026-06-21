@@ -32,10 +32,10 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
       if (profiles && !error) {
         const pCounts: Record<string, number> = {};
         const tCounts: Record<string, number> = {};
-        if (purchases) purchases.forEach((p: any) => pCounts[p.username] = (pCounts[p.username] || 0) + 1);
-        if (topups) topups.forEach((t: any) => tCounts[t.username] = (tCounts[t.username] || 0) + 1);
+        if (purchases) purchases.forEach((p: any) => { if (p && p.username) pCounts[p.username] = (pCounts[p.username] || 0) + 1 });
+        if (topups) topups.forEach((t: any) => { if (t && t.username) tCounts[t.username] = (tCounts[t.username] || 0) + 1 });
 
-        const arr = profiles.map((d: any) => ({
+        const arr = profiles.filter(d => Boolean(d)).map((d: any) => ({
           username: d.username,
           email: d.email,
           balance: Number(d.balance),

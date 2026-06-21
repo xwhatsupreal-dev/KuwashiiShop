@@ -187,7 +187,7 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
                         />
                         <button 
                           onClick={handleSaveUsername}
-                          disabled={editUsername === currentUser.username}
+                          disabled={editUsername === currentUser?.username}
                           className="py-3 px-5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-all text-sm flex items-center gap-2"
                         >
                           <Save className="w-4 h-4 max-sm:hidden" /> บันทึก

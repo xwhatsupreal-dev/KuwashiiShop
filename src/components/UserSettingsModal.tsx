@@ -131,7 +131,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
                 />
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={handleSaveUsername}
-                  disabled={editUsername === currentUser.username}
+                  disabled={editUsername === currentUser?.username}
                   className="py-2.5 px-4 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-all text-xs shadow-md flex items-center gap-2"
                 >
                   <Save className="w-3.5 h-3.5 max-sm:hidden" /> บันทึก

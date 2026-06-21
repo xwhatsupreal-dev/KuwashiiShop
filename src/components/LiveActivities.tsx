@@ -30,7 +30,7 @@ export const LiveActivities: React.FC<LiveActivitiesProps> = ({ appScreen, syncC
       try {
         const { data: raw, error } = await supabase.from('activities').select('*').order('timestamp', { ascending: false }).limit(20);
         if (raw && !error) {
-          const parsed: LiveActivity[] = raw.map((d: any) => ({
+          const parsed: LiveActivity[] = raw.filter(d => Boolean(d)).map((d: any) => ({
             id: d.id,
             type: d.type,
             username: d.username,

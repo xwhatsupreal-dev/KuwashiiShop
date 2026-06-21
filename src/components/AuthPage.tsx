@@ -205,7 +205,7 @@ export const AuthPage = ({
                 <div className="pt-2">
                   <button
                     type="submit"
-                    disabled={isProcessing || !isCaptchaVerified}
+                    disabled={isProcessing}
                     className="w-full py-2.5 sm:py-3 rounded-lg bg-[#008ff7] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed active:bg-blue-700 text-white font-bold cursor-pointer transition-all shadow-lg shadow-[#008ff7]/20 text-xs sm:text-sm flex justify-center items-center gap-2"
                   >
                     {isProcessing && <Loader2 className="w-4 h-4 animate-spin"/>}

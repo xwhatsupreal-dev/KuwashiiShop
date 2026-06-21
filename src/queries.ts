@@ -92,8 +92,8 @@ export async function createUser(username: string, passwordHash: string) {
 
 export async function fetchLiveActivities() {
   const { data, error } = await supabase.from('activities').select('*').order('timestamp', { ascending: false }).limit(50);
-  if (error) return [];
-  return data.map((d: any) => ({
+  if (error || !data) return [];
+  return data.filter(d => Boolean(d)).map((d: any) => ({
     id: d.id,
     type: d.type,
     username: d.username,
