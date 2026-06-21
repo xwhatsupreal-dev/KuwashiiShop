@@ -74,9 +74,14 @@ export const CategoryList = ({ selectedCategory, setSelectedCategory, globalStat
                     <div className={`p-1.5 rounded-lg bg-black/40 backdrop-blur-md shadow-inner border border-white/5 ${isSelected ? 'text-indigo-400' : 'text-zinc-300 group-hover:text-white transition-colors'}`}>
                       {category.icon ? React.cloneElement(category.icon as React.ReactElement, { className: 'w-4 h-4' } as any) : <Gamepad2 className="w-4 h-4" />}
                     </div>
-                    <h3 className={`text-lg sm:text-xl font-black tracking-wide drop-shadow-lg ${isSelected ? 'text-white' : 'text-zinc-100 group-hover:text-white transition-colors'}`}>
-                      {category.title}
-                    </h3>
+                    <div className="flex items-center justify-between flex-1">
+                      <h3 className={`text-lg sm:text-xl font-black tracking-wide drop-shadow-lg ${isSelected ? 'text-white' : 'text-zinc-100 group-hover:text-white transition-colors'}`}>
+                        {category.title}
+                      </h3>
+                      <div className={`p-1.5 rounded-full backdrop-blur-md border border-white/5 transition-all duration-300 ${isSelected ? 'bg-indigo-500/20 text-indigo-400 translate-x-1' : 'bg-black/40 text-zinc-400 group-hover:text-white group-hover:bg-white/10 group-hover:translate-x-1'}`}>
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
                   <p className="text-xs sm:text-sm text-zinc-400 font-medium line-clamp-1 mb-3 group-hover:text-zinc-300 transition-colors drop-shadow-lg">
                     {category.subtitle}
