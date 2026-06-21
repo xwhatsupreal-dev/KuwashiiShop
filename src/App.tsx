@@ -119,7 +119,7 @@ const readQRFromImage = (file: File): Promise<string | null> => {
   });
 };
 
-import { sendDiscordTopupEmbed, sendDiscordPurchaseEmbed } from "./discord";
+import { sendDiscordTopupEmbed, sendDiscordPurchaseEmbed, sendDiscordStockUpdateEmbed } from "./discord";
 import { LiveActivities, LiveActivity } from "./components/LiveActivities";
 import { supabase } from "./supabase";
 import { fetchItems, fetchUser, getSystemConfig } from "./queries";
@@ -508,10 +508,6 @@ export default function App() {
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
   const [showAuthPassword, setShowAuthPassword] = useState(false);
   
-  useEffect(() => {
-    setIsCaptchaVerified(false);
-  }, [authMode]);
-
   const [showAuthConfirmPassword, setShowAuthConfirmPassword] = useState(false);
 
   const [showMockEmailModal, setShowMockEmailModal] = useState(false);
@@ -1460,6 +1456,7 @@ export default function App() {
   const handleLogout = () => {
     setIsAdmin(false);
     setCurrentUser(null);
+    setIsCaptchaVerified(false);
     localStorage.removeItem("KUWASHII_IS_ADMIN");
     localStorage.removeItem("KUWASHII_CURRENT_USER");
     sessionStorage.removeItem("KUWASHII_IS_ADMIN");
@@ -1590,7 +1587,7 @@ export default function App() {
   };
 
   // --- Add/Edit/Delete controllers ---
-  const handleSaveItem = async (itemData: Omit<StockItem, "updatedAt">) => {
+  const handleSaveItem = async (itemData: Omit<StockItem, "updatedAt">, notifyDiscord?: boolean, webhookUrl?: string) => {
     const timestamp = new Date().toISOString();
 
     // Fetch latest to prevent race condition
@@ -1599,19 +1596,47 @@ export default function App() {
     const existingIndex = currentItems.findIndex((it) => it.id === itemData.id);
 
     let finalItem: StockItem;
+    let addedQty = 0;
+
     if (existingIndex >= 0) {
+      const oldItem = currentItems[existingIndex];
+      addedQty = itemData.quantity - oldItem.quantity;
       finalItem = {
-        ...currentItems[existingIndex],
+        ...oldItem,
         ...itemData,
         updatedAt: timestamp,
       } as StockItem;
       showToast(`บันทึกไอเทม ${itemData.name} สำเร็จ!`);
     } else {
+      addedQty = itemData.quantity;
       finalItem = {
         ...itemData,
         updatedAt: timestamp,
       } as StockItem;
       showToast(`เพิ่มไอเทม ${itemData.name} ลงระบบเรียบร้อย`);
+    }
+
+    if (notifyDiscord && webhookUrl && addedQty > 0) {
+      sendDiscordStockUpdateEmbed(webhookUrl, itemData.name, addedQty, finalItem.quantity, itemData.imageUrl, itemData.game);
+    }
+    
+    // Save webhookUrl to system_config globally if changed
+    if (webhookUrl !== undefined) {
+      if (!globalStats?.announcement_settings || globalStats.announcement_settings.stock_webhook_url !== webhookUrl) {
+         try {
+           let ann = globalStats?.announcement_settings || {};
+           if (typeof ann === 'string') {
+              try { ann = JSON.parse(ann) } catch(e) { ann = {} }
+           }
+           if (webhookUrl) {
+             ann.stock_webhook_url = webhookUrl;
+           } else {
+             delete ann.stock_webhook_url;
+           }
+           await supabase.from('system_config').upsert({ id: 'main', announcement_settings: ann });
+           window.dispatchEvent(new Event('sync-announcement'));
+         } catch(e) {}
+      }
     }
 
     // Update state to render instantly

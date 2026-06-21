@@ -7,7 +7,7 @@ import { supabase } from '../supabase';
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (item: Omit<StockItem, 'updatedAt'>) => void;
+  onSave: (item: Omit<StockItem, 'updatedAt'>, notifyDiscord?: boolean, webhookUrl?: string) => void;
   editingItem: StockItem | null;
   currentGame: 'AOTR' | 'ASTD';
   globalStats?: any;
@@ -51,8 +51,20 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [notifyDiscord, setNotifyDiscord] = useState(false);
+  const [stockWebhookUrl, setStockWebhookUrl] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (globalStats?.announcement_settings) {
+      let ann = globalStats.announcement_settings;
+      if (typeof ann === 'string') {
+         try { ann = JSON.parse(ann) } catch(e) {}
+      }
+      if (ann.stock_webhook_url) setStockWebhookUrl(ann.stock_webhook_url);
+    }
+  }, [globalStats]);
 
   useEffect(() => {
     if (editingItem) {
@@ -278,7 +290,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       isPopular,
       gachaPool: (category === 'สุ่มตัวละคร - ออสตา' || (gachaPool && gachaPool.length > 0)) ? gachaPool : undefined,
       accountCredentials: accCreds.length > 0 ? accCreds : undefined,
-    });
+    }, notifyDiscord, stockWebhookUrl);
     
     onClose();
   };
@@ -827,6 +839,33 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 placeholder="https://images.unsplash.com/...\nhttps://images.unsplash.com/..."
                 className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-amber-500 h-24 resize-y"
               />
+            </div>
+
+            <div className="bg-zinc-900 border border-white/5 rounded-2xl p-4 mt-2 mb-2">
+              <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-indigo-400"/> เเจ้งเตือน Discord (Webhook)</h4>
+              <p className="text-xs text-zinc-400 mb-3">คุณสามารถให้ระบบแจ้งเตือนสต๊อกเข้าลงใน Discord ได้อัตโนมัติ</p>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 block mb-1">Webhook URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://discord.com/api/webhooks/..."
+                    value={stockWebhookUrl}
+                    onChange={(e) => setStockWebhookUrl(e.target.value)}
+                    className="w-full bg-zinc-950 border border-white/5 text-zinc-200 px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={notifyDiscord} 
+                    onChange={e => setNotifyDiscord(e.target.checked)} 
+                    className="w-4 h-4 rounded bg-zinc-950 border-white/10 text-indigo-500 focus:ring-indigo-500" 
+                  />
+                  <span className="text-xs font-bold text-indigo-300 select-none">เเจ้งเตือนว่ามีสต๊อกสินค้าใหม่เข้าในร้าน</span>
+                </label>
+              </div>
             </div>
 
             {/* Submit and Cancel items */}

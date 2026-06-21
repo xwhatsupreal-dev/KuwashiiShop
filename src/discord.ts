@@ -84,3 +84,37 @@ export const sendDiscordPurchaseEmbed = async (username: string, itemName: strin
     });
   } catch(e) {}
 };
+
+export const sendDiscordStockUpdateEmbed = async (webhookUrl: string, itemName: string, quantityAdded: number, totalStock: number, imageUrl?: string, mapName?: string) => {
+  if (!webhookUrl) return;
+  try {
+    const embed = {
+      title: "🚀 แจ้งเตือนสินค้าเข้าใหม่!",
+      description: `มีการเติมสต๊อกสินค้า **${itemName}** เข้ามาในระบบ`,
+      color: 0x8b5cf6, 
+      thumbnail: {
+        url: imageUrl || "https://cdn-icons-png.flaticon.com/512/3050/3050400.png"
+      },
+      fields: [
+        { name: "📦 สินค้า", value: `**${itemName}**`, inline: true },
+        { name: "🎮 โซนเกม", value: `**${mapName || 'ASTD'}**`, inline: true },
+        { name: "🟢 จำนวนที่เพิ่ม", value: `\`+${quantityAdded}\` ชิ้น`, inline: false },
+        { name: "📋 สต๊อกทั้งหมด", value: `\`${totalStock}\` ชิ้น`, inline: false }
+      ],
+      footer: {
+        text: "🟢 Kuwashii El Web App - ระบบอัตโนมัติ"
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: "Kuwashii Stock Bot",
+        avatar_url: "https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?w=200&q=80",
+        embeds: [embed]
+      })
+    });
+  } catch(e) {}
+};
