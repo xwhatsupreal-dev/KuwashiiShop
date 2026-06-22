@@ -171,6 +171,8 @@ const DiscordBanner = () => (
   </section>
 );
 
+import { RecentPurchases } from "./components/RecentPurchases";
+
 export default function App() {
   const [globalStats, setGlobalStats] = useState<any>({
     global_sales_astd: 0,
@@ -1603,17 +1605,22 @@ export default function App() {
 
     if (existingIndex >= 0) {
       const oldItem = currentItems[existingIndex];
-      addedQty = itemData.quantity - oldItem.quantity;
+      const newQ = Number(itemData.quantity) || 0;
+      const oldQ = Number(oldItem.quantity) || 0;
+      addedQty = newQ - oldQ;
       finalItem = {
         ...oldItem,
         ...itemData,
+        quantity: newQ,
         updatedAt: timestamp,
       } as StockItem;
       showToast(`บันทึกไอเทม ${itemData.name} สำเร็จ!`);
     } else {
-      addedQty = itemData.quantity;
+      const newQ = Number(itemData.quantity) || 0;
+      addedQty = newQ;
       finalItem = {
         ...itemData,
+        quantity: newQ,
         updatedAt: timestamp,
       } as StockItem;
       showToast(`เพิ่มไอเทม ${itemData.name} ลงระบบเรียบร้อย`);
@@ -2898,7 +2905,10 @@ export default function App() {
               <>
                 {/* Category Cards Section */}
                 {selectedCategory === "all" ? (
-                  <CategoryList selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} globalStats={globalStats} />
+                  <>
+                    <RecentPurchases appScreen={appScreen} items={items} />
+                    <CategoryList selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} globalStats={globalStats} />
+                  </>
                 ) : (
                   <motion.div 
                     initial={{ opacity: 0, y: -20 }}

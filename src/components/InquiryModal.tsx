@@ -56,13 +56,13 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ item, onClose, onBuy
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[40] bg-black/90 backdrop-blur-sm overflow-hidden flex justify-center items-center p-4 pt-[92px]">
+      <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm overflow-hidden flex justify-center items-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="w-full h-auto max-h-[90vh] max-w-[460px] bg-black border border-white/10 rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl"
+          className="w-full h-auto max-h-[90dvh] max-w-[460px] bg-black border border-white/10 rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl"
         >
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-4 border-b border-white/5 shrink-0 bg-zinc-950/80 sticky top-0 z-50">

@@ -57,12 +57,25 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let annUrl = '';
+    const stored = localStorage.getItem("KUWASHII_ANNOUNCEMENT_SETTINGS");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.stock_webhook_url) annUrl = parsed.stock_webhook_url;
+      } catch (e) {}
+    }
+
     if (globalStats?.announcement_settings) {
       let ann = globalStats.announcement_settings;
       if (typeof ann === 'string') {
          try { ann = JSON.parse(ann) } catch(e) {}
       }
-      if (ann.stock_webhook_url) setStockWebhookUrl(ann.stock_webhook_url.trim());
+      if (ann.stock_webhook_url) annUrl = ann.stock_webhook_url;
+    }
+
+    if (annUrl) {
+      setStockWebhookUrl(annUrl.trim());
     }
   }, [globalStats]);
 
