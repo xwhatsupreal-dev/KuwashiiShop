@@ -4,21 +4,19 @@ export const DISCORD_WEBHOOK_URL_PURCHASE = 'https://discord.com/api/webhooks/15
 export const sendDiscordTopupEmbed = async (username: string, amount: number, channel: string, totalBalance: number, isSuccess: boolean = true, mapName?: string) => {
   try {
     const embed = {
-      title: isSuccess ? "✅ แจ้งเตือนการเติมเงินสำเร็จ!" : "❌ การเติมเงินล้มเหลว",
-      description: isSuccess ? `ผู้ใช้ **${username}** ได้ทำการเติมเงินเข้าสู่ระบบ` : `การเติมเงินสำหรับ **${username}** ไม่สำเร็จ`,
+      title: isSuccess ? `💰 แจ้งเตือนการเติมเงิน! > 🆕 ${username}` : `❌ การเติมเงินล้มเหลว > ${username}`,
+      description: `จำนวนเงิน **฿${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}** ผ่านช่องทาง **${channel.toUpperCase()}**`,
       color: isSuccess ? 0x22c55e : 0xef4444, // green-500 : red-500
       thumbnail: {
-        url: isSuccess ? "https://cdn-icons-png.flaticon.com/512/1055/1055183.png" : "https://cdn-icons-png.flaticon.com/512/1055/1055183.png"
+        url: "https://img2.pic.in.th/1000111145.png"
       },
       fields: [
-        { name: "👤 บัญชีผู้ใช้", value: `\`${username}\``, inline: true },
-        { name: "🎮 โซนเกมซัพพอร์ต", value: `**${mapName || 'ASTD'}**`, inline: true },
-        { name: "💰 ยอดเติม", value: `\`฿${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}\``, inline: false },
-        { name: "🏧 ช่องทาง", value: `**${channel.toUpperCase()}**`, inline: true },
-        ...isSuccess ? [{ name: "💳 ยอดเงินคงเหลือรวม", value: `\`฿${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}\``, inline: true }] : []
+        { name: "👤 User", value: `\`${username}\``, inline: true },
+        ...isSuccess ? [{ name: "💵 Balance", value: `\`฿${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}\``, inline: true }] : []
       ],
       footer: {
-        text: "🟢 Kuwashii El Web App - ระบบอัตโนมัติ"
+        text: "Kuwashii Shop - ( kuwashii-shop.vercel.app )",
+        icon_url: "https://img2.pic.in.th/1000111145bb818044d3458be6.md.png"
       },
       timestamp: new Date().toISOString()
     };
@@ -27,8 +25,8 @@ export const sendDiscordTopupEmbed = async (username: string, amount: number, ch
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        username: "Kuwashii Topup Bot",
-        avatar_url: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=200&q=80",
+        username: "KuwashiiShop - Topup",
+        avatar_url: "https://img2.pic.in.th/1000111145.png",
         embeds: [embed]
       })
     });
@@ -54,21 +52,20 @@ export const sendDiscordPurchaseEmbed = async (username: string, itemName: strin
     }).join('\n');
 
     const embed = {
-      title: "🛒 รายงานการสั่งซื้อ/สุ่มสินค้า",
-      description: `ผู้ใช้ **${username}** ได้ทำการสั่งซื้อสินค้าใหม่`,
+      title: `🛒 รายงานการสั่งซื้อ! > 🆕 ${username}`,
+      description: `ซื้อสินค้า **${itemName}** จำนวน **${qty}** ครั้ง`,
       color: hasRare ? 0xf59e0b : 0x3b82f6, // amber-500 : blue-500
       thumbnail: {
-        url: hasRare ? "https://cdn-icons-png.flaticon.com/512/3268/3268594.png" : "https://cdn-icons-png.flaticon.com/512/3144/3144456.png"
+        url: "https://img2.pic.in.th/1000111145.png"
       },
       fields: [
-        { name: "👤 บัญชีผู้ใช้", value: `\`${username}\``, inline: true },
-        { name: "🎮 โซนเกม", value: `**${mapName || 'ASTD'}**`, inline: true },
-        { name: "📦 สินค้าที่ทำรายการ", value: `**${itemName}**`, inline: false },
-        { name: "🔢 จำนวนและสต๊อก", value: `สุ่มจำนวน: \`${qty}\` ครั้ง\nคงเหลือ: \`${remainingStock}\` ชิ้น`, inline: true },
-        { name: "🎁 ไอเทมที่ได้รับ", value: dropsFormatted || 'ไม่มีข้อมูลไอเทมที่ได้', inline: false }
+        { name: "📦 Item", value: `\`${itemName}\``, inline: true },
+        { name: "📋 Left", value: `\`${remainingStock}\` ชิ้น`, inline: true },
+        { name: "🎁 Drops", value: dropsFormatted || 'ไม่มีข้อมูล', inline: false }
       ],
       footer: {
-        text: "🟢 Kuwashii El Web App - ระบบอัตโนมัติ"
+        text: "Kuwashii Shop - ( kuwashii-shop.vercel.app )",
+        icon_url: "https://img2.pic.in.th/1000111145bb818044d3458be6.md.png"
       },
       timestamp: new Date().toISOString()
     };
@@ -77,8 +74,8 @@ export const sendDiscordPurchaseEmbed = async (username: string, itemName: strin
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        username: "Kuwashii Shop Bot",
-        avatar_url: "https://images.unsplash.com/photo-1542204165-65bf26472b9b?w=200&q=80",
+        username: "KuwashiiShop - Purchase",
+        avatar_url: "https://img2.pic.in.th/1000111145.png",
         embeds: [embed]
       })
     });

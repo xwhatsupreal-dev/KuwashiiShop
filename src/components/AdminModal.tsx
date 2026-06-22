@@ -312,7 +312,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative max-w-lg w-full rounded-2xl border border-white/5 bg-transparent p-6 overflow-hidden shadow-2xl z-10 max-h-[90dvh] overflow-y-auto"
+          className="relative max-w-sm w-full rounded-2xl border border-white/5 bg-transparent p-4 sm:p-5 overflow-hidden shadow-2xl z-10 max-h-[90dvh] overflow-y-auto mx-auto"
         >
           {/* Neon orange accent strip */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-amber-600 to-amber-400" />

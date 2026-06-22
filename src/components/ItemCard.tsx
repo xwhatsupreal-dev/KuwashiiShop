@@ -246,7 +246,30 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
         {/* Action Button */}
         {isAdmin ? (
-            <div className="grid grid-cols-2 gap-2 mt-1 relative z-10 w-full">
+          <div className="flex flex-col gap-2 mt-1 relative z-10 w-full">
+            <div className="flex items-center justify-between gap-2 bg-zinc-900 border border-zinc-700/50 rounded-lg p-1.5 shadow-inner">
+              <div className="flex items-center gap-1 mx-auto">
+                <button
+                  type="button"
+                  onClick={() => onQuickQuantityChange(item.id, -1)}
+                  disabled={item.quantity <= 0}
+                  className="w-8 h-8 flex items-center justify-center rounded bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 disabled:opacity-40 font-bold transition-colors cursor-pointer"
+                >
+                  -
+                </button>
+                <span className="w-10 text-center font-bold text-sm text-white">
+                  {item.quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onQuickQuantityChange(item.id, 1)}
+                  className="w-8 h-8 flex items-center justify-center rounded bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 font-bold transition-colors cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 w-full">
               <button
                 type="button"
                 onClick={() => onEdit(item)}
@@ -264,6 +287,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                 <span>ลบ</span>
               </button>
             </div>
+          </div>
         ) : (
           <button
             type="button"

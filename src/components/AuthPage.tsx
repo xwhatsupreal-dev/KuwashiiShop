@@ -35,13 +35,10 @@ export const AuthPage = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="w-full max-w-[300px] sm:max-w-sm mx-auto py-4 sm:py-8 flex flex-col justify-start px-2 sm:px-0"
+      className="w-full max-w-[260px] sm:max-w-[300px] mx-auto py-4 sm:py-6 flex flex-col justify-start px-2 sm:px-0"
     >
-              <div className="mb-5 sm:mb-8 text-center flex flex-col items-center">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 sm:w-10 sm:h-10 mb-3 sm:mb-4">
-                  <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#0ea5e9"/>
-                  <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+              <div className="mb-4 sm:mb-6 text-center flex flex-col items-center">
+                <img src="https://img2.pic.in.th/1000111145.png" alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20 mb-3 sm:mb-4 object-contain rounded-xl shadow-lg" />
                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-1.5 sm:mb-2">
                   {authMode === "login" ? "เข้าสู่ระบบ" : authMode === "forgot" ? "ส่วนลืมรหัสผ่าน" : authMode === "forgot_verify_otp" ? "เปลี่ยนรหัสผ่าน" : "สมัครสมาชิก"}
                 </h2>
