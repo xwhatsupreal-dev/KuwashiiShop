@@ -21,7 +21,7 @@ export const sendDiscordTopupEmbed = async (username: string, amount: number, ch
       timestamp: new Date().toISOString()
     };
 
-    await fetch(DISCORD_WEBHOOK_URL_TOPUP, {
+    const res = await fetch(DISCORD_WEBHOOK_URL_TOPUP, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -30,7 +30,12 @@ export const sendDiscordTopupEmbed = async (username: string, amount: number, ch
         embeds: [embed]
       })
     });
-  } catch(e) {}
+    if (!res.ok) {
+       console.error('Discord webhook topup failed:', await res.text());
+    }
+  } catch(e) {
+    console.error('Discord webhook topup exception:', e);
+  }
 };
 
 export const sendDiscordPurchaseEmbed = async (username: string, itemName: string, qty: number, remainingStock: number, drops: { name: string, isSalt?: boolean }[], mapName?: string) => {
@@ -70,7 +75,7 @@ export const sendDiscordPurchaseEmbed = async (username: string, itemName: strin
       timestamp: new Date().toISOString()
     };
 
-    await fetch(DISCORD_WEBHOOK_URL_PURCHASE, {
+    const res = await fetch(DISCORD_WEBHOOK_URL_PURCHASE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -79,7 +84,12 @@ export const sendDiscordPurchaseEmbed = async (username: string, itemName: strin
         embeds: [embed]
       })
     });
-  } catch(e) {}
+    if (!res.ok) {
+       console.error('Discord webhook purchase failed:', await res.text());
+    }
+  } catch(e) {
+    console.error('Discord webhook purchase exception:', e);
+  }
 };
 
 export const sendDiscordStockUpdateEmbed = async (webhookUrl: string, itemName: string, quantityAdded: number, totalStock: number, imageUrl?: string, mapName?: string) => {
@@ -90,7 +100,7 @@ export const sendDiscordStockUpdateEmbed = async (webhookUrl: string, itemName: 
       description: `เติมสต๊อกจำนวน **${quantityAdded}** ชิ้น`,
       color: 0x8b5cf6, 
       thumbnail: {
-        url: imageUrl || "https://img2.pic.in.th/1000111145.png"
+        url: (imageUrl && imageUrl.startsWith('http')) ? imageUrl : "https://img2.pic.in.th/1000111145.png"
       },
       fields: [
         { name: "📥 Added", value: `\`+${quantityAdded}\` ชิ้น`, inline: true },
@@ -103,7 +113,7 @@ export const sendDiscordStockUpdateEmbed = async (webhookUrl: string, itemName: 
       timestamp: new Date().toISOString()
     };
 
-    await fetch(webhookUrl, {
+    const res = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -112,5 +122,10 @@ export const sendDiscordStockUpdateEmbed = async (webhookUrl: string, itemName: 
         embeds: [embed]
       })
     });
-  } catch(e) {}
+    if (!res.ok) {
+      console.error('Discord webhook failed:', await res.text());
+    }
+  } catch(e) {
+    console.error('Discord webhook exception:', e);
+  }
 };

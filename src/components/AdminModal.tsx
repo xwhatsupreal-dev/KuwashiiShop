@@ -62,7 +62,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       if (typeof ann === 'string') {
          try { ann = JSON.parse(ann) } catch(e) {}
       }
-      if (ann.stock_webhook_url) setStockWebhookUrl(ann.stock_webhook_url);
+      if (ann.stock_webhook_url) setStockWebhookUrl(ann.stock_webhook_url.trim());
     }
   }, [globalStats]);
 
