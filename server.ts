@@ -818,8 +818,9 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
 
 app.get('/api/auth/discord/login', (req, res) => {
   const host = req.headers['x-forwarded-host'] || req.get('host');
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-  const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
+  const resolvedHost = (host && host.includes('vercel.app')) ? host : 'kuwashii-shop.vercel.app';
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const redirectUri = process.env.DISCORD_REDIRECT_URI || process.env.VITE_DISCORD_REDIRECT_URI || `https://${resolvedHost}/api/auth/discord/callback`;
   console.log("Discord OAuth Redirect URI:", redirectUri);
 
   const clientId = process.env.DISCORD_CLIENT_ID || process.env.VITE_DISCORD_CLIENT_ID;
@@ -833,8 +834,9 @@ app.get('/api/auth/discord/login', (req, res) => {
 
 app.get('/api/auth/discord/url', (req, res) => {
   const host = req.headers['x-forwarded-host'] || req.get('host');
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-  const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
+  const resolvedHost = (host && host.includes('vercel.app')) ? host : 'kuwashii-shop.vercel.app';
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const redirectUri = process.env.DISCORD_REDIRECT_URI || process.env.VITE_DISCORD_REDIRECT_URI || `https://${resolvedHost}/api/auth/discord/callback`;
 
   const clientId = process.env.DISCORD_CLIENT_ID || process.env.VITE_DISCORD_CLIENT_ID;
   if (!clientId) {
@@ -850,8 +852,9 @@ app.get('/api/auth/discord/callback', async (req, res) => {
   if (!code) return res.send("No code provided.");
 
   const host = req.headers['x-forwarded-host'] || req.get('host');
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-  const redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
+  const resolvedHost = (host && host.includes('vercel.app')) ? host : 'kuwashii-shop.vercel.app';
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const redirectUri = process.env.DISCORD_REDIRECT_URI || process.env.VITE_DISCORD_REDIRECT_URI || `https://${resolvedHost}/api/auth/discord/callback`;
 
   const clientId = process.env.DISCORD_CLIENT_ID || process.env.VITE_DISCORD_CLIENT_ID;
   const clientSecret = process.env.DISCORD_CLIENT_SECRET || process.env.VITE_DISCORD_CLIENT_SECRET;

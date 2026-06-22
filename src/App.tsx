@@ -708,6 +708,7 @@ export default function App() {
           piecesPerUnit: item.piecesPerUnit,
           accountCredentials: item.accountCredentials || null,
           isPinned: item.isPinned || false,
+          originalPrice: item.originalPrice,
         },
         created_at: item.updatedAt || new Date().toISOString(),
       }));

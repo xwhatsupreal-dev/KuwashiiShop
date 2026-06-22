@@ -6,12 +6,16 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
   const [isBannerLoaded, setIsBannerLoaded] = useState(false);
 
-  const categoriesCount = new Set(items.map(i => i.category)).size;
+  const settings = globalStats?.announcement_settings || {} as any;
+  const configuredCategories = settings.categories || [];
+  const categoriesCount = configuredCategories.length > 0 
+    ? configuredCategories.length 
+    : new Set(items.map(i => i.category)).size;
+  
   const availableItemsCount = items.filter(i => i.quantity > 0).length;
   const soldItemsCount = globalStats?.total_purchases || 0;
   const totalTopupCount = globalStats?.total_topups || 0;
   
-  const settings = globalStats?.announcement_settings || {} as any;
   const shopLogoUrl = settings.shopLogoUrl || '';
   const shopBannerUrl = settings.shopBannerUrl || '';
   

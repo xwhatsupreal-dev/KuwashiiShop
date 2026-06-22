@@ -27,6 +27,7 @@ export async function fetchItems() {
     let accCreds = undefined;
     let pinned = d.is_pinned || false;
     let jsonSaleFormat = undefined;
+    let origPrice = undefined;
 
     if (parsedPool && !Array.isArray(parsedPool) && typeof parsedPool === 'object') {
       pool = parsedPool.pool || undefined;
@@ -35,6 +36,7 @@ export async function fetchItems() {
       if (initialQty === undefined) initialQty = parsedPool.initialQuantity;
       if (pieces === undefined) pieces = parsedPool.piecesPerUnit;
       if (parsedPool.isPinned) pinned = parsedPool.isPinned;
+      origPrice = parsedPool.originalPrice;
     } else if (typeof parsedPool === 'string') {
        // if it failed to parse and is still a string
        try {
@@ -66,6 +68,7 @@ export async function fetchItems() {
       accountCredentials: accCreds,
       initialQuantity: initialQty,
       piecesPerUnit: pieces,
+      originalPrice: origPrice,
       isPopular: d.popular === true || d.popular === "true" || d.popular === 1 || d.isPopular === true || d.isPopular === "true" || d.isPopular === 1,
       isPinned: d.is_pinned === true || d.is_pinned === "true" || d.is_pinned === 1 || pinned === true || pinned === "true" || false,
       updatedAt: d.created_at
