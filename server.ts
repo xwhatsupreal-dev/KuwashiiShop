@@ -895,7 +895,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
 
     const avatarUrl = userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : '';
     const email = userData.email || '';
-    const username = `Discord_${userData.id}`; // using ID to avoid username conflicts
+    let username = userData.username || `Discord_${userData.id}`;
     const discordId = userData.id;
 
     if (accountId && dbId && token) {
@@ -908,14 +908,22 @@ app.get('/api/auth/discord/callback', async (req, res) => {
         }).then(r => r.json());
       };
 
-      // Check if user exists
-      const existing = await fetchQuery("SELECT username FROM profiles WHERE username = ? OR discord_id = ? LIMIT 1", [username, discordId]);
+      // Check if user exists by Discord ID first
+      const byDiscordId = await fetchQuery("SELECT username, discord_id FROM profiles WHERE discord_id = ? LIMIT 1", [discordId]);
       
-      if (existing.result && existing.result[0] && existing.result[0].results.length > 0) {
-        // Update user
-        const targetUsername = existing.result[0].results[0].username;
-        await fetchQuery("UPDATE profiles SET email = ?, avatar_url = ?, discord_id = ? WHERE username = ?", [email, avatarUrl, discordId, targetUsername]);
+      if (byDiscordId.result && byDiscordId.result[0] && byDiscordId.result[0].results.length > 0) {
+        // User already exists via Discord ID
+        const targetUsername = byDiscordId.result[0].results[0].username;
+        username = targetUsername; // Keep original username
+        await fetchQuery("UPDATE profiles SET email = ?, avatar_url = ? WHERE username = ?", [email, avatarUrl, username]);
       } else {
+        // User not found by Discord ID. Check if username is already taken
+        const byUsername = await fetchQuery("SELECT username FROM profiles WHERE username = ? LIMIT 1", [username]);
+        if (byUsername.result && byUsername.result[0] && byUsername.result[0].results.length > 0) {
+           // Username is taken by someone else! Append discord ID to make it unique.
+           username = `${userData.username}_${userData.id}`;
+        }
+        
         // Insert user
         await fetchQuery("INSERT INTO profiles (username, password, email, avatar_url, discord_id, balance, is_admin) VALUES (?, ?, ?, ?, ?, 0, false)", 
           [username, "discord_oauth", email, avatarUrl, discordId]);
@@ -939,10 +947,10 @@ app.get('/api/auth/discord/callback', async (req, res) => {
               }, '*');
               window.close();
             } else {
-              window.location.href = '/?discord_login=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&avatar=${encodeURIComponent(avatarUrl)}';
+              window.location.href = 'https://${resolvedHost}/?discord_login=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&avatar=${encodeURIComponent(avatarUrl)}';
             }
           </script>
-          <p>Authentication successful. This window should close automatically.</p>
+          <p>Authentication successful. If this window does not close automatically, please <a href="https://${resolvedHost}/?discord_login=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&avatar=${encodeURIComponent(avatarUrl)}">click here</a> to return to the app.</p>
         </body>
       </html>
     `);

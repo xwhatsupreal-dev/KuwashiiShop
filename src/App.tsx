@@ -209,9 +209,9 @@ export default function App() {
   // Popup Message Listener for Discord Auth
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Validate origin is from AI Studio preview or localhost
+      // Validate origin is from AI Studio preview or localhost or vercel.app
       const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('studio.google.com')) {
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('studio.google.com') && !origin.includes('vercel.app')) {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS' && event.data.payload) {
