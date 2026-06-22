@@ -97,10 +97,10 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
             const configData = await getSystemConfig();
             if (targetGame === 'ASTD') {
               const currentRev = configData ? Number(configData.global_rev_astd || 0) : 0;
-              await supabase.from('system_config').upsert({ id: 'main', global_rev_astd: currentRev + difference });
+              await supabase.from('system_config').update({ global_rev_astd: currentRev + difference }).eq('id', 'main');
             } else {
               const currentRev = configData ? Number(configData.global_revenue_aotr || 0) : 0;
-              await supabase.from('system_config').upsert({ id: 'main', global_revenue_aotr: currentRev + difference });
+              await supabase.from('system_config').update({ global_revenue_aotr: currentRev + difference }).eq('id', 'main');
             }
           }
 

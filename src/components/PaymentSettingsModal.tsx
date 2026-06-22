@@ -84,10 +84,10 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
 
       const { data, error } = await supabase
         .from("system_config")
-        .upsert({
-          id: "main",
+        .update({
           announcement_settings: newSettings
         })
+        .eq("id", "main")
         .select()
         .single();
       

@@ -85,13 +85,12 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
         }
       }
 
-      await supabase.from('system_config').upsert({ 
-        id: 'main', 
+      await supabase.from('system_config').update({ 
         announcement_settings: {
           ...currentSettings,
           ...settings
         }
-      });
+      }).eq('id', 'main');
     } catch(e) {}
     
     window.dispatchEvent(new Event('sync-announcement'));

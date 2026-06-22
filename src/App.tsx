@@ -588,10 +588,10 @@ export default function App() {
     ) {
       await supabase
         .from("system_config")
-        .upsert({
-          id: "main",
+        .update({
           maintenance_mode: !globalStats?.maintenance_mode,
-        });
+        })
+        .eq("id", "main");
       window.dispatchEvent(new Event("sync-update"));
       showToast(
         globalStats?.maintenance_mode
@@ -794,10 +794,10 @@ export default function App() {
               : 0;
             await supabase
               .from("system_config")
-              .upsert({
-                id: "main",
+              .update({
                 global_free_astd: currentFree + coupon.amount,
-              });
+              })
+              .eq("id", "main");
 
         const balanceField = 'balance';
         const userBalance = Number(liveUser[balanceField] || 0);
@@ -867,17 +867,18 @@ export default function App() {
                 : 0;
               await supabase
                 .from("system_config")
-                .upsert({ id: "main", global_rev_astd: currentRev + amount });
+                .update({ global_rev_astd: currentRev + amount })
+                .eq("id", "main");
             } else if (false) {
               const currentRev = configData
                 ? Number(configData.global_revenue_aotr || 0)
                 : 0;
               await supabase
                 .from("system_config")
-                .upsert({
-                  id: "main",
+                .update({
                   global_revenue_aotr: currentRev + amount,
-                });
+                })
+                .eq("id", "main");
             }
 
             const balanceField = 'balance';
@@ -1058,17 +1059,18 @@ export default function App() {
                 : 0;
               await supabase
                 .from("system_config")
-                .upsert({ id: "main", global_rev_astd: currentRev + amount });
+                .update({ global_rev_astd: currentRev + amount })
+                .eq("id", "main");
             } else if (false) {
               const currentRev = configData
                 ? Number(configData.global_revenue_aotr || 0)
                 : 0;
               await supabase
                 .from("system_config")
-                .upsert({
-                  id: "main",
+                .update({
                   global_revenue_aotr: currentRev + amount,
-                });
+                })
+                .eq("id", "main");
             }
             // If ROV, we do nothing to system_config because we don't track global_revenue_rov currently.
 
@@ -1214,7 +1216,7 @@ export default function App() {
           "KUWASHII_CURRENT_USER",
           JSON.stringify({ username: "Kuwashii_admin" }),
         );
-        setShowAuthModal(false); setAppScreen("SHOP");
+        setAppScreen("SHOP");
         setAuthUsername("");
         setAuthEmail("");
         setAuthPassword("");
@@ -1247,7 +1249,7 @@ export default function App() {
         );
         storage.setItem("KUWASHII_IS_ADMIN", "false");
 
-        setShowAuthModal(false); setAppScreen("SHOP");
+        setAppScreen("SHOP");
         setAuthUsername("");
         setAuthEmail("");
         setAuthPassword("");
@@ -1675,6 +1677,7 @@ export default function App() {
       showToast("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ!", "error");
       setAppScreen("LOGIN");
       setAuthMode("login");
+      setInquiringItem(null);
       return;
     }
     if (isAdmin) {
@@ -1873,9 +1876,11 @@ export default function App() {
             quantity: liveItemQty - purchaseQty,
             gacha_pool: {
               pool: item.gachaPool || null,
+              saleFormat: item.saleFormat || 'ขายรหัส',
               initialQuantity: item.initialQuantity,
               piecesPerUnit: item.piecesPerUnit,
               accountCredentials: nextAccCreds,
+              isPinned: item.isPinned || false,
             },
           })
           .eq("id", item.id);
@@ -1933,10 +1938,10 @@ export default function App() {
           : 0;
         await supabase
           .from("system_config")
-          .upsert({
-            id: "main",
+          .update({
             global_sales_astd: currentSales + purchaseQty,
-          });
+          })
+          .eq("id", "main");
       } else if (item.game === "ROV") {
         const configData = await getSystemConfig();
         const currentSales = configData
@@ -1944,10 +1949,10 @@ export default function App() {
           : 0;
         const { error } = await supabase
           .from("system_config")
-          .upsert({
-            id: "main",
+          .update({
             global_sales_rov: currentSales + purchaseQty,
-          });
+          })
+          .eq("id", "main");
         // Error will pop up in console if column doesn't exist, but won't crash user app thanks to no strict throw.
         if (error) console.warn("Database update for ROV sales failed (likely missing column global_sales_rov)", error);
       }
