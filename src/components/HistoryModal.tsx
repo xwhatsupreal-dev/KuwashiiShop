@@ -9,9 +9,10 @@ interface HistoryModalProps {
   onClose: () => void;
   username: string;
   initialTab?: 'purchases' | 'topups';
+  items?: any[];
 }
 
-export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchases' }: HistoryModalProps) {
+export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchases', items = [] }: HistoryModalProps) {
   const [activeTab, setActiveTab] = useState<'purchases' | 'topups'>(initialTab);
 
   useEffect(() => {
@@ -191,7 +192,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                             
                             <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3">
                               <div className="flex gap-3 items-center flex-1 min-w-0">
-                                <img src={(purchase as any).imageUrl || "https://img2.pic.in.th/pic/Screenshot_20241029_163939_Facebook.jpg"} alt="" className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border border-white/5 shrink-0 shadow-sm" />
+                                <img src={items.find(item => item.id === purchase.itemId || item.name === purchase.itemName)?.imageUrls?.[0] || items.find(item => item.id === purchase.itemId || item.name === purchase.itemName)?.imageUrl || (purchase as any).imageUrl || "https://img2.pic.in.th/pic/Screenshot_20241029_163939_Facebook.jpg"} alt="" className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border border-white/5 shrink-0 shadow-sm" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-zinc-100 font-bold text-sm sm:text-base pr-2 mb-1.5 whitespace-normal leading-tight">
                                     {purchase.itemName}

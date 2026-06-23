@@ -12,7 +12,7 @@ export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }
       seventyTwoHoursAgo.setHours(seventyTwoHoursAgo.getHours() - 72);
 
       let query = supabase.from('purchases')
-        .select('id, username, item_name, price, created_at, game')
+        .select('id, username, item_name, price, created_at, game');
 
       // Optional: Filter by game if needed
       // if (appScreen !== 'SHOP') query = query.eq('game', appScreen);
@@ -22,7 +22,7 @@ export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }
         .limit(10);
       
       if (data) {
-        // Map created_at to timestamp for UI
+        // Map created_at to timestamp to match UI props expected later or just use the data
         setPurchases(data.map(p => ({ ...p, timestamp: p.created_at })));
       }
     };
@@ -74,7 +74,7 @@ export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }
         <h2 className="text-sm font-bold text-zinc-300 font-sans tracking-tight">รายการสั่งซื้อล่าสุด</h2>
       </div>
 
-      <div className="overflow-visible pb-4 pt-2 w-full relative">
+      <div className="overflow-hidden pb-4 pt-2 w-full relative">
         <AnimatePresence mode="wait">
           {purchases.length > 0 ? (
             <motion.div 

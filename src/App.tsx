@@ -2481,6 +2481,7 @@ export default function App() {
             setViewingUserHistory(null);
           }}
           username={viewingUserHistory || currentUser?.username || ""}
+          items={items}
         />
       )}
 
