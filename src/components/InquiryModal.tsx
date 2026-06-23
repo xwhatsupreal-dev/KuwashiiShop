@@ -82,7 +82,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ item, onClose, onBuy
           </div>
 
           {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide bg-black pb-[90px]">
+          <div className="flex-1 overflow-y-auto scrollbar-hide bg-black pb-[110px]">
             <div className="flex flex-col w-full">
               {/* Image Section */}
               <div className="w-full relative bg-zinc-950 border-b border-white/5 flex items-center justify-center p-6 aspect-[4/3] overflow-hidden">
@@ -188,6 +188,10 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ item, onClose, onBuy
 
                 {/* Action Button */}
                 <div className="absolute bottom-0 left-0 right-0 w-full bg-[#0a0a0a] border-t border-zinc-800 px-4 pt-3 pb-4 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] z-10 box-border">
+                  <div className="text-center text-red-500 font-bold text-[11px] sm:text-xs mb-2.5 flex items-center justify-center gap-1.5 drop-shadow-md">
+                    <Info className="w-3.5 h-3.5" />
+                    อย่าลืมอ่านรายละเอียดสินค้าก่อนสั่งซื้อทุกครั้ง
+                  </div>
                   {item.quantity === 0 ? (
                     <button 
                       disabled
