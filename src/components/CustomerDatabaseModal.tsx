@@ -5,6 +5,7 @@ import { supabase } from '../supabase';
 import { UserData } from '../types';
 import { sendDiscordTopupEmbed } from '../discord';
 import { getSystemConfig } from '../queries';
+import { formatThaiDate } from '../utils/date';
 
 interface CustomerModalProps {
   isOpen: boolean;
@@ -200,7 +201,7 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
                             )}
                             <div className="flex flex-col gap-1 mt-1">
                                <div className="text-[10px] text-zinc-500 flex flex-wrap items-center gap-3 mt-1">
-                                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> เข้าร่วม: {user.joinDate ? new Date(user.joinDate).toLocaleDateString('th-TH') : '-'}</span>
+                                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> เข้าร่วม: {user.joinDate ? formatThaiDate(user.joinDate) : '-'}</span>
                                </div>
                                <div className="text-[10px] text-zinc-500 flex flex-wrap items-center gap-3">
                                   <span className="flex items-center gap-1 text-emerald-400/70"><History className="w-3 h-3" /> ยอดซื้อ: {user.purchaseCount || 0} ครั้ง</span>

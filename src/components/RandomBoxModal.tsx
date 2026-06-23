@@ -7,9 +7,10 @@ interface RandomBoxModalProps {
   item: StockItem | null;
   onClose: () => void;
   onBuy?: (item: StockItem, quantity: number) => void;
+  isProcessing?: boolean;
 }
 
-export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({ item, onClose, onBuy }) => {
+export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({ item, onClose, onBuy, isProcessing = false }) => {
   const [quantity, setQuantity] = useState<number | string>(1);
   const [copied, setCopied] = useState(false);
   const pressTimeout = React.useRef<NodeJS.Timeout | null>(null);
@@ -266,11 +267,18 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({ item, onClose, o
                        <ShoppingCart className="w-4 h-4" /> สินค้าหมดแล้ว
                     </button>
                   ) : (
-                    <motion.button whileTap={{ scale: 0.98 }}
-                      onClick={handlePurchase}
-                      className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-3 rounded-xl w-full flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/20 text-sm sm:text-base"
+                    <motion.button 
+                      whileTap={{ scale: isProcessing ? 1 : 0.98 }}
+                      onClick={isProcessing ? undefined : handlePurchase}
+                      disabled={isProcessing}
+                      className={`font-bold py-3 rounded-xl w-full flex items-center justify-center gap-2 transition-all shadow-lg text-sm sm:text-base ${isProcessing ? 'bg-zinc-800 text-zinc-400 cursor-not-allowed border border-zinc-700' : 'bg-amber-500 hover:bg-amber-400 text-zinc-950 shadow-amber-500/20'}`}
                     >
-                      {copied ? (
+                      {isProcessing ? (
+                        <>
+                          <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-zinc-500 border-t-zinc-200 rounded-full animate-spin shrink-0"></div>
+                          กำลังทำรายการ...
+                        </>
+                      ) : copied ? (
                         <>
                           <Check className="w-4 h-4" />
                           คัดลอกข้อความแล้ว!

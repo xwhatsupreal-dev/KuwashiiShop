@@ -31,6 +31,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   globalStats,
 }) => {
   const [name, setName] = useState('');
+  const [itemGame, setItemGame] = useState<string>(currentGame);
   const [category, setCategory] = useState<string>('Grow A Garden 2');
   const [saleFormat, setSaleFormat] = useState<'ขายรหัส' | 'กล่องสุ่ม'>('ขายรหัส');
   const [quantity, setQuantity] = useState<number | string>(1);
@@ -82,6 +83,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   useEffect(() => {
     if (editingItem) {
       setName(editingItem.name || '');
+      setItemGame(editingItem.game || (currentGame === 'SHOP' ? 'ROV' : currentGame));
       setCategory(editingItem.category || 'Grow A Garden 2');
       setSaleFormat(editingItem.saleFormat || 'ขายรหัส');
       setQuantity(editingItem.quantity !== undefined && editingItem.quantity !== null ? editingItem.quantity : '');
@@ -129,6 +131,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     } else {
       // Clear values for new item
       setName('');
+      setItemGame(currentGame === 'SHOP' ? 'ROV' : currentGame);
       setCategory('Grow A Garden 2');
       setSaleFormat('ขายรหัส');
       setQuantity(1);
@@ -286,8 +289,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     }
 
     onSave({
-      id: editingItem ? editingItem.id : `${currentGame.toLowerCase()}-${Date.now()}`,
-      game: currentGame,
+      id: editingItem ? editingItem.id : `${itemGame.toLowerCase()}-${Date.now()}`,
+      game: itemGame,
       name: name.trim(),
       category,
       saleFormat,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Turnstile } from '@marsidev/react-turnstile';
 import { motion, AnimatePresence } from "motion/react";
+import { parseUTCDate, formatThaiDate, formatThaiTime } from './utils/date';
 import {
   Shield,
   ShieldCheck,
@@ -548,6 +549,7 @@ export default function App() {
 
   const [isProcessingTopup, setIsProcessingTopup] = useState(false);
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
+  const isProcessingPurchaseRef = useRef(false);
 
   // Modals controller
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
@@ -1642,7 +1644,37 @@ export default function App() {
         ? currentItems.map((it) => (it.id === itemData.id ? finalItem : it))
         : [finalItem, ...currentItems];
 
-    await saveItemsToStorage(updatedList);
+    setItems(updatedList);
+
+    try {
+      const updates = [{
+        id: finalItem.id,
+        name: finalItem.name,
+        description: finalItem.description,
+        price: finalItem.price,
+        quantity: finalItem.quantity,
+        image: finalItem.imageUrls ? JSON.stringify(finalItem.imageUrls) : finalItem.imageUrl,
+        game: finalItem.game,
+        category: finalItem.category,
+        rarity: finalItem.saleFormat,
+        popular: finalItem.isPopular,
+        gacha_pool: {
+          pool: finalItem.gachaPool || null,
+          saleFormat: finalItem.saleFormat,
+          initialQuantity: finalItem.initialQuantity,
+          piecesPerUnit: finalItem.piecesPerUnit,
+          accountCredentials: finalItem.accountCredentials || null,
+          isPinned: finalItem.isPinned || false,
+          originalPrice: finalItem.originalPrice,
+        },
+        created_at: finalItem.updatedAt || new Date().toISOString(),
+      }];
+      await supabase.from("items").upsert(updates);
+    } catch (e) {
+      console.error("Error saving item", e);
+    }
+
+    window.dispatchEvent(new Event("sync-update"));
     setEditingItem(null);
   };
 
@@ -1686,6 +1718,8 @@ export default function App() {
   };
 
   const handleBuyItem = async (item: StockItem, purchaseQty: number = 1) => {
+    if (isProcessingPurchase || isProcessingPurchaseRef.current) return;
+    
     if (!currentUser) {
       showToast("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ!", "error");
       setAppScreen("LOGIN");
@@ -1698,6 +1732,7 @@ export default function App() {
       return;
     }
 
+    isProcessingPurchaseRef.current = true;
     setIsProcessingPurchase(true);
 
     const user = await fetchUser(currentUser.username);
@@ -1708,12 +1743,14 @@ export default function App() {
         "error",
       );
       setIsProcessingPurchase(false);
+      isProcessingPurchaseRef.current = false;
       return;
     }
 
     if (purchaseQty > item.quantity) {
       showToast("ขออภัย สินค้าในสต๊อกมีไม่เพียงพอ", "error");
       setIsProcessingPurchase(false);
+      isProcessingPurchaseRef.current = false;
       return;
     }
 
@@ -1726,6 +1763,7 @@ export default function App() {
         "error",
       );
       setIsProcessingPurchase(false);
+      isProcessingPurchaseRef.current = false;
       return;
     }
 
@@ -1737,6 +1775,7 @@ export default function App() {
       if (!liveUser || liveUserBalance < totalPrice) {
         showToast("ยอดเงินไม่เพียงพอ หรือข้อมูลไม่ถูกต้อง", "error");
         setIsProcessingPurchase(false);
+        isProcessingPurchaseRef.current = false;
         return;
       }
 
@@ -1757,6 +1796,7 @@ export default function App() {
           "error",
         );
         setIsProcessingPurchase(false);
+        isProcessingPurchaseRef.current = false;
         return;
       }
 
@@ -2003,6 +2043,7 @@ export default function App() {
 
       setInquiringItem(null);
       setIsProcessingPurchase(false);
+      isProcessingPurchaseRef.current = false;
       window.dispatchEvent(new Event("sync-update"));
 
       if (item.gachaPool && item.gachaPool.length > 0 && drops.length > 0) {
@@ -2015,6 +2056,7 @@ export default function App() {
     } catch (err) {
       console.error(err);
       setIsProcessingPurchase(false);
+      isProcessingPurchaseRef.current = false;
       showToast("เกิดข้อผิดพลาดในการซื้อสินค้า", "error");
     }
   };
@@ -2072,7 +2114,38 @@ export default function App() {
     };
 
     const newItems = items.map((it) => (it.id === id ? updated : it));
-    saveItemsToStorage(newItems);
+    setItems(newItems);
+
+    try {
+      const updates = [{
+        id: updated.id,
+        name: updated.name,
+        description: updated.description,
+        price: updated.price,
+        quantity: updated.quantity,
+        image: updated.imageUrls ? JSON.stringify(updated.imageUrls) : updated.imageUrl,
+        game: updated.game,
+        category: updated.category,
+        rarity: updated.saleFormat,
+        popular: updated.isPopular,
+        gacha_pool: {
+          pool: updated.gachaPool || null,
+          saleFormat: updated.saleFormat,
+          initialQuantity: updated.initialQuantity,
+          piecesPerUnit: updated.piecesPerUnit,
+          accountCredentials: updated.accountCredentials || null,
+          isPinned: updated.isPinned || false,
+          originalPrice: updated.originalPrice,
+        },
+        created_at: updated.updatedAt || new Date().toISOString(),
+      }];
+      await supabase.from("items").upsert(updates);
+    } catch (e) {
+      console.error("Error pinning item", e);
+    }
+
+    window.dispatchEvent(new Event("sync-update"));
+
     if (updated.isPinned) {
       showToast(`ปักหมุดไอเทม ${updated.name} แล้ว!`, "success");
     } else {
@@ -2125,7 +2198,7 @@ export default function App() {
     if (!list || list.length === 0) return "ไม่มีบันทึกข้อมูล";
     try {
       const timestamps = list
-        .map((it) => new Date(it.updatedAt).getTime())
+        .map((it) => parseUTCDate(it.updatedAt).getTime())
         .filter((t) => !isNaN(t));
       if (timestamps.length === 0) return "ไม่มีบันทึกข้อมูล";
       const latestTime = Math.max(...timestamps);
@@ -2144,11 +2217,7 @@ export default function App() {
       if (diffDays === 1) return "เมื่อวานนี้";
       if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
 
-      return date.toLocaleDateString("th-TH", {
-        day: "numeric",
-        month: "short",
-        year: "2-digit",
-      });
+      return formatThaiDate(date);
     } catch (e) {
       return "ไม่ระบุเวลา";
     }
@@ -2406,12 +2475,14 @@ export default function App() {
           item={inquiringItem}
           onClose={() => setInquiringItem(null)}
           onBuy={handleBuyItem}
+          isProcessing={isProcessingPurchase}
         />
       ) : (
         <InquiryModal
           item={inquiringItem}
           onClose={() => setInquiringItem(null)}
           onBuy={appScreen !== "AOTR" ? handleBuyItem : undefined}
+          isProcessing={isProcessingPurchase}
         />
       )}
 

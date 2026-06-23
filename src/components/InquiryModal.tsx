@@ -7,9 +7,10 @@ interface InquiryModalProps {
   item: StockItem | null;
   onClose: () => void;
   onBuy?: (item: StockItem, qty: number) => void;
+  isProcessing?: boolean;
 }
 
-export const InquiryModal: React.FC<InquiryModalProps> = ({ item, onClose, onBuy }) => {
+export const InquiryModal: React.FC<InquiryModalProps> = ({ item, onClose, onBuy, isProcessing = false }) => {
   const [quantity, setQuantity] = useState<number | string>(1);
   const [copied, setCopied] = useState(false);
 
@@ -202,11 +203,17 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ item, onClose, onBuy
                     </button>
                   ) : (
                     <motion.button 
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleAction}
-                      className="w-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer text-sm sm:text-base shadow-lg shadow-[#0ea5e9]/20"
+                      whileTap={{ scale: isProcessing ? 1 : 0.98 }}
+                      onClick={isProcessing ? undefined : handleAction}
+                      disabled={isProcessing}
+                      className={`w-full font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm sm:text-base shadow-lg ${isProcessing ? 'bg-zinc-800 text-zinc-400 cursor-not-allowed border border-zinc-700' : 'bg-[#0ea5e9] hover:bg-[#0284c7] text-white cursor-pointer shadow-[#0ea5e9]/20'}`}
                     >
-                      {onBuy ? (
+                      {isProcessing ? (
+                        <>
+                          <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-zinc-500 border-t-zinc-200 rounded-full animate-spin shrink-0"></div>
+                          กำลังทำรายการ...
+                        </>
+                      ) : onBuy ? (
                         <>
                           <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
                           สั่งซื้อสินค้า (฿{(item.price * validQuantity).toLocaleString()})

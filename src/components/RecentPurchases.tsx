@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { StockItem } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { parseUTCDate } from '../utils/date';
 
 export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }> = ({ appScreen, items }) => {
   const [purchases, setPurchases] = useState<any[]>([]);
@@ -54,8 +55,8 @@ export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }
   };
 
   const getTimeAgo = (isoString: string) => {
-    const timeStr = isoString.endsWith('Z') || isoString.includes('+') ? isoString : `${isoString}Z`;
-    const minDiff = Math.floor((Date.now() - new Date(timeStr).getTime()) / 60000);
+    const d = parseUTCDate(isoString);
+    const minDiff = Math.floor((Date.now() - d.getTime()) / 60000);
     if (minDiff < 1) return 'เมื่อสักครู่';
     if (minDiff < 60) return `${minDiff} นาทีที่แล้ว`;
     if (minDiff < 1440) return `${Math.floor(minDiff/60)} ชม.ที่แล้ว`;

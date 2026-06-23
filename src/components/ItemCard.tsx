@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Edit2, Trash2, ShieldAlert, BadgeInfo, Coins, Package, Clock, ShoppingBag, Pin, Flame, Sparkles, Eye, X, Star } from 'lucide-react';
 import { StockItem } from '../types';
+import { parseUTCDate, formatThaiDate, formatThaiDateTime, formatThaiTime } from '../utils/date';
 
 interface ItemCardProps {
   item: StockItem;
@@ -73,7 +74,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const getRelativeTimeString = (dateString?: string): string => {
     if (!dateString) return 'ไม่มีการบันทึกข้อมูล';
     try {
-      const date = new Date(dateString);
+      const date = parseUTCDate(dateString);
       if (isNaN(date.getTime())) return 'ไม่มีการบันทึกข้อมูล';
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
@@ -89,11 +90,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       if (diffDays === 1) return 'เมื่อวานนี้';
       if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
       
-      return date.toLocaleDateString('th-TH', {
-        day: 'numeric',
-        month: 'short',
-        year: '2-digit'
-      });
+      return formatThaiDate(date);
     } catch (e) {
       return 'ไม่มีการบันทึกข้อมูล';
     }
@@ -101,16 +98,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
   let formattedDate = 'ไม่มีการบันทึกข้อมูล';
   if (item.updatedAt) {
-    const rawDate = new Date(item.updatedAt);
-    if (!isNaN(rawDate.getTime())) {
-      formattedDate = rawDate.toLocaleDateString('th-TH', {
-        day: 'numeric',
-        month: 'short',
-        year: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
+    formattedDate = formatThaiDateTime(item.updatedAt);
   }
 
   const relativeTime = getRelativeTimeString(item.updatedAt);

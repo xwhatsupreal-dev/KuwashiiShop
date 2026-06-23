@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Trash2, Gift, Save } from 'lucide-react';
+import { formatThaiDate } from '../utils/date';
 
 export interface CouponRecord {
   code: string;
@@ -153,7 +154,7 @@ export const CouponManagerModal: React.FC<CouponManagerModalProps> = ({ isOpen, 
                           <div className="text-xs text-zinc-500 mt-1">
                             ได้รับ: {c.amount.toLocaleString()} เครดิต • ใช้งานแล้ว {c.usedBy.length}/{c.maxUses} คน
                             {c.expiresAt && (
-                              <span className="block mt-0.5 text-zinc-500/80">หมดอายุ: {new Date(c.expiresAt).toLocaleDateString('th-TH')}</span>
+                              <span className="block mt-0.5 text-zinc-500/80">หมดอายุ: {formatThaiDate(c.expiresAt)}</span>
                             )}
                           </div>
                         </div>

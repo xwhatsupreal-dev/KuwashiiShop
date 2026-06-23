@@ -18,6 +18,7 @@ import {
 import { supabase } from "../supabase";
 import { PurchaseRecord, TopupRecord } from "../types";
 import { fetchUserPurchases, fetchUserTopups } from "../queries";
+import { formatThaiDate, formatThaiTime } from "../utils/date";
 
 interface UserProfileDashboardProps {
   currentUser: any;
@@ -121,21 +122,6 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
       !searchTerm ||
       p.itemName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
-
-  const formatDate = (dateString: string) => {
-    const d = new Date(dateString);
-    return {
-      date: d.toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-      time: d.toLocaleTimeString("th-TH", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-  };
 
   return (
     <motion.div
@@ -377,7 +363,8 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
               ) : (
                 <div className="bg-zinc-900 border border-white/5 rounded-2xl divide-y divide-white/5 overflow-hidden">
                   {filteredPurchases.map((purchase) => {
-                    const { date, time } = formatDate(purchase.date);
+                    const date = formatThaiDate(purchase.date);
+                    const time = formatThaiTime(purchase.date);
                     const hasGachaDrops =
                       purchase.gachaDrops && purchase.gachaDrops.length > 0;
                     const hasCredentialData = !!purchase.credentialData;
@@ -575,7 +562,8 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
                   </thead>
                   <tbody className="divide-y divide-white/5 text-zinc-300 font-mono">
                     {topups.map((topup) => {
-                      const { date, time } = formatDate(topup.date);
+                      const date = formatThaiDate(topup.date);
+                      const time = formatThaiTime(topup.date);
                       return (
                         <motion.tr
                           key={topup.id}

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, History, ShoppingCart, PackageOpen, Calendar, Clock, Sparkles, DollarSign, ChevronDown, ChevronUp, MessageCircle, Copy, Search, ShoppingBag, ChevronLeft } from 'lucide-react';
 import { PurchaseRecord, TopupRecord } from '../types';
 import { fetchUserPurchases, fetchUserTopups } from '../queries';
+import { formatThaiDate, formatThaiTime } from '../utils/date';
 
 interface HistoryModalProps {
   isOpen: boolean;
@@ -54,14 +55,6 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
   const sortedPurchases = [...purchases].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const sortedTopups = [...topups].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const filteredPurchases = sortedPurchases.filter(p => !searchTerm || p.itemName.toLowerCase().includes(searchTerm.toLowerCase()));
-
-  const formatDate = (dateString: string) => {
-    const d = new Date(dateString);
-    return {
-      date: d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }),
-      time: d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
-    };
-  };
 
   return (
     <AnimatePresence>
@@ -163,7 +156,8 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                 ) : (
                   <div className="border border-white/5 rounded-xl overflow-hidden divide-y divide-white/5 bg-[#121215]">
                     {filteredPurchases.map((purchase) => {
-                      const { date, time } = formatDate(purchase.date);
+                      const date = formatThaiDate(purchase.date);
+                      const time = formatThaiTime(purchase.date);
                       const hasGachaDrops = purchase.gachaDrops && purchase.gachaDrops.length > 0;
                       const hasCredentialData = !!purchase.credentialData;
                       const canExpand = hasGachaDrops || hasCredentialData;
@@ -317,7 +311,8 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
               ) : (
                 <div className="border border-white/5 rounded-xl overflow-hidden divide-y divide-white/5 bg-[#121215]">
                   {sortedTopups.map((topup) => {
-                    const { date, time } = formatDate(topup.date);
+                    const date = formatThaiDate(topup.date);
+                    const time = formatThaiTime(topup.date);
                     return (
                       <motion.div 
                         key={topup.id} 
