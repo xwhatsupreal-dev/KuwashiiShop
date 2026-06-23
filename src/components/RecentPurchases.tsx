@@ -11,19 +11,19 @@ export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }
       const seventyTwoHoursAgo = new Date();
       seventyTwoHoursAgo.setHours(seventyTwoHoursAgo.getHours() - 72);
 
-      let query = supabase.from('activities')
-        .select('*')
-        .eq('type', 'purchase');
+      let query = supabase.from('purchases')
+        .select('id, username, item_name, price, created_at, game')
 
       // Optional: Filter by game if needed
       // if (appScreen !== 'SHOP') query = query.eq('game', appScreen);
 
       const { data } = await query
-        .order('timestamp', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(10);
       
       if (data) {
-        setPurchases(data);
+        // Map created_at to timestamp for UI
+        setPurchases(data.map(p => ({ ...p, timestamp: p.created_at })));
       }
     };
     
@@ -31,10 +31,10 @@ export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }
     window.addEventListener('sync-update', loadData);
 
     const channel = supabase
-      .channel('activities_changes')
+      .channel('purchases_changes')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'activities', filter: "type=eq.purchase" },
+        { event: 'INSERT', schema: 'public', table: 'purchases' },
         (payload) => {
           loadData();
         }

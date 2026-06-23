@@ -143,14 +143,13 @@ export const addLiveActivity = async (
         remaining_stock: activity.remainingStock,
         game: activity.game,
         gacha_drops: activity.gachaDrops,
+        timestamp: new Date().toISOString(),
       },
     ]);
 
-    // Clean up old activities (older than 7 hours)
-    const sevenHoursAgo = new Date(
-      Date.now() - 7 * 60 * 60 * 1000,
-    ).toISOString();
-    await supabase.from("activities").delete().lt("timestamp", sevenHoursAgo);
+    // Clean up old activities (older than 72 hours to match recent purchases, or 7 hours?)
+    const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+    await supabase.from("activities").delete().lt("timestamp", cutoff);
 
     if (!error) {
       window.dispatchEvent(new Event("sync-update"));
