@@ -658,7 +658,8 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
         maintenance_mode BOOLEAN DEFAULT FALSE,
         global_revenue_aotr INTEGER DEFAULT 0,
         global_rev_astd INTEGER DEFAULT 0,
-        announcement_settings TEXT
+        announcement_settings TEXT,
+        last_cleanup_timestamp TEXT
       );
     `;
 
@@ -812,6 +813,97 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
     res.json({ data: resultArr });
   } catch (err: any) {
     console.error("D1 Proxy Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+let lastCheckedCleanStorage = 0;
+
+async function runCleanStorage(force = false) {
+  try {
+    const rawAccountId = process.env.CF_ACCOUNT_ID || process.env.VITE_CF_ACCOUNT_ID;
+    const accountId = rawAccountId?.trim();
+    let dbIdRaw = process.env.CF_DATABASE_ID || process.env.VITE_CF_DATABASE_ID;
+    dbIdRaw = dbIdRaw?.trim();
+    let dbId = dbIdRaw;
+    if (dbIdRaw && dbIdRaw.includes("dash.cloudflare.com")) {
+      const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
+      if (match) dbId = match[0];
+    }
+    const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+    const token = rawToken?.trim();
+
+    if (!accountId || !dbId || !token) {
+      if (force) console.error("Clean Storage Error: Missing D1 credentials");
+      return;
+    }
+
+    const fetchQuery = async (query: string, params: any[]) => {
+      const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ sql: query, params })
+      });
+      return response.json();
+    };
+
+    const now = Date.now();
+    // Guard: Only check the DB at most once every 30 minutes per server instance
+    if (!force && now - lastCheckedCleanStorage < 30 * 60 * 1000) {
+      return;
+    }
+    lastCheckedCleanStorage = now;
+
+    // Check DB for last cleanup
+    // Use try-catch in case column doesn't exist yet
+    let lastCleanupTimestamp = 0;
+    try {
+       const configRes = await fetchQuery("SELECT last_cleanup_timestamp FROM system_config WHERE id = 'main'", []);
+       if (configRes?.result?.[0]?.results?.[0]?.last_cleanup_timestamp) {
+         lastCleanupTimestamp = new Date(configRes.result[0].results[0].last_cleanup_timestamp).getTime();
+       }
+    } catch (_) { }
+
+    // If less than 24 hours ago and not forced, abort
+    if (!force && now - lastCleanupTimestamp < 24 * 60 * 60 * 1000) {
+      return; // Already cleaned recently
+    }
+
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+    
+    // Delete activities older than 1 day
+    await fetchQuery("DELETE FROM activities WHERE timestamp < ?", [oneDayAgo]);
+    
+    // Delete items with missing/invalid game
+    await fetchQuery("DELETE FROM items WHERE game IS NULL OR game = '' OR game NOT IN ('AOTR', 'ASTD', 'ROV')", []);
+
+    // Update timestamp in DB
+    const currentISO = new Date(now).toISOString();
+    await fetchQuery("UPDATE system_config SET last_cleanup_timestamp = ? WHERE id = 'main'", [currentISO]);
+
+    console.log("Clean storage completed successfully (from auto worker/db timecheck)");
+  } catch (err: any) {
+    if (force) console.error("Automatic Clean Storage Error:", err);
+  }
+}
+
+// Background hook on all API requests (lazy run, doesn't block request)
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.path.startsWith('/api/')) {
+    runCleanStorage(false).catch(() => {});
+  }
+  next();
+});
+
+app.post("/api/admin/clean_storage", async (req: express.Request, res: express.Response) => {
+  try {
+    await runCleanStorage(true);
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("Clean Storage Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
