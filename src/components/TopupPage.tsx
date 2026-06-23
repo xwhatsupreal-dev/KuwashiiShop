@@ -15,7 +15,8 @@ export const TopupPage = ({
   isProcessingTopup,
   handleTopup,
   setAppScreen,
-  globalStats
+  globalStats,
+  successMessage
 }: any) => {
 
   let parsedSettings = globalStats?.announcement_settings || {};
@@ -181,9 +182,35 @@ export const TopupPage = ({
              <HelpCircle className="w-3.5 h-3.5" /> ดูข้อตกลงและเงื่อนไขการเติมเงิน
           </button>
         </motion.div>
+      ) : topupModalStep === "success" ? (
+        <motion.div 
+          key="success"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="bg-[#151515] border border-emerald-500/20 rounded-2xl p-8 shadow-[0_0_30px_rgba(16,185,129,0.15)] text-white text-center flex flex-col items-center justify-center min-h-[300px]"
+        >
+          <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/20">
+            <CheckCircle className="w-10 h-10 text-emerald-400" />
+          </div>
+          <h3 className="text-2xl font-bold mb-3 font-display">ทำรายการสำเร็จ!</h3>
+          {successMessage ? (
+            <p className="text-zinc-400 text-sm mb-8 font-sans whitespace-pre-line">
+              {successMessage}
+            </p>
+          ) : (
+            <p className="text-zinc-400 text-sm mb-8 font-sans">
+              ระบบได้ทำการเพิ่มยอดเงินเข้าบัญชีของคุณเรียบร้อยแล้ว
+            </p>
+          )}
+          <div className="flex justify-center w-full">
+            <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+          </div>
+        </motion.div>
       ) : (
         <motion.div 
           key="form"
+
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}

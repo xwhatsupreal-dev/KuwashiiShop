@@ -910,7 +910,7 @@ export default function App() {
 
             window.dispatchEvent(new Event("sync-update"));
 
-            const msg = `เติมเงินสำเร็จ! จำนวน ${amount.toLocaleString()} บาท\n(หักค่าธรรมเนียม ${fee})\nจากซองของ: ${ownerName}`;
+            const msg = `เติมเงินสำเร็จ! จำนวน ${amount.toLocaleString()} บาท\n(หักค่าธรรมเนียม ${fee} บาท)`;
             showToast(`เติมเงินสำเร็จ ${amount} บาท`, "success");
             setTopupSuccessMessage(msg);
             setTopupModalStep("success");
@@ -1104,7 +1104,7 @@ export default function App() {
 
             window.dispatchEvent(new Event("sync-update"));
 
-            const bankMsg = `เติมเงินด้วยสลิปสำเร็จ! จำนวน ${amount.toLocaleString()} บาท\nจาก: ${senderName}\nถึง: ${receiverName}`;
+            const bankMsg = `เติมเงินด้วยสลิปสำเร็จ! จำนวน ${amount.toLocaleString()} บาท`;
             showToast(bankMsg, "success");
             setTopupSuccessMessage(bankMsg);
             setTopupModalStep("success");
@@ -2901,6 +2901,7 @@ export default function App() {
                  handleTopup={handleTopupSubmit}
                  setAppScreen={setAppScreen}
                  globalStats={globalStats}
+                 successMessage={topupSuccessMessage}
                />
             ) : (
               <>
