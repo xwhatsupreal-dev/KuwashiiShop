@@ -13,8 +13,7 @@ export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }
 
       let query = supabase.from('activities')
         .select('*')
-        .eq('type', 'purchase')
-        .gte('timestamp', seventyTwoHoursAgo.toISOString());
+        .eq('type', 'purchase');
 
       // Optional: Filter by game if needed
       // if (appScreen !== 'SHOP') query = query.eq('game', appScreen);
@@ -30,7 +29,22 @@ export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }
     
     loadData();
     window.addEventListener('sync-update', loadData);
-    return () => window.removeEventListener('sync-update', loadData);
+
+    const channel = supabase
+      .channel('activities_changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'activities', filter: "type=eq.purchase" },
+        (payload) => {
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener('sync-update', loadData);
+      supabase.removeChannel(channel);
+    };
   }, [appScreen]);
 
   const maskName = (name: string) => {

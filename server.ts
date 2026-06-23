@@ -721,6 +721,19 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
       },
       body: JSON.stringify({ sql: "CREATE TABLE IF NOT EXISTS claimed_jackpots (id INTEGER PRIMARY KEY AUTOINCREMENT, item_id TEXT NOT NULL, stock_trigger INTEGER NOT NULL, reward_name TEXT NOT NULL, username TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(item_id, stock_trigger));" })
     });
+    
+    // Add timestamp/id columns to activities safely
+    const alterActivitiesStrs = [
+      "ALTER TABLE activities ADD COLUMN timestamp DATETIME DEFAULT CURRENT_TIMESTAMP;",
+      "ALTER TABLE activities ADD COLUMN id TEXT;"
+    ];
+    for (const sqlStr of alterActivitiesStrs) {
+      await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ sql: sqlStr })
+      });
+    }
 
     // Also insert main system config if not exists
     await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {

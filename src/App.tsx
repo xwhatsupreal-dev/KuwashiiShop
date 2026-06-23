@@ -756,10 +756,13 @@ export default function App() {
       return;
     }
 
+    setIsProcessingTopup(true);
+
     const activeUsername = currentUser.username.trim();
     const liveUser = await fetchUser(activeUsername);
     if (!liveUser) {
       showToast("เกิดข้อผิดพลาดในการโหลดข้อมูลลูกค้า โปรดลองอีกครั้ง", "error");
+      setIsProcessingTopup(false);
       return;
     }
 
@@ -773,10 +776,12 @@ export default function App() {
       if (coupon) {
         if (coupon.usedBy && coupon.usedBy.includes(activeUsername)) {
           showToast("คุณได้ใช้งานโค้ดนี้ไปแล้ว", "error");
+          setIsProcessingTopup(false);
           return;
         }
         if (coupon.usedBy && coupon.usedBy.length >= coupon.maxUses) {
           showToast("โค้ดอ้างอิงนี้ถูกใช้งานจนครบกำหนดแล้ว", "error");
+          setIsProcessingTopup(false);
           return;
         }
         if (
@@ -784,6 +789,7 @@ export default function App() {
           new Date(coupon.expiresAt).getTime() < Date.now()
         ) {
           showToast("โค้ดนี้หมดอายุการใช้งานแล้ว", "error");
+          setIsProcessingTopup(false);
           return;
         }
 
@@ -841,10 +847,10 @@ export default function App() {
       } else {
         showToast("ไม่พบโค้ดคูปองนี้ในระบบ", "error");
       }
+      setIsProcessingTopup(false);
       return;
     }
 
-    setIsProcessingTopup(true);
     // Angpao topup
     if (topupModalStep === "angpao") {
       const receiveAngpao = async () => {
@@ -1693,6 +1699,8 @@ export default function App() {
       return;
     }
 
+    setIsProcessingPurchase(true);
+
     const user = await fetchUser(currentUser.username);
 
     if (!user) {
@@ -1700,11 +1708,13 @@ export default function App() {
         "ไม่พบบัญชีส่วนตัวในฐานข้อมูล V2 (โปรดออกจากระบบและเข้าใหม่)",
         "error",
       );
+      setIsProcessingPurchase(false);
       return;
     }
 
     if (purchaseQty > item.quantity) {
       showToast("ขออภัย สินค้าในสต๊อกมีไม่เพียงพอ", "error");
+      setIsProcessingPurchase(false);
       return;
     }
 
@@ -1716,13 +1726,11 @@ export default function App() {
         `ยอดเครดิตในระบบไม่เพียงพอ! (ขาดอีก ${totalPrice - userBalance} ฿)`,
         "error",
       );
+      setIsProcessingPurchase(false);
       return;
     }
 
-    setIsProcessingPurchase(true);
-
-    // Simulate payment processing delay
-    setTimeout(async () => {
+    try {
       // Re-fetch users to prevent race conditions during the delay
       const liveUser = await fetchUser(currentUser.username);
 
@@ -2005,7 +2013,11 @@ export default function App() {
         // Direct purchase, go straight to history to view credential/product
         setShowHistoryModal(true);
       }
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      setIsProcessingPurchase(false);
+      showToast("เกิดข้อผิดพลาดในการซื้อสินค้า", "error");
+    }
   };
 
   const handleQuickQuantityChange = async (
