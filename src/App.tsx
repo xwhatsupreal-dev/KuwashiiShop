@@ -2812,7 +2812,7 @@ export default function App() {
           />
           {appScreen === 'SHOP' && (
             <>
-              <AnnouncementPopup appScreen={appScreen} />
+              <AnnouncementPopup appScreen={appScreen} isLoadingData={isLoadingStock || appScreen === "LOADING" || appScreen === "TRANSITION"} />
             </>
           )}
           

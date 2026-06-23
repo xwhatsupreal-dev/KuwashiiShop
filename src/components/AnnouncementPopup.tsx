@@ -5,15 +5,18 @@ import { AnnouncementSettings } from './AnnouncementManagerModal';
 
 interface AnnouncementPopupProps {
   appScreen: 'ATOR' | 'AOTR' | 'ASTD' | string;
+  isLoadingData?: boolean;
 }
 
-export const AnnouncementPopup: React.FC<AnnouncementPopupProps> = ({ appScreen }) => {
+export const AnnouncementPopup: React.FC<AnnouncementPopupProps> = ({ appScreen, isLoadingData = false }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [settings, setSettings] = useState<AnnouncementSettings | null>(null);
   const [activeAnnouncements, setActiveAnnouncements] = useState<{ image: string, link: string, originalIndex: number }[]>([]);
   const [currentActiveIndex, setCurrentActiveIndex] = useState(0);
 
   useEffect(() => {
+    if (isLoadingData) return;
+
     const rawSettings = localStorage.getItem('KUWASHII_ANNOUNCEMENT_SETTINGS');
     if (!rawSettings) return;
 
@@ -66,7 +69,7 @@ export const AnnouncementPopup: React.FC<AnnouncementPopupProps> = ({ appScreen 
     } catch (e) {
       console.error(e);
     }
-  }, [appScreen]);
+  }, [appScreen, isLoadingData]);
 
   const handleClose = () => {
     if (currentActiveIndex < activeAnnouncements.length - 1) {

@@ -168,7 +168,14 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                       const canExpand = hasGachaDrops || hasCredentialData;
 
                       return (
-                        <div key={purchase.id} className="flex flex-col">
+                        <motion.div 
+                          key={purchase.id} 
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: "0px 0px -20px 0px" }}
+                          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                          className="flex flex-col"
+                        >
                           <div className="p-4 flex gap-3 items-start relative w-full">
                             <div className="pt-1 sm:pt-3.5 shrink-0">
                                <input 
@@ -290,7 +297,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                               </div>
                             </div>
                           )}
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -311,7 +318,14 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                   {sortedTopups.map((topup) => {
                     const { date, time } = formatDate(topup.date);
                     return (
-                      <div key={topup.id} className="bg-[#121215] flex flex-col">
+                      <motion.div 
+                        key={topup.id} 
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "0px 0px -20px 0px" }}
+                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                        className="bg-[#121215] flex flex-col"
+                      >
                         <div className="p-4 flex gap-3 items-start relative w-full">
                           
                           <div className="w-12 h-12 rounded-lg border border-white/5 bg-zinc-900 flex items-center justify-center shrink-0">
@@ -346,7 +360,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
