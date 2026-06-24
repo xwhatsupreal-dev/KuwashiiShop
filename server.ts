@@ -1064,6 +1064,20 @@ app.get('/api/auth/discord/callback', async (req, res) => {
   }
 });
 
+app.get("/api/proxy-image", async (req: express.Request, res: express.Response) => {
+  try {
+    const url = req.query.url as string;
+    if (!url) return res.status(400).send("No url provided");
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch image");
+    const buffer = await response.arrayBuffer();
+    res.setHeader("Content-Type", response.headers.get("content-type") || "image/jpeg");
+    res.send(Buffer.from(buffer));
+  } catch (e: any) {
+    res.status(500).send("Error proxying image");
+  }
+});
+
 // Configure Vite integration or static file serving
 const setupServer = async () => {
   if (process.env.NODE_ENV !== "production") {

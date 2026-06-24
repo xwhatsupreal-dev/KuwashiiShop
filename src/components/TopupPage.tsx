@@ -268,7 +268,8 @@ export const TopupPage = ({
                               onClick={async (e) => {
                                 e.preventDefault();
                                 try {
-                                  const response = await fetch(qrUrl);
+                                  // Use our server proxy to avoid CORS issues when fetching the image to download
+                                  const response = await fetch(`/api/proxy-image?url=${encodeURIComponent(qrUrl)}`);
                                   if (!response.ok) throw new Error('Network response was not ok');
                                   const blob = await response.blob();
                                   const url = window.URL.createObjectURL(blob);
