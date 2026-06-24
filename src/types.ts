@@ -3,7 +3,7 @@ export interface StockItem {
   game?: 'AOTR' | 'ASTD' | 'ROV';
   name: string;
   category: string;
-  saleFormat?: 'ขายรหัส' | 'กล่องสุ่ม';
+  saleFormat?: 'ขายรหัส' | 'กล่องสุ่ม' | 'ไฟล์ตัวรัน';
   quantity: number;
   initialQuantity?: number;
   piecesPerUnit?: number;
@@ -16,6 +16,8 @@ export interface StockItem {
   isPopular?: boolean;
   gachaPool?: { id: string; name: string; color?: string; guaranteedAtStock?: number; guaranteedAtStocks?: number[]; }[];
   accountCredentials?: string[]; 
+  fileLink?: string;
+  filePassword?: string;
   updatedAt: string;
 }
 

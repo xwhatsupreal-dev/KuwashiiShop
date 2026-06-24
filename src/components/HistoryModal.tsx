@@ -228,14 +228,33 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                           {hasCredentialData && expandedPurchases.includes(purchase.id) && (
                             <div className="p-4 bg-zinc-900 border-t border-white/5">
                               <div className="text-xs font-semibold text-zinc-300 mb-2 flex items-center gap-1.5 uppercase tracking-widest font-mono">
-                                {purchase.game === 'ROV' ? 'Username:Password' : 'ข้อมูลบัญชี / โค้ด'}
+                                {purchase.credentialData!.includes('ลิ้งค์ดาวน์โหลด:') ? 'ดาวน์โหลดไฟล์ตัวรัน' : purchase.game === 'ROV' ? 'Username:Password' : 'ข้อมูลบัญชี / โค้ด'}
                               </div>
                               <div className="space-y-2">
-                                {purchase.credentialData!.split('\n').map((cred, idx) => (
-                                  <div key={idx} className="bg-[#121215] border border-white/10 text-zinc-200 px-4 py-3 rounded-lg font-mono text-xs flex-1 break-all select-all shadow-sm">
-                                    {cred}
-                                  </div>
-                                ))}
+                                {purchase.credentialData!.split('\n').map((cred, idx) => {
+                                  if (cred.includes('ลิ้งค์ดาวน์โหลด:')) {
+                                    const [linkPart, passPart] = cred.split(' | รหัสผ่านเข้าถึงลิ้งค์:');
+                                    const link = linkPart.replace('ลิ้งค์ดาวน์โหลด: ', '').trim();
+                                    const pass = passPart ? passPart.trim() : '';
+                                    return (
+                                      <div key={idx} className="bg-[#121215] border border-white/10 text-zinc-200 px-4 py-3 rounded-lg font-mono text-xs shadow-sm flex flex-col gap-2">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
+                                           <span className="text-zinc-400">ลิ้งค์ดาวน์โหลด:</span>
+                                           <a href={link} target="_blank" rel="noopener noreferrer" className="text-[#0ca5e9] hover:underline break-all">{link}</a>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
+                                           <span className="text-zinc-400">รหัสผ่าน:</span>
+                                           <span className="select-all text-amber-400">{pass}</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div key={idx} className="bg-[#121215] border border-white/10 text-zinc-200 px-4 py-3 rounded-lg font-mono text-xs flex-1 break-all select-all shadow-sm">
+                                      {cred}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

@@ -33,7 +33,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [name, setName] = useState('');
   const [itemGame, setItemGame] = useState<string>(currentGame);
   const [category, setCategory] = useState<string>('Grow A Garden 2');
-  const [saleFormat, setSaleFormat] = useState<'ขายรหัส' | 'กล่องสุ่ม'>('ขายรหัส');
+  const [saleFormat, setSaleFormat] = useState<'ขายรหัส' | 'กล่องสุ่ม' | 'ไฟล์ตัวรัน'>('ขายรหัส');
   const [quantity, setQuantity] = useState<number | string>(1);
   const [initialQuantity, setInitialQuantity] = useState<number | string>('');
   const [piecesPerUnit, setPiecesPerUnit] = useState<number | string>('');
@@ -44,6 +44,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [isPopular, setIsPopular] = useState(false);
   const [gachaPool, setGachaPool] = useState<{ id: string; name: string; color?: string; guaranteedAtStock?: number; guaranteedAtStocks?: number[]; }[]>([]);
   const [accountCredentialsText, setAccountCredentialsText] = useState('');
+  const [fileLink, setFileLink] = useState('');
+  const [filePassword, setFilePassword] = useState('');
   const [claimedJackpots, setClaimedJackpots] = useState<any[]>([]);
   
   const [imageType, setImageType] = useState<'url' | 'upload' | 'presets'>('url');
@@ -96,6 +98,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       setIsPopular(!!editingItem.isPopular);
       setGachaPool(Array.isArray(editingItem.gachaPool) ? editingItem.gachaPool : []);
       setAccountCredentialsText(editingItem.accountCredentials ? editingItem.accountCredentials.join('\n') : '');
+      setFileLink(editingItem.fileLink || '');
+      setFilePassword(editingItem.filePassword || '');
       
       const fetchClaims = async () => {
         if (editingItem.category === 'สุ่มตัวละคร - ออสตา' || (Array.isArray(editingItem.gachaPool) && editingItem.gachaPool.length > 0)) {
@@ -144,6 +148,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       setIsPopular(false);
       setGachaPool([]);
       setClaimedJackpots([]);
+      setAccountCredentialsText('');
+      setFileLink('');
+      setFilePassword('');
       setImageType('url');
       setImageUrl('');
       setUploadedImages([]);
@@ -306,6 +313,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       isPopular,
       gachaPool: (category === 'สุ่มตัวละคร - ออสตา' || (gachaPool && gachaPool.length > 0)) ? gachaPool : undefined,
       accountCredentials: accCreds.length > 0 ? accCreds : undefined,
+      fileLink: saleFormat === 'ไฟล์ตัวรัน' ? fileLink.trim() : undefined,
+      filePassword: saleFormat === 'ไฟล์ตัวรัน' ? filePassword.trim() : undefined,
     }, notifyDiscord, stockWebhookUrl);
     
     onClose();
@@ -412,11 +421,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               </label>
               <select
                 value={saleFormat}
-                onChange={(e) => setSaleFormat(e.target.value as 'ขายรหัส' | 'กล่องสุ่ม')}
+                onChange={(e) => setSaleFormat(e.target.value as 'ขายรหัส' | 'กล่องสุ่ม' | 'ไฟล์ตัวรัน')}
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-200 px-3 py-2.5 rounded-2xl text-sm focus:outline-none focus:border-amber-500 transition-all cursor-pointer font-display tracking-tight"
               >
                 <option value="ขายรหัส">ขายรหัส</option>
                 <option value="กล่องสุ่ม">กล่องสุ่ม</option>
+                <option value="ไฟล์ตัวรัน">ไฟล์ตัวรัน</option>
               </select>
             </div>
             {/* Quantity, Initial Quantity, Pieces per pack, and Price row */}
@@ -580,6 +590,36 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   placeholder="USER1:PASS1&#10;USER2:PASS2..."
                   className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-amber-500 h-32 resize-y"
                 />
+              </div>
+            )}
+
+            {saleFormat === 'ไฟล์ตัวรัน' && (
+              <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-850 space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block font-display tracking-tight">
+                    ข้อมูลไฟล์ตัวรัน
+                  </span>
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">ลิ้งค์ดาวน์โหลด (Download Link)</label>
+                  <input
+                    type="text"
+                    value={fileLink}
+                    onChange={e => setFileLink(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">รหัสผ่านเข้าถึงลิ้งค์ (Password)</label>
+                  <input
+                    type="text"
+                    value={filePassword}
+                    onChange={e => setFilePassword(e.target.value)}
+                    placeholder="รหัสผ่าน..."
+                    className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
               </div>
             )}
 

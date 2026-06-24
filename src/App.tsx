@@ -1664,6 +1664,8 @@ export default function App() {
           initialQuantity: finalItem.initialQuantity,
           piecesPerUnit: finalItem.piecesPerUnit,
           accountCredentials: finalItem.accountCredentials || null,
+          fileLink: finalItem.fileLink || null,
+          filePassword: finalItem.filePassword || null,
           isPinned: finalItem.isPinned || false,
           originalPrice: finalItem.originalPrice,
         },
@@ -1922,7 +1924,11 @@ export default function App() {
       let extractCreds: string[] | undefined = undefined;
       let nextAccCreds = item.accountCredentials;
 
-      if (item.accountCredentials && item.accountCredentials.length > 0) {
+      if (item.saleFormat === 'ไฟล์ตัวรัน') {
+        const productInfo = `ลิ้งค์ดาวน์โหลด: ${item.fileLink || '-'} | รหัสผ่านเข้าถึงลิ้งค์: ${item.filePassword || '-'}`;
+        extractCreds = Array(purchaseQty).fill(productInfo);
+        handleQuickQuantityChange(item.id, -purchaseQty, true);
+      } else if (item.accountCredentials && item.accountCredentials.length > 0) {
         extractCreds = item.accountCredentials.slice(0, purchaseQty);
         nextAccCreds = item.accountCredentials.slice(purchaseQty);
         await supabase
@@ -1935,6 +1941,8 @@ export default function App() {
               initialQuantity: item.initialQuantity,
               piecesPerUnit: item.piecesPerUnit,
               accountCredentials: nextAccCreds,
+              fileLink: item.fileLink || null,
+              filePassword: item.filePassword || null,
               isPinned: item.isPinned || false,
             },
           })
@@ -2134,6 +2142,8 @@ export default function App() {
           initialQuantity: updated.initialQuantity,
           piecesPerUnit: updated.piecesPerUnit,
           accountCredentials: updated.accountCredentials || null,
+          fileLink: updated.fileLink || null,
+          filePassword: updated.filePassword || null,
           isPinned: updated.isPinned || false,
           originalPrice: updated.originalPrice,
         },

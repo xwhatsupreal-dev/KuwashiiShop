@@ -28,6 +28,8 @@ export async function fetchItems() {
     let pinned = d.is_pinned || false;
     let jsonSaleFormat = undefined;
     let origPrice = undefined;
+    let fileL = undefined;
+    let fileP = undefined;
 
     if (parsedPool && !Array.isArray(parsedPool) && typeof parsedPool === 'object') {
       pool = parsedPool.pool || undefined;
@@ -37,6 +39,8 @@ export async function fetchItems() {
       if (pieces === undefined) pieces = parsedPool.piecesPerUnit;
       if (parsedPool.isPinned) pinned = parsedPool.isPinned;
       origPrice = parsedPool.originalPrice;
+      fileL = parsedPool.fileLink;
+      fileP = parsedPool.filePassword;
     } else if (typeof parsedPool === 'string') {
        // if it failed to parse and is still a string
        try {
@@ -66,6 +70,8 @@ export async function fetchItems() {
       imageUrls: imgUrls.length > 0 ? imgUrls : undefined,
       gachaPool: pool,
       accountCredentials: accCreds,
+      fileLink: fileL,
+      filePassword: fileP,
       initialQuantity: initialQty,
       piecesPerUnit: pieces,
       originalPrice: origPrice,
