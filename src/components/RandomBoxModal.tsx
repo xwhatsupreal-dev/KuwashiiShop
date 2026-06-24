@@ -160,7 +160,7 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({ item, onClose, o
                 </div>
 
                 <div className="pt-2 flex flex-col gap-3 bg-zinc-900/30 p-4 sm:p-5 rounded-[1.25rem] border border-zinc-800/50">
-                  <div className="text-zinc-400 text-[12px] sm:text-[13px] leading-relaxed whitespace-pre-wrap font-medium">
+                  <div className="text-zinc-300 text-base sm:text-lg leading-relaxed whitespace-pre-wrap font-medium">
                     {item.description /* custom description here */}
                     {item.description && <div className="h-px bg-zinc-800 my-4" />}
                     

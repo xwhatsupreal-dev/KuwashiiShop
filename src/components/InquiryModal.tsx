@@ -240,16 +240,16 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ item, onClose, onBuy
                     <span>รายละเอียดสินค้าแบบครบถ้วน</span>
                   </div>
                   {item.description ? (
-                    <div className="text-zinc-300 font-sans text-xs sm:text-[13px] leading-relaxed break-words space-y-1.5">
+                    <div className="text-zinc-300 font-sans text-base sm:text-lg leading-relaxed break-words space-y-1.5">
                       {item.description.split('\n').map((line, i) => (
                         <p key={i} className="flex gap-1.5 items-start">
                           {line.startsWith('-') || line.startsWith('•') ? (
                             <>
-                              <span className="text-[#0ea5e9] mt-0.5">•</span>
+                              <span className="text-[#0ea5e9] mt-0.5 sm:mt-1">•</span>
                               <span>{line.replace(/^[-•]\s*/, '')}</span>
                             </>
                           ) : (
-                            <span className={i === 0 ? "font-bold text-white text-sm sm:text-base mb-1.5 inline-block leading-snug pt-0.5" : ""}>
+                            <span className={i === 0 ? "font-bold text-white text-lg sm:text-xl mb-1.5 inline-block leading-snug pt-0.5" : ""}>
                               {i === 0 && <span className="text-red-500 scale-110 rotate-45 inline-block mr-1.5">📌</span>} 
                               {line}
                             </span>
