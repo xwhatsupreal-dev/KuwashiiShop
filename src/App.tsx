@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Turnstile } from '@marsidev/react-turnstile';
 import { motion, AnimatePresence } from "motion/react";
 import { parseUTCDate, formatThaiDate, formatThaiTime } from './utils/date';
@@ -186,9 +187,6 @@ export default function App() {
 
   // --- Global Hub State ---
   const [appScreen, setAppScreen] = useState<string>("SHOP");
-  const [targetScreen, setTargetScreen] = useState<string | null>(null);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [hoveredGame, setHoveredGame] = useState<string | null>(null);
 
   // Route handlers for Discord Auth redirection parameters
   useEffect(() => {
@@ -414,96 +412,7 @@ export default function App() {
     };
   }, [currentUser]);
 
-  const [isLoaderTimerDone, setIsLoaderTimerDone] = useState(false);
 
-  // Loading Screen Timer
-  useEffect(() => {
-    if (appScreen === "LOADING") {
-      const timer = setTimeout(() => {
-        setIsLoaderTimerDone(true);
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [appScreen]);
-
-  useEffect(() => {
-    if (appScreen === "LOADING" && isLoaderTimerDone && !isLoadingStock && syncCounter > 0) {
-      let finalScreen = "SELECT";
-      try {
-        const stored = localStorage.getItem("KUWASHII_LAST_SCREEN");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (
-            parsed.expiry > Date.now() &&
-            ["ASTD", "AOTR", "ROV"].includes(parsed.screen)
-          ) {
-            finalScreen = parsed.screen;
-          } else {
-            localStorage.removeItem("KUWASHII_LAST_SCREEN");
-          }
-        }
-      } catch (e) {}
-      setAppScreen(finalScreen as any);
-    }
-  }, [appScreen, isLoaderTimerDone, isLoadingStock, syncCounter]);
-
-  // Save Last Screen Strategy
-  useEffect(() => {
-    if (["ASTD", "AOTR", "ROV"].includes(appScreen)) {
-      const TH_OFFSET = 7 * 60 * 60 * 1000;
-      const now = Date.now();
-      const thTimeMs = now + TH_OFFSET;
-      const daysSinceEpoch = Math.floor(thTimeMs / 86400000);
-      const nextMidnightThMs = (daysSinceEpoch + 1) * 86400000;
-      const expiry = nextMidnightThMs - TH_OFFSET;
-
-      localStorage.setItem(
-        "KUWASHII_LAST_SCREEN",
-        JSON.stringify({
-          screen: appScreen,
-          expiry: expiry,
-        })
-      );
-    }
-  }, [appScreen]);
-
-  // Transition Timer
-  useEffect(() => {
-    if (appScreen === "TRANSITION" && targetScreen) {
-      const timer = setTimeout(() => {
-        setAppScreen(targetScreen);
-        setTargetScreen(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [appScreen, targetScreen]);
-
-  // Loading Progress Number Effect
-  useEffect(() => {
-    if (appScreen === "LOADING" || appScreen === "TRANSITION") {
-      setLoadingProgress(0);
-      let p = 0;
-      const duration = appScreen === "LOADING" ? 3500 : 3000;
-      const step = 30; // ms
-      const increment = 100 / (duration / step);
-
-      const interval = setInterval(() => {
-        p += increment + (Math.random() * 2 - 0.5); // Add slight randomness
-        if (p > 99) p = 99; // Cap at 99 until finished closely
-        setLoadingProgress(Math.floor(p));
-      }, step);
-
-      const finishTimer = setTimeout(() => {
-        setLoadingProgress(100);
-        clearInterval(interval);
-      }, duration - 200);
-
-      return () => {
-        clearInterval(interval);
-        clearTimeout(finishTimer);
-      };
-    }
-  }, [appScreen]);
 
   // Modals controller
   // showAuthModal removed
@@ -572,6 +481,83 @@ export default function App() {
   );
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [inquiringItem, setInquiringItem] = useState<StockItem | null>(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isNavigating = useRef(false);
+
+  // Sync state to URL
+  useEffect(() => {
+    if (isNavigating.current) {
+      isNavigating.current = false;
+      return;
+    }
+    let newPath = '/';
+    if (appScreen === 'LOGIN') {
+      newPath = '/login';
+    } else if (appScreen === 'TOPUP') {
+      newPath = '/topup';
+    } else if (appScreen === 'PROFILE') {
+      newPath = '/profile';
+    } else if (inquiringItem) {
+      newPath = `/products/${inquiringItem.id}`;
+    } else if (selectedCategory && selectedCategory !== 'all') {
+      newPath = `/categories/${encodeURIComponent(selectedCategory)}`;
+    }
+    
+    if (location.pathname !== newPath) {
+      isNavigating.current = true;
+      navigate(newPath); 
+    }
+  }, [appScreen, selectedCategory, inquiringItem?.id]);
+
+  // Sync URL to state
+  useEffect(() => {
+    if (isNavigating.current) {
+      isNavigating.current = false;
+      return;
+    }
+    
+    const path = location.pathname;
+    let newAppScreen = appScreen;
+    let newSelectedCategory = selectedCategory;
+    let newInquiringItem = inquiringItem;
+
+    if (path === '/login') {
+      newAppScreen = 'LOGIN';
+      newInquiringItem = null;
+    } else if (path === '/topup') {
+      newAppScreen = 'TOPUP';
+      newInquiringItem = null;
+    } else if (path === '/profile') {
+      newAppScreen = 'PROFILE';
+      newInquiringItem = null;
+    } else if (path.startsWith('/categories/')) {
+      newAppScreen = 'SHOP';
+      newSelectedCategory = decodeURIComponent(path.replace('/categories/', ''));
+      newInquiringItem = null;
+    } else if (path.startsWith('/products/')) {
+      newAppScreen = 'SHOP';
+      const productId = path.replace('/products/', '');
+      const item = items.find(i => i.id === productId);
+      if (item) {
+        newInquiringItem = item;
+      }
+    } else if (path === '/' || path === '') {
+      newAppScreen = 'SHOP';
+      newSelectedCategory = 'all';
+      newInquiringItem = null;
+    }
+
+    let changed = false;
+    if (newAppScreen !== appScreen) { setAppScreen(newAppScreen); changed = true; }
+    if (newSelectedCategory !== selectedCategory) { setSelectedCategory(newSelectedCategory); changed = true; }
+    if (newInquiringItem !== inquiringItem) { setInquiringItem(newInquiringItem); changed = true; }
+
+    if (changed) {
+      isNavigating.current = true; 
+    }
+  }, [location.pathname, items]);
 
   const [hideGlobalStats, setHideGlobalStats] = useState(() => {
     return localStorage.getItem("KUWASHII_HIDE_STATS") === "true";
@@ -2282,13 +2268,6 @@ export default function App() {
 
   // --- Filtering & Sorting Compute ---
   const filteredItems = items.filter((item) => {
-    let matchesGame = true;
-    if (appScreen === "AOTR") matchesGame = item.game === "AOTR";
-    if (appScreen === "ASTD") matchesGame = item.game === "ASTD";
-    if (appScreen === "ROV") matchesGame = item.game === "ROV";
-
-    if (!matchesGame) return false;
-
     const searchStr = (search || "").toLowerCase();
     const matchesSearch =
       (item.name || "").toLowerCase().includes(searchStr) ||
@@ -2491,7 +2470,7 @@ export default function App() {
         <InquiryModal
           item={inquiringItem}
           onClose={() => setInquiringItem(null)}
-          onBuy={appScreen !== "AOTR" ? handleBuyItem : undefined}
+          onBuy={handleBuyItem}
           isProcessing={isProcessingPurchase}
         />
       )}
@@ -2711,180 +2690,7 @@ export default function App() {
 
     
 
-    if (appScreen === "SELECT") {
-      const getBgGlow = () => {
-        switch (hoveredGame) {
-          case "AOTR": return "from-amber-900/30 via-red-900/10 to-transparent";
-          case "ASTD": return "from-indigo-900/30 via-purple-900/10 to-transparent";
-          case "ROV": return "from-emerald-900/30 via-teal-900/10 to-transparent";
-          default: return "from-zinc-800/10 via-zinc-900/5 to-transparent";
-        }
-      };
-
-      return (
-        <motion.div
-          key="select"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.99 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="min-h-[100vh] min-h-[100dvh] bg-transparent flex flex-col items-center p-6 sm:p-10 relative w-full overflow-y-auto text-zinc-100"
-        >
-          {/* Dynamic Background */}
-          <div
-            className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 z-0 transition-opacity duration-1000"
-            style={{
-              backgroundImage:
-                "url('https://s.imgz.io/2026/05/31/1000098494b68242f76bd7e2f7.gif')",
-            }}
-          />
-          <div className="absolute inset-0 bg-zinc-950/80 z-0 pointer-events-none transition-colors duration-700" />
-          
-          <div className={`absolute top-0 left-0 w-full h-[40rem] bg-gradient-to-b ${getBgGlow()} filter blur-[100px] pointer-events-none z-0 transition-all duration-1000`} />
-
-          <div className="z-10 w-full max-w-6xl relative m-auto flex flex-col justify-center min-h-[80vh]">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.5 }}
-              className="text-center mb-16"
-            >
-              <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tighter text-zinc-50 mb-4 drop-shadow-sm">
-                เลือกเกมที่คุณ
-                <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent ml-2">
-                  สนใจ
-                </span>
-                ได้เลย 🎮
-              </h1>
-              <p className="text-zinc-400 text-sm sm:text-base max-w-2xl mx-auto font-medium leading-relaxed">
-                สวัสดีค้าบ 🙏 สนใจเกมไหนดูก่อนได้เลยน้า <br className="hidden sm:block" />
-                ร้านเรามีของให้เลือกเพียบ แถมมีระบบสุ่มกล่องด้วย ทักเข้ามาสอบถามได้ตลอดเลยค้าบผม!
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 w-full max-w-5xl mx-auto px-4">
-              {/* AOT Revolution */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 100 }}
-                onHoverStart={() => setHoveredGame("AOTR")}
-                onHoverEnd={() => setHoveredGame(null)}
-                onClick={() => {
-                  setTargetScreen("AOTR");
-                  setAppScreen("TRANSITION");
-                }}
-                className="group relative rounded-[2rem] border border-zinc-800/50 bg-zinc-900/40 p-3 sm:p-4 cursor-pointer hover:border-amber-500/30 transition-all duration-500 overflow-hidden shadow-xl hover:shadow-amber-500/10 hover:-translate-y-2 backdrop-blur-sm"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-600/5 to-red-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative mb-5 shadow-inner">
-                  <img
-                    src="https://img1.pic.in.th/images/1000109791.png"
-                    alt="Attack on Titan"
-                    className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/20 to-transparent opacity-80" />
-                  <div className="absolute bottom-4 left-4 z-20">
-                    <span className="px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-bold uppercase tracking-widest backdrop-blur-md border border-amber-500/20 shadow-lg">
-                      Attack on Titan
-                    </span>
-                  </div>
-                </div>
-                <div className="px-2 pb-2 relative z-10 text-left">
-                  <h3 className="text-xl font-bold text-zinc-200 group-hover:text-amber-400 transition-colors uppercase tracking-tight mb-1">
-                    สินค้า ATOR โดย Kuwashii El
-                  </h3>
-                  <p className="text-sm text-zinc-500 font-mono group-hover:text-amber-200/60 transition-colors">
-                    Connect to the Paradis terminal.
-                  </p>
-                </div>
-              </motion.div>
-
-              {/* ASTD */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 100 }}
-                onHoverStart={() => setHoveredGame("ASTD")}
-                onHoverEnd={() => setHoveredGame(null)}
-                onClick={() => {
-                  setTargetScreen("ASTD");
-                  setAppScreen("TRANSITION");
-                }}
-                className="group relative rounded-[2rem] border border-zinc-800/50 bg-zinc-900/40 p-3 sm:p-4 cursor-pointer hover:border-indigo-500/30 transition-all duration-500 overflow-hidden shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-2 backdrop-blur-sm"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/5 to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative mb-5 shadow-inner">
-                  <img
-                    src="https://img2.pic.in.th/1000098143.jpg"
-                    alt="All Star Tower Defense"
-                    className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/20 to-transparent opacity-80" />
-                  <div className="absolute bottom-4 left-4 z-20">
-                    <span className="px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase tracking-widest backdrop-blur-md border border-indigo-500/20 shadow-lg">
-                      All Star Tower Defense
-                    </span>
-                  </div>
-                </div>
-                <div className="px-2 pb-2 relative z-10 text-left">
-                  <h3 className="text-xl font-bold text-zinc-200 group-hover:text-indigo-400 transition-colors uppercase tracking-tight mb-1">
-                    สินค้า ASTD เพียบ
-                  </h3>
-                  <p className="text-sm text-zinc-500 font-mono group-hover:text-indigo-200/60 transition-colors">
-                    Connect to the Multiverse defense grid.
-                  </p>
-                </div>
-              </motion.div>
-
-              {/* ROV */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ delay: 0.4, duration: 0.5, type: "spring", stiffness: 100 }}
-                onHoverStart={() => setHoveredGame("ROV")}
-                onHoverEnd={() => setHoveredGame(null)}
-                onClick={() => {
-                  setTargetScreen("ROV");
-                  setAppScreen("TRANSITION");
-                }}
-                className="group relative rounded-[2rem] border border-zinc-800/50 bg-zinc-900/40 p-3 sm:p-4 cursor-pointer hover:border-emerald-500/30 transition-all duration-500 overflow-hidden shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-2 backdrop-blur-sm"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-teal-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-colors duration-700" />
-                <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative mb-5 shadow-inner">
-                  <img
-                    src="https://img2.pic.in.th/1000099558.jpg"
-                    alt="ROV"
-                    className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/20 to-transparent opacity-80" />
-                  <div className="absolute bottom-4 left-4 z-20">
-                    <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-widest backdrop-blur-md border border-emerald-500/20 shadow-lg">
-                      Arena of Valor
-                    </span>
-                  </div>
-                </div>
-                <div className="px-2 pb-2 relative z-10 text-left">
-                  <h3 className="text-xl font-bold text-zinc-200 group-hover:text-emerald-400 transition-colors uppercase tracking-tight mb-1">
-                    สินค้า ROV โดย sokay0419
-                  </h3>
-                  <p className="text-sm text-zinc-500 font-mono group-hover:text-emerald-200/60 transition-colors">
-                    Arena of Valor accounts and codes.
-                  </p>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-          {renderModals()}
-        </motion.div>
-      );
-    }
-
-    if (["SHOP", "TOPUP", "LOGIN", "PROFILE", "AOTR", "ASTD", "ROV"].includes(appScreen)) {
+    if (["SHOP", "TOPUP", "LOGIN", "PROFILE"].includes(appScreen)) {
       return (
         <motion.div
           key={appScreen}
@@ -2905,7 +2711,7 @@ export default function App() {
           />
           {appScreen === 'SHOP' && (
             <>
-              <AnnouncementPopup appScreen={appScreen} isLoadingData={isLoadingStock || appScreen === "LOADING" || appScreen === "TRANSITION"} />
+              <AnnouncementPopup appScreen={appScreen} isLoadingData={isLoadingStock} />
             </>
           )}
           
@@ -3254,7 +3060,7 @@ export default function App() {
   return (
     <>
       <ShootingStars />
-      <GlobalLoadingScreen isLoading={isLoadingStock || appScreen === "LOADING" || appScreen === "TRANSITION"} progress={loadingProgress} />
+      <GlobalLoadingScreen isLoading={isLoadingStock} />
       <AnimatePresence mode="wait">{renderAppScreen()}</AnimatePresence>
     </>
   );

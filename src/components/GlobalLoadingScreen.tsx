@@ -36,7 +36,7 @@ export const GlobalLoadingScreen: React.FC<GlobalLoadingScreenProps> = ({ isLoad
             transition={{ delay: 0.5, duration: 0.8 }}
             className="flex flex-col items-center gap-3 w-full max-w-xs"
           >
-            <h2 className="text-xl sm:text-2xl font-black text-zinc-100 tracking-widest uppercase font-display">
+            <h2 className="text-xl sm:text-2xl font-bold text-zinc-100">
               กำลังโหลดข้อมูล
             </h2>
             {progress !== undefined && progress > 0 ? (
@@ -56,17 +56,17 @@ export const GlobalLoadingScreen: React.FC<GlobalLoadingScreenProps> = ({ isLoad
                 <motion.div 
                   animate={{ y: [0, -10, 0] }} 
                   transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} 
-                  className="w-2.5 h-2.5 bg-indigo-500 rounded-full" 
+                  className="w-3 h-3 bg-violet-500 rounded-full" 
                 />
                 <motion.div 
                   animate={{ y: [0, -10, 0] }} 
                   transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }} 
-                  className="w-2.5 h-2.5 bg-purple-500 rounded-full" 
+                  className="w-3 h-3 bg-purple-500 rounded-full" 
                 />
                 <motion.div 
                   animate={{ y: [0, -10, 0] }} 
                   transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} 
-                  className="w-2.5 h-2.5 bg-emerald-500 rounded-full" 
+                  className="w-3 h-3 bg-teal-500 rounded-full" 
                 />
               </div>
             )}
