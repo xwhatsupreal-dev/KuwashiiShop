@@ -185,8 +185,28 @@ export default function App() {
 
   const isUnderMaintenance = globalStats?.maintenance_mode;
 
+  const getInitialState = () => {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '/';
+    let initAppScreen = "SHOP";
+    let initSelectedCategory = "all";
+    
+    if (path === '/login') {
+      initAppScreen = 'LOGIN';
+    } else if (path === '/topup') {
+      initAppScreen = 'TOPUP';
+    } else if (path === '/profile') {
+      initAppScreen = 'PROFILE';
+    } else if (path.startsWith('/categories/')) {
+      initSelectedCategory = decodeURIComponent(path.replace('/categories/', ''));
+    }
+    
+    return { initAppScreen, initSelectedCategory };
+  };
+
+  const initialState = getInitialState();
+
   // --- Global Hub State ---
-  const [appScreen, setAppScreen] = useState<string>("SHOP");
+  const [appScreen, setAppScreen] = useState<string>(initialState.initAppScreen);
 
   // Route handlers for Discord Auth redirection parameters
   useEffect(() => {
@@ -311,7 +331,7 @@ export default function App() {
   const [isServerQuotaExceeded, setIsServerQuotaExceeded] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] =
-    useState<CategoryFilter>("all");
+    useState<CategoryFilter>(initialState.initSelectedCategory);
   const [selectedSaleFormat, setSelectedSaleFormat] = useState<SaleFormatFilter>("all");
   const [selectedStatus, setSelectedStatus] =
     useState<StockStatusFilter>("all");
@@ -485,9 +505,15 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const isNavigating = useRef(false);
+  const isInitialMount = useRef(true);
 
   // Sync state to URL
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
     if (isNavigating.current) {
       isNavigating.current = false;
       return;
