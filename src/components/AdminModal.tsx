@@ -22,6 +22,8 @@ const PRESET_IMAGE_SUGGESTIONS = [
   { name: 'Abyss Deep Blue', url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&q=80' },
 ];
 
+const generateObjectId = () => Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+
 export const AdminModal: React.FC<AdminModalProps> = ({
   isOpen,
   onClose,
@@ -296,7 +298,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     }
 
     onSave({
-      id: editingItem ? editingItem.id : `${itemGame.toLowerCase()}-${Date.now()}`,
+      id: editingItem ? editingItem.id : generateObjectId(),
       game: itemGame,
       name: name.trim(),
       category,
@@ -631,7 +633,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   </span>
                   <motion.button whileTap={{ scale: 0.95 }}
                     type="button"
-                    onClick={() => setGachaPool([...gachaPool, { id: Date.now().toString(), name: '' }])}
+                    onClick={() => setGachaPool([...gachaPool, { id: generateObjectId(), name: '' }])}
                     className="flex items-center gap-1 text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" /> เพิ่ม
