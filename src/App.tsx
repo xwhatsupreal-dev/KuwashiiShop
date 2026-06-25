@@ -2720,9 +2720,9 @@ export default function App() {
       return (
         <motion.div
           key={appScreen}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.99 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.15, ease: "easeOut" }}
           className="min-h-[100vh] min-h-[100dvh] flex flex-col bg-transparent text-zinc-200 font-display tracking-tight selection:bg-indigo-500 selection:text-zinc-100 pb-20 sm:pb-0 relative w-full"
         >
