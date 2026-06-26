@@ -105,7 +105,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className="w-full max-w-[360px] mx-auto flex flex-col justify-start text-white pb-8 px-4"
+      className="w-full max-w-4xl mx-auto flex flex-col justify-start text-white pb-8 px-4"
     >
       {/* Breadcrumbs & Back Button */}
       <div className="flex items-center justify-between mb-6 pt-6">
@@ -129,9 +129,9 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
         </button>
       </div>
 
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col md:flex-row gap-6 w-full">
         {/* Product Image */}
-        <div className="w-full relative flex justify-center mb-6">
+        <div className="w-full md:w-1/2 relative flex justify-center mb-6 md:mb-0 h-fit">
           {item.imageUrls?.[0] || item.imageUrl ? (
             <img
               src={item.imageUrls?.[0] || item.imageUrl}
@@ -156,7 +156,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
         </div>
 
         {/* Product Info Section */}
-        <div className="flex flex-col">
+        <div className="w-full md:w-1/2 flex flex-col">
           {/* Warning Section */}
           <div className="mb-4 bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
             <p className="text-red-400 font-bold text-sm mb-1">⚠️ คำเตือนก่อนสั่งซื้อ</p>

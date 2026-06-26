@@ -165,7 +165,7 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className="w-full max-w-[360px] mx-auto flex flex-col justify-start text-white pb-8 px-4"
+      className="w-full max-w-4xl mx-auto flex flex-col justify-start text-white pb-8 px-4"
     >
       {/* Breadcrumbs & Back Button */}
       <div className="flex items-center justify-between mb-6 pt-6">
@@ -189,9 +189,9 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({
         </button>
       </div>
 
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col md:flex-row gap-6 w-full">
         {/* Product Image */}
-        <div className="w-full relative flex justify-center mb-6">
+        <div className="w-full md:w-1/2 relative flex justify-center mb-6 md:mb-0 h-fit">
           {item.imageUrls?.[0] || item.imageUrl ? (
             <img
               src={item.imageUrls?.[0] || item.imageUrl}
@@ -209,7 +209,7 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({
         </div>
 
         {/* Product Info Section */}
-        <div className="flex flex-col">
+        <div className="w-full md:w-1/2 flex flex-col">
           {/* Title & Share */}
           <div className="flex items-start justify-between gap-2 mb-3">
             <h1 className="text-2xl font-black text-[#0ea5e9] uppercase tracking-wide drop-shadow-[0_0_10px_rgba(14,165,233,0.2)] break-words">

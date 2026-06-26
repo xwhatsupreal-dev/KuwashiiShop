@@ -70,7 +70,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-[#121215] rounded-t-[2rem] sm:rounded-3xl mt-12 sm:mt-0 shadow-2xl p-4 sm:p-6 w-full sm:max-w-2xl relative z-10 flex flex-col h-[calc(100dvh-3rem)] sm:h-auto sm:max-h-[85dvh]"
+          className="bg-[#121215] rounded-t-[2rem] sm:rounded-3xl mt-12 sm:mt-0 shadow-2xl p-4 sm:p-6 w-full sm:max-w-4xl relative z-10 flex flex-col h-[calc(100dvh-3rem)] sm:h-auto sm:max-h-[85dvh]"
         >
           <div className="flex justify-between items-start mb-6 shrink-0 pt-2 sm:pt-0">
             <div>

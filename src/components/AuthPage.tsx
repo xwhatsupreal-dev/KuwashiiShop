@@ -35,7 +35,7 @@ export const AuthPage = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="w-full max-w-[260px] sm:max-w-[300px] mx-auto py-4 sm:py-6 flex flex-col justify-start px-2 sm:px-0"
+      className="w-full max-w-[280px] sm:max-w-md mx-auto py-4 sm:py-6 flex flex-col justify-start px-2 sm:px-0"
     >
               <div className="mb-4 sm:mb-6 text-center flex flex-col items-center">
                 <img src="https://img2.pic.in.th/1000111145.png" alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20 mb-3 sm:mb-4 object-contain rounded-xl shadow-lg" />

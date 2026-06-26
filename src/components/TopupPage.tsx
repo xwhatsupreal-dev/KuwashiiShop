@@ -32,7 +32,7 @@ export const TopupPage = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="w-full max-w-[400px] sm:max-w-md mx-auto py-8 flex flex-col justify-start"
+      className="w-full max-w-xl mx-auto py-8 flex flex-col justify-start px-4 sm:px-0"
     >
       <motion.div 
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}

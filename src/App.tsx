@@ -289,58 +289,6 @@ export default function App() {
 
   const [loadingVariant, setLoadingVariant] = useState(1);
   const [isAstdMenuOpen, setIsAstdMenuOpen] = useState(false);
-  const [isStale, setIsStale] = useState(false);
-
-  useEffect(() => {
-    const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
-    let lastActiveTime = Date.now();
-    let intervalId: NodeJS.Timeout;
-
-    const updateActivity = () => {
-      // Only update if not already stale
-      if (!isStale) {
-        lastActiveTime = Date.now();
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        if (Date.now() - lastActiveTime > IDLE_TIMEOUT) {
-          setIsStale(true);
-        } else {
-          updateActivity();
-        }
-      }
-    };
-
-    window.addEventListener("mousemove", updateActivity);
-    window.addEventListener("keydown", updateActivity);
-    window.addEventListener("click", updateActivity);
-    window.addEventListener("scroll", updateActivity, { passive: true });
-    window.addEventListener("touchstart", updateActivity, { passive: true });
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    intervalId = setInterval(() => {
-      if (
-        document.visibilityState === "hidden" ||
-        Date.now() - lastActiveTime > IDLE_TIMEOUT
-      ) {
-        if (Date.now() - lastActiveTime > IDLE_TIMEOUT) {
-          setIsStale(true);
-        }
-      }
-    }, 30000); // Check every 30s
-
-    return () => {
-      window.removeEventListener("mousemove", updateActivity);
-      window.removeEventListener("keydown", updateActivity);
-      window.removeEventListener("click", updateActivity);
-      window.removeEventListener("scroll", updateActivity);
-      window.removeEventListener("touchstart", updateActivity);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      clearInterval(intervalId);
-    };
-  }, [isStale]);
 
   const [gachaResult, setGachaResult] = useState<{
     drops: { name: string; color?: string }[];
@@ -2556,7 +2504,6 @@ export default function App() {
 
   const renderModals = () => (
     <>
-      {renderStaleOverlay()}
       {/* Processing Purchase / Topup Overlay */}
       <AnimatePresence>
         {(isProcessingPurchase || isProcessingTopup) && (
@@ -2710,32 +2657,6 @@ export default function App() {
     (acc, curr) => acc + curr.price * curr.quantity,
     0,
   );
-
-  const renderStaleOverlay = () => {
-    if (!isStale) return null;
-    return (
-      <div className="fixed inset-0 z-[99999] bg-zinc-900  flex flex-col items-center justify-center p-4 text-center select-none pointer-events-auto">
-        <div className="bg-transparent border border-red-500/30 p-6 sm:p-8 rounded-2xl w-[90%] max-w-sm shadow-2xl shadow-red-500/10">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4 animate-pulse" />
-          <h2 className="text-lg sm:text-xl font-black text-zinc-100 mb-2">
-            เซสชั่นหมดอายุ
-          </h2>
-          <p className="text-[11px] sm:text-xs text-zinc-500 mb-6 leading-relaxed">
-            ระบบตรวจพบว่าคุณไม่มีการเคลื่อนไหวเกิน 10 นาที
-            <br />
-            เพื่อรีเฟรชสต๊อกล่าสุด กรุณาโหลดหน้าเว็บใหม่
-          </p>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => window.location.reload()}
-            className="w-full py-3 sm:py-4 px-6 rounded-2xl bg-red-600 hover:bg-red-500 text-zinc-100 font-bold text-xs sm:text-sm tracking-wide shadow-lg shadow-red-500/25 transition-all outline-none"
-          >
-            รีเฟรชหน้าเว็บ (Refresh)
-          </motion.button>
-        </div>
-      </div>
-    );
-  };
 
   const renderAppScreen = () => {
     if (
