@@ -3111,8 +3111,11 @@ export default function App() {
                   <div className="text-center py-24 bg-zinc-900 border border-zinc-800 rounded-2xl">
                     <Inbox className="w-16 h-16 text-indigo-500/50 mx-auto mb-6" />
                     <h2 className="text-lg font-black text-zinc-100 mb-2 uppercase tracking-wide">
-                      ไม่พบสินค้าในสต๊อก
+                      {search ? `ไม่พบสินค้าสำหรับ "${search}"` : "ไม่พบสินค้าในสต๊อก"}
                     </h2>
+                    <p className="text-zinc-500 text-sm">
+                      {search ? "ลองค้นหาด้วยคำอื่น หรือกลับไปดูสินค้าทั้งหมด" : "ขณะนี้ยังไม่มีสินค้าวางจำหน่ายในหมวดหมู่นี้"}
+                    </p>
                   </div>
                 ) : (
                   <motion.div
