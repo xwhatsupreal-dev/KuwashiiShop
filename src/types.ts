@@ -1,6 +1,6 @@
 export interface StockItem {
   id: string;
-  game?: 'AOTR' | 'ASTD' | 'ROV';
+  game?: string;
   name: string;
   category: string;
   saleFormat?: 'ขายรหัส' | 'กล่องสุ่ม' | 'ไฟล์ตัวรัน';

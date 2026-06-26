@@ -85,7 +85,7 @@ export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex gap-3 w-max animate-marquee hover:[animation-play-state:paused]">
+              <div className="flex gap-3 w-max animate-marquee-slow hover:[animation-play-state:paused]">
                 {[...purchases, ...purchases, ...purchases, ...purchases].map((p, i) => {
                   const item = items.find(it => it.name === p.item_name);
                   const imgSrc = item?.imageUrls?.[0] || item?.imageUrl || '';

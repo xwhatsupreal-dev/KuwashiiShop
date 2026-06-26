@@ -186,6 +186,10 @@ class MockQueryBuilder {
       if (this.countMode) { count = data.length > 0 ? (data[0].count || 0) : 0; }
       return { data, error: null, count };
     } catch (error: any) {
+      if (error && error.message && error.message.includes('Failed to fetch')) {
+        // Silently ignore aborted fetches
+        return { data: null, error, count: 0 };
+      }
       console.error("D1 Query Error:", error);
       return { data: null, error, count: 0 };
     }
@@ -205,5 +209,8 @@ export const supabase = {
 };
 
 // Initialize D1 once
-fetch('/api/d1/init', { method: 'POST' }).catch(console.error);
+fetch('/api/d1/init', { method: 'POST' }).catch((e) => {
+  if (e && e.message && e.message.includes('Failed to fetch')) return;
+  console.error(e);
+});
 

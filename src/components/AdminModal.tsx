@@ -9,7 +9,7 @@ interface AdminModalProps {
   onClose: () => void;
   onSave: (item: Omit<StockItem, 'updatedAt'>, notifyDiscord?: boolean, webhookUrl?: string) => void;
   editingItem: StockItem | null;
-  currentGame: 'AOTR' | 'ASTD';
+  currentGame: string;
   globalStats?: any;
 }
 

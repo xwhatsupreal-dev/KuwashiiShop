@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet } from 'lucide-react';
 import { MarqueeAnnouncement } from './MarqueeAnnouncement';
 
-export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, setAppScreen, currentScreen, globalStats }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any }) => {
+export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, setAppScreen, currentScreen, globalStats, onLogoClick }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any, onLogoClick?: () => void }) => {
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
 
   return (
@@ -16,7 +16,7 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
       <MarqueeAnnouncement appScreen={currentScreen || 'SHOP'} />
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between w-full">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setAppScreen?.("SHOP")}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={onLogoClick || (() => setAppScreen?.("SHOP"))}>
             {/* Logo Placeholder */}
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-blue-900/40 flex items-center justify-center bg-transparent overflow-hidden shrink-0 relative">
               {globalStats?.announcement_settings?.shopLogoUrl && (
@@ -47,7 +47,13 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
               สินค้าทั้งหมด
             </button>
             <button 
-              onClick={() => setAppScreen?.("TOPUP")}
+              onClick={() => {
+                if (!currentUser) {
+                  onLoginClick();
+                } else {
+                  setAppScreen?.("TOPUP");
+                }
+              }}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${currentScreen === "TOPUP" ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"}`}
             >
               <Wallet className="w-4 h-4" />
@@ -57,7 +63,7 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={onSearchToggle} className="p-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-900/20 rounded-full transition-colors hidden sm:block">
+          <button onClick={onSearchToggle} className="p-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-900/20 rounded-full transition-colors">
             <Search className="w-5 h-5" />
           </button>
           

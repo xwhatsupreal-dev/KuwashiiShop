@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Turnstile } from '@marsidev/react-turnstile';
+import { Turnstile } from "@marsidev/react-turnstile";
 import { motion, AnimatePresence } from "motion/react";
-import { parseUTCDate, formatThaiDate, formatThaiTime } from './utils/date';
+import { parseUTCDate, formatThaiDate, formatThaiTime } from "./utils/date";
 import {
   Shield,
   ShieldCheck,
@@ -121,13 +121,18 @@ const readQRFromImage = (file: File): Promise<string | null> => {
   });
 };
 
-import { sendDiscordTopupEmbed, sendDiscordPurchaseEmbed, sendDiscordStockUpdateEmbed } from "./discord";
+import {
+  sendDiscordTopupEmbed,
+  sendDiscordPurchaseEmbed,
+  sendDiscordStockUpdateEmbed,
+} from "./discord";
 import { LiveActivities, LiveActivity } from "./components/LiveActivities";
 import { supabase } from "./supabase";
 import { fetchItems, fetchUser, getSystemConfig } from "./queries";
 
 import { SalesChart } from "./components/SalesChart";
-import { MobileDrawer } from './components/MobileDrawer';
+import { MobileDrawer } from "./components/MobileDrawer";
+import { SearchOverlay } from "./components/SearchOverlay";
 
 export const addLiveActivity = async (
   activity: Omit<LiveActivity, "id" | "timestamp">,
@@ -184,39 +189,50 @@ export default function App() {
   const isUnderMaintenance = globalStats?.maintenance_mode;
 
   const getInitialState = () => {
-    const path = typeof window !== 'undefined' ? window.location.pathname : '/';
+    const path = typeof window !== "undefined" ? window.location.pathname : "/";
     let initAppScreen = "SHOP";
     let initSelectedCategory = "all";
-    
-    if (path === '/login') {
-      initAppScreen = 'LOGIN';
-    } else if (path === '/topup') {
-      initAppScreen = 'TOPUP';
-    } else if (path === '/profile') {
-      initAppScreen = 'PROFILE';
-    } else if (path.startsWith('/categories/')) {
-      initSelectedCategory = decodeURIComponent(path.replace('/categories/', ''));
+
+    if (path === "/login") {
+      initAppScreen = "LOGIN";
+    } else if (path === "/topup") {
+      initAppScreen = "TOPUP";
+    } else if (path === "/profile") {
+      initAppScreen = "PROFILE";
+    } else if (path.startsWith("/categories/")) {
+      initSelectedCategory = decodeURIComponent(
+        path.replace("/categories/", ""),
+      );
     }
-    
+
     return { initAppScreen, initSelectedCategory };
   };
 
   const initialState = getInitialState();
 
   // --- Global Hub State ---
-  const [appScreen, setAppScreen] = useState<string>(initialState.initAppScreen);
+  const [appScreen, setAppScreen] = useState<string>(
+    initialState.initAppScreen,
+  );
 
   // Route handlers for Discord Auth redirection parameters
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const discordLogin = params.get('discord_login');
-    const discordEmail = params.get('email');
-    const discordAvatar = params.get('avatar');
-    
+    const discordLogin = params.get("discord_login");
+    const discordEmail = params.get("email");
+    const discordAvatar = params.get("avatar");
+
     if (discordLogin) {
-      const userPayload = { username: discordLogin, discord_email: discordEmail, avatar: discordAvatar };
+      const userPayload = {
+        username: discordLogin,
+        discord_email: discordEmail,
+        avatar: discordAvatar,
+      };
       setCurrentUser(userPayload);
-      localStorage.setItem("KUWASHII_CURRENT_USER", JSON.stringify(userPayload));
+      localStorage.setItem(
+        "KUWASHII_CURRENT_USER",
+        JSON.stringify(userPayload),
+      );
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -227,23 +243,31 @@ export default function App() {
     const handleMessage = (event: MessageEvent) => {
       // Validate origin is from AI Studio preview or localhost or vercel.app
       const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('studio.google.com') && !origin.includes('vercel.app')) {
+      if (
+        !origin.endsWith(".run.app") &&
+        !origin.includes("localhost") &&
+        !origin.includes("studio.google.com") &&
+        !origin.includes("vercel.app")
+      ) {
         return;
       }
-      if (event.data?.type === 'OAUTH_AUTH_SUCCESS' && event.data.payload) {
+      if (event.data?.type === "OAUTH_AUTH_SUCCESS" && event.data.payload) {
         const payload = event.data.payload;
-        const userPayload = { 
-          username: payload.username, 
-          discord_email: payload.email, 
-          avatar: payload.avatar 
+        const userPayload = {
+          username: payload.username,
+          discord_email: payload.email,
+          avatar: payload.avatar,
         };
         setCurrentUser(userPayload);
-        localStorage.setItem("KUWASHII_CURRENT_USER", JSON.stringify(userPayload));
+        localStorage.setItem(
+          "KUWASHII_CURRENT_USER",
+          JSON.stringify(userPayload),
+        );
         setAppScreen("SHOP"); // Go to shop screen after login
       }
     };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
   // User & Admin Authentications
@@ -328,9 +352,12 @@ export default function App() {
   const [isLoadingStock, setIsLoadingStock] = useState(true);
   const [isServerQuotaExceeded, setIsServerQuotaExceeded] = useState(false);
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] =
-    useState<CategoryFilter>(initialState.initSelectedCategory);
-  const [selectedSaleFormat, setSelectedSaleFormat] = useState<SaleFormatFilter>("all");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>(
+    initialState.initSelectedCategory,
+  );
+  const [selectedSaleFormat, setSelectedSaleFormat] =
+    useState<SaleFormatFilter>("all");
   const [selectedStatus, setSelectedStatus] =
     useState<StockStatusFilter>("all");
   const [showPopularOnly, setShowPopularOnly] = useState(false);
@@ -338,7 +365,7 @@ export default function App() {
   const [syncCounter, setSyncCounter] = useState(0);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [appScreen, selectedCategory]);
 
   // Sync Engine Listener
@@ -368,10 +395,15 @@ export default function App() {
           if (!pError && purchaseCount !== null) {
             config.total_purchases = purchaseCount;
           }
-          
-          const { data: allTopups } = await supabase.from('topups').select('amount');
+
+          const { data: allTopups } = await supabase
+            .from("topups")
+            .select("amount");
           if (allTopups) {
-            config.total_topups = allTopups.reduce((acc, topup) => acc + (parseFloat(topup.amount) || 0), 0);
+            config.total_topups = allTopups.reduce(
+              (acc, topup) => acc + (parseFloat(topup.amount) || 0),
+              0,
+            );
           }
         } catch (e) {}
 
@@ -390,9 +422,15 @@ export default function App() {
         const u = await fetchUser(currentUser.username);
         let totalTopups = 0;
         try {
-          const { data: topupsData } = await supabase.from('topups').select('amount').eq('username', currentUser.username);
+          const { data: topupsData } = await supabase
+            .from("topups")
+            .select("amount")
+            .eq("username", currentUser.username);
           if (topupsData) {
-            totalTopups = topupsData.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+            totalTopups = topupsData.reduce(
+              (acc, curr) => acc + (parseFloat(curr.amount) || 0),
+              0,
+            );
           }
         } catch (e) {}
 
@@ -409,7 +447,8 @@ export default function App() {
     handleSync();
 
     const throttledHandleSync = () => {
-      if ((window as any)._syncDebounce) clearTimeout((window as any)._syncDebounce);
+      if ((window as any)._syncDebounce)
+        clearTimeout((window as any)._syncDebounce);
       (window as any)._syncDebounce = setTimeout(() => {
         handleSync();
       }, 3000);
@@ -430,8 +469,6 @@ export default function App() {
     };
   }, [currentUser]);
 
-
-
   // Modals controller
   // showAuthModal removed
   const [authMode, setAuthMode] = useState<
@@ -446,7 +483,7 @@ export default function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
   const [showAuthPassword, setShowAuthPassword] = useState(false);
-  
+
   const [showAuthConfirmPassword, setShowAuthConfirmPassword] = useState(false);
 
   const [showMockEmailModal, setShowMockEmailModal] = useState(false);
@@ -488,9 +525,11 @@ export default function App() {
   const [isAnnouncementManagerOpen, setIsAnnouncementManagerOpen] =
     useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [historyTab, setHistoryTab] = useState<'purchases' | 'topups'>('purchases');
+  const [historyTab, setHistoryTab] = useState<"purchases" | "topups">(
+    "purchases",
+  );
 
-  const openHistoryModal = (tab: 'purchases' | 'topups') => {
+  const openHistoryModal = (tab: "purchases" | "topups") => {
     setHistoryTab(tab);
     setShowHistoryModal(true);
   };
@@ -511,27 +550,27 @@ export default function App() {
       isInitialMount.current = false;
       return;
     }
-    
+
     if (isNavigating.current) {
       isNavigating.current = false;
       return;
     }
-    let newPath = '/';
-    if (appScreen === 'LOGIN') {
-      newPath = '/login';
-    } else if (appScreen === 'TOPUP') {
-      newPath = '/topup';
-    } else if (appScreen === 'PROFILE') {
-      newPath = '/profile';
+    let newPath = "/";
+    if (appScreen === "LOGIN") {
+      newPath = "/login";
+    } else if (appScreen === "TOPUP") {
+      newPath = "/topup";
+    } else if (appScreen === "PROFILE") {
+      newPath = "/profile";
     } else if (inquiringItem) {
       newPath = `/products/${inquiringItem.id}`;
-    } else if (selectedCategory && selectedCategory !== 'all') {
+    } else if (selectedCategory && selectedCategory !== "all") {
       newPath = `/categories/${encodeURIComponent(selectedCategory)}`;
     }
-    
+
     if (location.pathname !== newPath) {
       isNavigating.current = true;
-      navigate(newPath); 
+      navigate(newPath);
     }
   }, [appScreen, selectedCategory, inquiringItem?.id]);
 
@@ -541,45 +580,56 @@ export default function App() {
       isNavigating.current = false;
       return;
     }
-    
+
     const path = location.pathname;
     let newAppScreen = appScreen;
     let newSelectedCategory = selectedCategory;
     let newInquiringItem = inquiringItem;
 
-    if (path === '/login') {
-      newAppScreen = 'LOGIN';
+    if (path === "/login") {
+      newAppScreen = "LOGIN";
       newInquiringItem = null;
-    } else if (path === '/topup') {
-      newAppScreen = 'TOPUP';
+    } else if (path === "/topup") {
+      newAppScreen = "TOPUP";
       newInquiringItem = null;
-    } else if (path === '/profile') {
-      newAppScreen = 'PROFILE';
+    } else if (path === "/profile") {
+      newAppScreen = "PROFILE";
       newInquiringItem = null;
-    } else if (path.startsWith('/categories/')) {
-      newAppScreen = 'SHOP';
-      newSelectedCategory = decodeURIComponent(path.replace('/categories/', ''));
+    } else if (path.startsWith("/categories/")) {
+      newAppScreen = "SHOP";
+      newSelectedCategory = decodeURIComponent(
+        path.replace("/categories/", ""),
+      );
       newInquiringItem = null;
-    } else if (path.startsWith('/products/')) {
-      newAppScreen = 'SHOP';
-      const productId = path.replace('/products/', '');
-      const item = items.find(i => i.id === productId);
+    } else if (path.startsWith("/products/")) {
+      newAppScreen = "SHOP";
+      const productId = path.replace("/products/", "");
+      const item = items.find((i) => i.id === productId);
       if (item) {
         newInquiringItem = item;
       }
-    } else if (path === '/' || path === '') {
-      newAppScreen = 'SHOP';
-      newSelectedCategory = 'all';
+    } else if (path === "/" || path === "") {
+      newAppScreen = "SHOP";
+      newSelectedCategory = "all";
       newInquiringItem = null;
     }
 
     let changed = false;
-    if (newAppScreen !== appScreen) { setAppScreen(newAppScreen); changed = true; }
-    if (newSelectedCategory !== selectedCategory) { setSelectedCategory(newSelectedCategory); changed = true; }
-    if (newInquiringItem !== inquiringItem) { setInquiringItem(newInquiringItem); changed = true; }
+    if (newAppScreen !== appScreen) {
+      setAppScreen(newAppScreen);
+      changed = true;
+    }
+    if (newSelectedCategory !== selectedCategory) {
+      setSelectedCategory(newSelectedCategory);
+      changed = true;
+    }
+    if (newInquiringItem !== inquiringItem) {
+      setInquiringItem(newInquiringItem);
+      changed = true;
+    }
 
     if (changed) {
-      isNavigating.current = true; 
+      isNavigating.current = true;
     }
   }, [location.pathname, items]);
 
@@ -645,7 +695,7 @@ export default function App() {
 
   // --- AI Chat Assistant States & Handlers ---
   // Chat feature removed
-  
+
   // Cleanup logic (7 days retention)
   useEffect(() => {
     async function cleanupOldData() {
@@ -723,7 +773,7 @@ export default function App() {
         },
         created_at: item.updatedAt || new Date().toISOString(),
       }));
-      
+
       // Cloudflare D1 / SQLite parameter limit per query is often 100 max. Each item has 12 fields = max 8 items per chunk
       const chunkSize = 8;
       for (let i = 0; i < updates.length; i += chunkSize) {
@@ -808,18 +858,18 @@ export default function App() {
         coupon.usedBy.push(activeUsername);
         localStorage.setItem("KUWASHII_COUPONS", JSON.stringify(coupons));
 
-            const configData = await getSystemConfig();
-            const currentFree = configData
-              ? Number(configData.global_free_astd || 0)
-              : 0;
-            await supabase
-              .from("system_config")
-              .update({
-                global_free_astd: currentFree + coupon.amount,
-              })
-              .eq("id", "main");
+        const configData = await getSystemConfig();
+        const currentFree = configData
+          ? Number(configData.global_free_astd || 0)
+          : 0;
+        await supabase
+          .from("system_config")
+          .update({
+            global_free_astd: currentFree + coupon.amount,
+          })
+          .eq("id", "main");
 
-        const balanceField = 'balance';
+        const balanceField = "balance";
         const userBalance = Number(liveUser[balanceField] || 0);
         const newBalance = userBalance + coupon.amount;
         await supabase
@@ -830,7 +880,7 @@ export default function App() {
           {
             username: activeUsername,
             amount: coupon.amount,
-            method: `Coupon: ${coupon.code}`
+            method: `Coupon: ${coupon.code}`,
           },
         ]);
         if (topupError) {
@@ -870,7 +920,10 @@ export default function App() {
           const res = await fetch("/api/topup/true-wallet", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ gift_link: topupCode.trim(), game: appScreen }),
+            body: JSON.stringify({
+              gift_link: topupCode.trim(),
+              game: appScreen,
+            }),
           });
 
           const data = await res.json();
@@ -901,7 +954,7 @@ export default function App() {
                 .eq("id", "main");
             }
 
-            const balanceField = 'balance';
+            const balanceField = "balance";
             const userBalance = Number(liveUser[balanceField] || 0);
             const newBalance = userBalance + amount;
             await supabase
@@ -912,7 +965,7 @@ export default function App() {
               {
                 username: activeUsername,
                 amount: amount,
-                method: `TrueMoney (Angpao) - ${topupCode.trim()}`
+                method: `TrueMoney (Angpao) - ${topupCode.trim()}`,
               },
             ]);
             if (topupError) {
@@ -939,17 +992,18 @@ export default function App() {
               "angpao",
               newBalance,
               true,
-              appScreen
+              appScreen,
             );
-            
+
             // รอ 2 วินาทีแล้วโหลดกลับหน้าหลัก
             setTimeout(() => {
               setTopupModalStep("select");
               setAppScreen("SHOP");
             }, 2000);
           } else {
-            let errorMsg =
-              String(data.message || "ซองของขวัญไม่ถูกต้องหรือถูกใช้งานไปแล้ว");
+            let errorMsg = String(
+              data.message || "ซองของขวัญไม่ถูกต้องหรือถูกใช้งานไปแล้ว",
+            );
             if (errorMsg.includes("ติดต่อผู้ดูแลระบบ")) {
               errorMsg += " ";
             }
@@ -965,9 +1019,9 @@ export default function App() {
               activeUsername,
               0,
               "angpao",
-              (liveUser.balance || 0),
+              liveUser.balance || 0,
               false,
-              appScreen
+              appScreen,
             );
           }
         } catch (error: any) {
@@ -993,10 +1047,13 @@ export default function App() {
       const processBankSlip = async () => {
         try {
           setTopupError("");
-          
+
           const qrcode_text = await readQRFromImage(slipFile);
           if (!qrcode_text) {
-            showToast("สลิปการโอนเงินไม่ถูกต้อง คิวอาร์โค้ดไม่สมบูรณ์ หรือไม่มีข้อมูล", "error");
+            showToast(
+              "สลิปการโอนเงินไม่ถูกต้อง คิวอาร์โค้ดไม่สมบูรณ์ หรือไม่มีข้อมูล",
+              "error",
+            );
             setIsProcessingTopup(false);
             return;
           }
@@ -1009,12 +1066,34 @@ export default function App() {
             }),
           });
           const data = await checkRes.json();
-          if (data.status === "success" || data.code === 200 || data.message === "เช็คสลิปสำเร็จ") {
+          if (
+            data.status === "success" ||
+            data.code === 200 ||
+            data.message === "เช็คสลิปสำเร็จ"
+          ) {
             const slipData = data.data || data;
-            const amount = parseFloat(slipData.amount?.amount || slipData.amount || data.amount) || 0;
-            const receiverName = slipData.receiver?.name || slipData.receiver?.account_name || slipData.receiver_name || data.receiver_name || "ไม่ทราบชื่อ";
-            const senderName = slipData.sender?.name || slipData.sender?.account_name || slipData.sender_name || data.sender_name || "ไม่ทราบชื่อ";
-            const transRef = slipData.transRef || slipData.ref1 || data.transRef || data.ref1 || `UNKNOWN-${Date.now()}`;
+            const amount =
+              parseFloat(
+                slipData.amount?.amount || slipData.amount || data.amount,
+              ) || 0;
+            const receiverName =
+              slipData.receiver?.name ||
+              slipData.receiver?.account_name ||
+              slipData.receiver_name ||
+              data.receiver_name ||
+              "ไม่ทราบชื่อ";
+            const senderName =
+              slipData.sender?.name ||
+              slipData.sender?.account_name ||
+              slipData.sender_name ||
+              data.sender_name ||
+              "ไม่ทราบชื่อ";
+            const transRef =
+              slipData.transRef ||
+              slipData.ref1 ||
+              data.transRef ||
+              data.ref1 ||
+              `UNKNOWN-${Date.now()}`;
 
             if (amount <= 0) {
               setTopupError("ไม่พบยอดเงินในสลิป หรือสลิปไม่สมบูรณ์");
@@ -1022,32 +1101,40 @@ export default function App() {
               setIsProcessingTopup(false);
               return;
             }
-            
+
             // Check receiver name if configured
             let configName = "";
             let settingsObj = globalStats?.announcement_settings || {};
-            if (typeof settingsObj === 'string') {
-               try { settingsObj = JSON.parse(settingsObj); } catch(e) {}
+            if (typeof settingsObj === "string") {
+              try {
+                settingsObj = JSON.parse(settingsObj);
+              } catch (e) {}
             }
             configName = (settingsObj.topup_qrcode_name || "").trim();
-            
+
             if (configName && receiverName !== "ไม่ทราบชื่อ") {
-               const cleanReceiver = receiverName.toLowerCase().replace(/\s/g, '');
-               const cleanConfig = configName.toLowerCase().replace(/\s/g, '');
-               // Allow fallback for the specific name requested
-               const hardcodeName1 = "ด.ช.ธีรสิทธิ์สุวรรณศรี";
-               const hardcodeName2 = "ด.ช.ธีรสิทธิ์ส";
-               
-               if (!cleanReceiver.includes(cleanConfig) && 
-                   !cleanConfig.includes(cleanReceiver) && 
-                   !cleanReceiver.includes(hardcodeName1) && 
-                   !cleanReceiver.includes(hardcodeName2) &&
-                   !hardcodeName1.includes(cleanReceiver)) {
-                  setTopupError(`ชื่อบัญชีผู้รับไม่ถูกต้อง (ต้องเป็น: ${configName})`);
-                  showToast(`สลิปนี้ถูกโอนไปยัง: ${receiverName}`, "error");
-                  setIsProcessingTopup(false);
-                  return;
-               }
+              const cleanReceiver = receiverName
+                .toLowerCase()
+                .replace(/\s/g, "");
+              const cleanConfig = configName.toLowerCase().replace(/\s/g, "");
+              // Allow fallback for the specific name requested
+              const hardcodeName1 = "ด.ช.ธีรสิทธิ์สุวรรณศรี";
+              const hardcodeName2 = "ด.ช.ธีรสิทธิ์ส";
+
+              if (
+                !cleanReceiver.includes(cleanConfig) &&
+                !cleanConfig.includes(cleanReceiver) &&
+                !cleanReceiver.includes(hardcodeName1) &&
+                !cleanReceiver.includes(hardcodeName2) &&
+                !hardcodeName1.includes(cleanReceiver)
+              ) {
+                setTopupError(
+                  `ชื่อบัญชีผู้รับไม่ถูกต้อง (ต้องเป็น: ${configName})`,
+                );
+                showToast(`สลิปนี้ถูกโอนไปยัง: ${receiverName}`, "error");
+                setIsProcessingTopup(false);
+                return;
+              }
             }
 
             const { data: existingTopup } = await supabase
@@ -1065,9 +1152,9 @@ export default function App() {
                 activeUsername,
                 0,
                 "bank",
-                (liveUser.balance || 0),
+                liveUser.balance || 0,
                 false,
-                appScreen
+                appScreen,
               );
               return;
             }
@@ -1094,7 +1181,7 @@ export default function App() {
             }
             // If ROV, we do nothing to system_config because we don't track global_revenue_rov currently.
 
-            const balanceField = 'balance';
+            const balanceField = "balance";
             const userBalance = Number(liveUser[balanceField] || 0);
             const newBalance = userBalance + amount;
             await supabase
@@ -1106,7 +1193,7 @@ export default function App() {
               {
                 username: activeUsername,
                 amount: amount,
-                method: `Slip: ${transRef}`
+                method: `Slip: ${transRef}`,
               },
             ]);
             if (topupError) {
@@ -1133,7 +1220,7 @@ export default function App() {
               "bank",
               newBalance,
               true,
-              appScreen
+              appScreen,
             );
 
             // รอ 2 วินาทีแล้วโหลดกลับหน้าหลัก
@@ -1142,14 +1229,16 @@ export default function App() {
               setAppScreen("SHOP");
             }, 2000);
           } else {
-            let finalErr = String(data.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้");
+            let finalErr = String(
+              data.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้",
+            );
             if (finalErr.includes("ติดต่อผู้ดูแลระบบ")) {
               finalErr += " ";
             }
             if (finalErr.includes("http")) {
               finalErr = finalErr.replace(
                 /https:\/\/discord\.gg\/[a-zA-Z0-9]+/g,
-                "https://discord.gg/AQKtJpvyva"
+                "https://discord.gg/AQKtJpvyva",
               );
             }
             setTopupError(`API แจ้งเตือน: ${finalErr}`);
@@ -1158,9 +1247,9 @@ export default function App() {
               activeUsername,
               0,
               "bank",
-              (liveUser.balance || 0),
+              liveUser.balance || 0,
               false,
-              appScreen
+              appScreen,
             );
           }
         } catch (error: any) {
@@ -1189,83 +1278,262 @@ export default function App() {
 
     try {
       if (authMode === "forgot") {
-      if (!authEmail.trim()) {
-        setAuthError("กรุณากรอกอีเมลให้ครบถ้วน");
-        return;
-      }
-    } else if (authMode === "forgot_verify_otp") {
-      if (!authEmail.trim() || !authOtpCode.trim() || !authPassword.trim()) {
-        setAuthError("กรุณากรอกอีเมล รหัส OTP และรหัสผ่านใหม่ ให้ครบถ้วน");
-        return;
-      }
-    } else {
-      if (
-        !authUsername.trim() ||
-        !authPassword.trim() ||
-        (authMode === "register" &&
-          (!authEmail.trim() || !authConfirmPassword.trim()))
-      ) {
-        setAuthError(
-          authMode === "register"
-            ? "กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง"
-            : "กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบถ้วน",
-        );
-        return;
-      }
-      if (authMode === "register" && authPassword !== authConfirmPassword) {
-        setAuthError("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
-        return;
-      }
-    }
-
-    if (authMode === "login") {
-      const storage = rememberAuth ? localStorage : sessionStorage;
-      localStorage.removeItem("KUWASHII_CURRENT_USER");
-      sessionStorage.removeItem("KUWASHII_CURRENT_USER");
-      localStorage.removeItem("KUWASHII_IS_ADMIN");
-      sessionStorage.removeItem("KUWASHII_IS_ADMIN");
-
-      if (
-        authUsername.trim() === "Kuwashii_admin" &&
-        authPassword === "ZAZACI09"
-      ) {
-        setIsAdmin(true);
-        setCurrentUser({ username: "Kuwashii_admin" });
-        storage.setItem("KUWASHII_IS_ADMIN", "true");
-        storage.setItem(
-          "KUWASHII_CURRENT_USER",
-          JSON.stringify({ username: "Kuwashii_admin" }),
-        );
-        setAppScreen("SHOP");
-        setAuthUsername("");
-        setAuthEmail("");
-        setAuthPassword("");
-        setAuthConfirmPassword("");
-        setAuthError("");
-        showToast("เข้าสู่ระบบผู้ดูแลเรียบร้อยแล้ว!", "success");
-        return;
+        if (!authEmail.trim()) {
+          setAuthError("กรุณากรอกอีเมลให้ครบถ้วน");
+          return;
+        }
+      } else if (authMode === "forgot_verify_otp") {
+        if (!authEmail.trim() || !authOtpCode.trim() || !authPassword.trim()) {
+          setAuthError("กรุณากรอกอีเมล รหัส OTP และรหัสผ่านใหม่ ให้ครบถ้วน");
+          return;
+        }
+      } else {
+        if (
+          !authUsername.trim() ||
+          !authPassword.trim() ||
+          (authMode === "register" &&
+            (!authEmail.trim() || !authConfirmPassword.trim()))
+        ) {
+          setAuthError(
+            authMode === "register"
+              ? "กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง"
+              : "กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบถ้วน",
+          );
+          return;
+        }
+        if (authMode === "register" && authPassword !== authConfirmPassword) {
+          setAuthError("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
+          return;
+        }
       }
 
-      const usernameTrimmed = authUsername.trim();
-      let user = await fetchUser(usernameTrimmed);
+      if (authMode === "login") {
+        const storage = rememberAuth ? localStorage : sessionStorage;
+        localStorage.removeItem("KUWASHII_CURRENT_USER");
+        sessionStorage.removeItem("KUWASHII_CURRENT_USER");
+        localStorage.removeItem("KUWASHII_IS_ADMIN");
+        sessionStorage.removeItem("KUWASHII_IS_ADMIN");
 
-      if (!user && usernameTrimmed.includes("@")) {
+        if (
+          authUsername.trim() === "Kuwashii_admin" &&
+          authPassword === "ZAZACI09"
+        ) {
+          setIsAdmin(true);
+          setCurrentUser({ username: "Kuwashii_admin" });
+          storage.setItem("KUWASHII_IS_ADMIN", "true");
+          storage.setItem(
+            "KUWASHII_CURRENT_USER",
+            JSON.stringify({ username: "Kuwashii_admin" }),
+          );
+          setAppScreen("SHOP");
+          setAuthUsername("");
+          setAuthEmail("");
+          setAuthPassword("");
+          setAuthConfirmPassword("");
+          setAuthError("");
+          showToast("เข้าสู่ระบบผู้ดูแลเรียบร้อยแล้ว!", "success");
+          return;
+        }
+
+        const usernameTrimmed = authUsername.trim();
+        let user = await fetchUser(usernameTrimmed);
+
+        if (!user && usernameTrimmed.includes("@")) {
+          try {
+            const { data } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("email", usernameTrimmed)
+              .limit(1)
+              .single();
+            if (data) user = data;
+          } catch (e) {}
+        }
+
+        if (user && user.password === authPassword) {
+          setCurrentUser({ username: user.username });
+          storage.setItem(
+            "KUWASHII_CURRENT_USER",
+            JSON.stringify({ username: user.username }),
+          );
+          storage.setItem("KUWASHII_IS_ADMIN", "false");
+
+          setAppScreen("SHOP");
+          setAuthUsername("");
+          setAuthEmail("");
+          setAuthPassword("");
+          setAuthConfirmPassword("");
+          setAuthError("");
+          showToast("เข้าสู่ระบบสำเร็จ!", "success");
+        } else {
+          setAuthError("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!");
+        }
+      } else if (authMode === "forgot") {
+        if (!authEmail.includes("@")) {
+          setAuthError("รูปแบบอีเมลไม่ถูกต้อง");
+          return;
+        }
+
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("email", authEmail.trim())
+          .limit(1)
+          .single();
+
+        if (!data) {
+          setAuthError("ไม่พบบัญชีที่ผูกกับอีเมลนี้");
+          return;
+        }
+
+        // Generate OTP and expire 15 mins
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expire = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        await supabase
+          .from("profiles")
+          .update({ otp_code: otp, otp_expires_at: expire })
+          .eq("username", data.username);
+
         try {
-          const { data } = await supabase
+          const response = await fetch("/api/send-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ toEmail: authEmail.trim(), otp }),
+          });
+          const resData = await response.json();
+          if (resData.error) {
+            throw new Error(resData.error);
+          }
+        } catch (err: any) {
+          console.error("Failed to send OTP:", err);
+          setAuthError(
+            err.message || "เกิดข้อผิดพลาดในการส่งอีเมล กรุณาลองใหม่อีกครั้ง",
+          );
+          return;
+        }
+
+        setAuthMode("forgot_verify_otp");
+        setAuthError("");
+        showToast("รหัส OTP ถูกส่งไปยังอีเมลของคุณแล้ว", "success");
+      } else if (authMode === "forgot_verify_otp") {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("email", authEmail.trim())
+          .limit(1)
+          .single();
+        if (!data) {
+          setAuthError("ไม่พบบัญชีที่ผูกกับอีเมลนี้");
+          return;
+        }
+        if (data.otp_code !== authOtpCode.trim()) {
+          setAuthError("รหัส OTP ไม่ถูกต้อง");
+          return;
+        }
+        if (new Date(data.otp_expires_at) < new Date()) {
+          setAuthError("รหัส OTP หมดอายุแล้ว");
+          return;
+        }
+
+        await supabase
+          .from("profiles")
+          .update({
+            password: authPassword,
+            otp_code: null,
+            otp_expires_at: null,
+          })
+          .eq("username", data.username);
+
+        setAuthMode("login");
+        setAuthPassword("");
+        setAuthOtpCode("");
+        setAuthEmail("");
+        setAuthError("");
+        showToast("ตั้งรหัสผ่านใหม่สำเร็จแล้ว กรุณาเข้าสู่ระบบ", "success");
+      } else {
+        // Register Mode
+        try {
+          const lockRes = await fetch("/api/check-register-lock");
+          const lockData = await lockRes.json();
+          if (lockData.locked) {
+            setAuthError(
+              `กรุณารอ ${lockData.remaining} นาที ก่อนสมัครสมาชิกใหม่เพื่อป้องกันสแปม (ล็อค IP)`,
+            );
+            return;
+          }
+        } catch (e) {
+          console.error("Lock check error", e);
+        }
+
+        if (!authEmail.includes("@")) {
+          setAuthError("รูปแบบอีเมลไม่ถูกต้อง");
+          return;
+        }
+
+        const targetUsername = authUsername.trim();
+
+        if (targetUsername.toLowerCase() === "kuwashii_admin") {
+          setAuthError("ไม่สามารถใช้ชื่อผู้ดูแลนี้ได้");
+          return;
+        }
+
+        const existing = await fetchUser(targetUsername);
+
+        if (existing) {
+          setAuthError("ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว!");
+          return;
+        }
+
+        try {
+          const { data: existingEmail } = await supabase
             .from("profiles")
-            .select("*")
-            .eq("email", usernameTrimmed)
+            .select("username")
+            .eq("email", authEmail.trim())
             .limit(1)
             .single();
-          if (data) user = data;
-        } catch (e) {}
-      }
+          if (existingEmail) {
+            setAuthError("อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น!");
+            return;
+          }
+        } catch (e) {
+          // Table might not have email column yet or other error, ignore and let insert fail if it's unique
+        }
 
-      if (user && user.password === authPassword) {
-        setCurrentUser({ username: user.username });
+        let insertRes = await supabase.from("profiles").insert([
+          {
+            username: targetUsername,
+            email: authEmail.trim(),
+            password: authPassword,
+            balance: 0,
+          },
+        ]);
+
+        if (insertRes.error && insertRes.error.message.includes("email")) {
+          // Fallback for older schema without email column
+          insertRes = await supabase.from("profiles").insert([
+            {
+              username: targetUsername,
+              password: authPassword,
+              balance: 0,
+            },
+          ]);
+        }
+
+        if (insertRes.error) {
+          setAuthError("เกิดข้อผิดพลาดในการสมัครสมาชิก โปรดลองอีกครั้ง");
+          return;
+        }
+
+        const storage = rememberAuth ? localStorage : sessionStorage;
+        localStorage.removeItem("KUWASHII_CURRENT_USER");
+        sessionStorage.removeItem("KUWASHII_CURRENT_USER");
+        localStorage.removeItem("KUWASHII_IS_ADMIN");
+        sessionStorage.removeItem("KUWASHII_IS_ADMIN");
+
+        setCurrentUser({ username: authUsername.trim() });
         storage.setItem(
           "KUWASHII_CURRENT_USER",
-          JSON.stringify({ username: user.username }),
+          JSON.stringify({ username: authUsername.trim() }),
         );
         storage.setItem("KUWASHII_IS_ADMIN", "false");
 
@@ -1275,198 +1543,19 @@ export default function App() {
         setAuthPassword("");
         setAuthConfirmPassword("");
         setAuthError("");
-        showToast("เข้าสู่ระบบสำเร็จ!", "success");
-      } else {
-        setAuthError("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!");
-      }
-    } else if (authMode === "forgot") {
-      if (!authEmail.includes("@")) {
-        setAuthError("รูปแบบอีเมลไม่ถูกต้อง");
-        return;
-      }
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("email", authEmail.trim())
-        .limit(1)
-        .single();
-
-      if (!data) {
-        setAuthError("ไม่พบบัญชีที่ผูกกับอีเมลนี้");
-        return;
-      }
-
-      // Generate OTP and expire 15 mins
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const expire = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-      await supabase
-        .from("profiles")
-        .update({ otp_code: otp, otp_expires_at: expire })
-        .eq("username", data.username);
-
-      try {
-        const response = await fetch("/api/send-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ toEmail: authEmail.trim(), otp }),
+        addLiveActivity({
+          type: "signup",
+          username: authUsername.trim(),
+          game: appScreen,
         });
-        const resData = await response.json();
-        if (resData.error) {
-          throw new Error(resData.error);
-        }
-      } catch (err: any) {
-        console.error("Failed to send OTP:", err);
-        setAuthError(
-          err.message || "เกิดข้อผิดพลาดในการส่งอีเมล กรุณาลองใหม่อีกครั้ง",
-        );
-        return;
+
+        try {
+          await fetch("/api/set-register-lock", { method: "POST" });
+        } catch (e) {}
+        showToast("สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!", "success");
       }
-
-      setAuthMode("forgot_verify_otp");
-      setAuthError("");
-      showToast("รหัส OTP ถูกส่งไปยังอีเมลของคุณแล้ว", "success");
-    } else if (authMode === "forgot_verify_otp") {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("email", authEmail.trim())
-        .limit(1)
-        .single();
-      if (!data) {
-        setAuthError("ไม่พบบัญชีที่ผูกกับอีเมลนี้");
-        return;
-      }
-      if (data.otp_code !== authOtpCode.trim()) {
-        setAuthError("รหัส OTP ไม่ถูกต้อง");
-        return;
-      }
-      if (new Date(data.otp_expires_at) < new Date()) {
-        setAuthError("รหัส OTP หมดอายุแล้ว");
-        return;
-      }
-
-      await supabase
-        .from("profiles")
-        .update({
-          password: authPassword,
-          otp_code: null,
-          otp_expires_at: null,
-        })
-        .eq("username", data.username);
-
-      setAuthMode("login");
-      setAuthPassword("");
-      setAuthOtpCode("");
-      setAuthEmail("");
-      setAuthError("");
-      showToast("ตั้งรหัสผ่านใหม่สำเร็จแล้ว กรุณาเข้าสู่ระบบ", "success");
-    } else {
-      // Register Mode
-      try {
-        const lockRes = await fetch("/api/check-register-lock");
-        const lockData = await lockRes.json();
-        if (lockData.locked) {
-          setAuthError(
-            `กรุณารอ ${lockData.remaining} นาที ก่อนสมัครสมาชิกใหม่เพื่อป้องกันสแปม (ล็อค IP)`,
-          );
-          return;
-        }
-      } catch (e) {
-        console.error("Lock check error", e);
-      }
-
-      if (!authEmail.includes("@")) {
-        setAuthError("รูปแบบอีเมลไม่ถูกต้อง");
-        return;
-      }
-
-      const targetUsername = authUsername.trim();
-
-      if (targetUsername.toLowerCase() === "kuwashii_admin") {
-        setAuthError("ไม่สามารถใช้ชื่อผู้ดูแลนี้ได้");
-        return;
-      }
-
-      const existing = await fetchUser(targetUsername);
-
-      if (existing) {
-        setAuthError("ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว!");
-        return;
-      }
-
-      try {
-        const { data: existingEmail } = await supabase
-          .from("profiles")
-          .select("username")
-          .eq("email", authEmail.trim())
-          .limit(1)
-          .single();
-        if (existingEmail) {
-          setAuthError("อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น!");
-          return;
-        }
-      } catch (e) {
-        // Table might not have email column yet or other error, ignore and let insert fail if it's unique
-      }
-
-      let insertRes = await supabase.from("profiles").insert([
-        {
-          username: targetUsername,
-          email: authEmail.trim(),
-          password: authPassword,
-          balance: 0,
-        },
-      ]);
-
-      if (insertRes.error && insertRes.error.message.includes("email")) {
-        // Fallback for older schema without email column
-        insertRes = await supabase.from("profiles").insert([
-          {
-            username: targetUsername,
-            password: authPassword,
-            balance: 0,
-          },
-        ]);
-      }
-
-      if (insertRes.error) {
-        setAuthError("เกิดข้อผิดพลาดในการสมัครสมาชิก โปรดลองอีกครั้ง");
-        return;
-      }
-
-      const storage = rememberAuth ? localStorage : sessionStorage;
-      localStorage.removeItem("KUWASHII_CURRENT_USER");
-      sessionStorage.removeItem("KUWASHII_CURRENT_USER");
-      localStorage.removeItem("KUWASHII_IS_ADMIN");
-      sessionStorage.removeItem("KUWASHII_IS_ADMIN");
-
-      setCurrentUser({ username: authUsername.trim() });
-      storage.setItem(
-        "KUWASHII_CURRENT_USER",
-        JSON.stringify({ username: authUsername.trim() }),
-      );
-      storage.setItem("KUWASHII_IS_ADMIN", "false");
-
-      setAppScreen("SHOP");
-      setAuthUsername("");
-      setAuthEmail("");
-      setAuthPassword("");
-      setAuthConfirmPassword("");
-      setAuthError("");
-
-      addLiveActivity({
-        type: "signup",
-        username: authUsername.trim(),
-        game: appScreen,
-      });
-
-      try {
-        await fetch("/api/set-register-lock", { method: "POST" });
-      } catch (e) {}
-      showToast("สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!", "success");
-    }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       setAuthError("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     } finally {
@@ -1610,7 +1699,11 @@ export default function App() {
   };
 
   // --- Add/Edit/Delete controllers ---
-  const handleSaveItem = async (itemData: Omit<StockItem, "updatedAt">, notifyDiscord?: boolean, webhookUrl?: string) => {
+  const handleSaveItem = async (
+    itemData: Omit<StockItem, "updatedAt">,
+    notifyDiscord?: boolean,
+    webhookUrl?: string,
+  ) => {
     const timestamp = new Date().toISOString();
 
     // Fetch latest to prevent race condition
@@ -1645,9 +1738,16 @@ export default function App() {
     }
 
     if (notifyDiscord && webhookUrl && addedQty > 0) {
-      sendDiscordStockUpdateEmbed(webhookUrl, itemData.name, addedQty, finalItem.quantity, itemData.imageUrl, itemData.game);
+      sendDiscordStockUpdateEmbed(
+        webhookUrl,
+        itemData.name,
+        addedQty,
+        finalItem.quantity,
+        itemData.imageUrl,
+        itemData.game,
+      );
     }
-    
+
     // Update state to render instantly
     const updatedList =
       existingIndex >= 0
@@ -1657,30 +1757,34 @@ export default function App() {
     setItems(updatedList);
 
     try {
-      const updates = [{
-        id: finalItem.id,
-        name: finalItem.name,
-        description: finalItem.description,
-        price: finalItem.price,
-        quantity: finalItem.quantity,
-        image: finalItem.imageUrls ? JSON.stringify(finalItem.imageUrls) : finalItem.imageUrl,
-        game: finalItem.game,
-        category: finalItem.category,
-        rarity: finalItem.saleFormat,
-        popular: finalItem.isPopular,
-        gacha_pool: {
-          pool: finalItem.gachaPool || null,
-          saleFormat: finalItem.saleFormat,
-          initialQuantity: finalItem.initialQuantity,
-          piecesPerUnit: finalItem.piecesPerUnit,
-          accountCredentials: finalItem.accountCredentials || null,
-          fileLink: finalItem.fileLink || null,
-          filePassword: finalItem.filePassword || null,
-          isPinned: finalItem.isPinned || false,
-          originalPrice: finalItem.originalPrice,
+      const updates = [
+        {
+          id: finalItem.id,
+          name: finalItem.name,
+          description: finalItem.description,
+          price: finalItem.price,
+          quantity: finalItem.quantity,
+          image: finalItem.imageUrls
+            ? JSON.stringify(finalItem.imageUrls)
+            : finalItem.imageUrl,
+          game: finalItem.game,
+          category: finalItem.category,
+          rarity: finalItem.saleFormat,
+          popular: finalItem.isPopular,
+          gacha_pool: {
+            pool: finalItem.gachaPool || null,
+            saleFormat: finalItem.saleFormat,
+            initialQuantity: finalItem.initialQuantity,
+            piecesPerUnit: finalItem.piecesPerUnit,
+            accountCredentials: finalItem.accountCredentials || null,
+            fileLink: finalItem.fileLink || null,
+            filePassword: finalItem.filePassword || null,
+            isPinned: finalItem.isPinned || false,
+            originalPrice: finalItem.originalPrice,
+          },
+          created_at: finalItem.updatedAt || new Date().toISOString(),
         },
-        created_at: finalItem.updatedAt || new Date().toISOString(),
-      }];
+      ];
       await supabase.from("items").upsert(updates);
     } catch (e) {
       console.error("Error saving item", e);
@@ -1731,7 +1835,7 @@ export default function App() {
 
   const handleBuyItem = async (item: StockItem, purchaseQty: number = 1) => {
     if (isProcessingPurchase || isProcessingPurchaseRef.current) return;
-    
+
     if (!currentUser) {
       showToast("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ!", "error");
       setAppScreen("LOGIN");
@@ -1881,7 +1985,11 @@ export default function App() {
                     },
                   ]);
 
-                if (claimErr && (claimErr.code === "23505" || (claimErr.message && claimErr.message.includes("UNIQUE")))) {
+                if (
+                  claimErr &&
+                  (claimErr.code === "23505" ||
+                    (claimErr.message && claimErr.message.includes("UNIQUE")))
+                ) {
                   // UNIQUE constraint violation
                   // Someone else beat us to this jackpot!
                   dropped = null; // Turn to salt
@@ -1934,11 +2042,14 @@ export default function App() {
       let extractCreds: string[] | undefined = undefined;
       let nextAccCreds = item.accountCredentials;
 
-      if (item.saleFormat === 'ไฟล์ตัวรัน') {
-        const productInfo = `ลิ้งค์ดาวน์โหลด: ${item.fileLink || '-'} | รหัสผ่านเข้าถึงลิ้งค์: ${item.filePassword || '-'}`;
+      if (item.saleFormat === "ไฟล์ตัวรัน") {
+        const productInfo = `ลิ้งค์ดาวน์โหลด: ${item.fileLink || "-"} | รหัสผ่านเข้าถึงลิ้งค์: ${item.filePassword || "-"}`;
         extractCreds = Array(purchaseQty).fill(productInfo);
         handleQuickQuantityChange(item.id, -purchaseQty, true);
-      } else if (item.accountCredentials && item.accountCredentials.length > 0) {
+      } else if (
+        item.accountCredentials &&
+        item.accountCredentials.length > 0
+      ) {
         extractCreds = item.accountCredentials.slice(0, purchaseQty);
         nextAccCreds = item.accountCredentials.slice(purchaseQty);
         await supabase
@@ -1947,7 +2058,7 @@ export default function App() {
             quantity: liveItemQty - purchaseQty,
             gacha_pool: {
               pool: item.gachaPool || null,
-              saleFormat: item.saleFormat || 'ขายรหัส',
+              saleFormat: item.saleFormat || "ขายรหัส",
               initialQuantity: item.initialQuantity,
               piecesPerUnit: item.piecesPerUnit,
               accountCredentials: nextAccCreds,
@@ -1988,17 +2099,19 @@ export default function App() {
       ]);
       if (purchaseError) {
         console.error("Error inserting purchase:", purchaseError);
-        
+
         // Retry with basic schema if the new columns don't exist
-        const { error: fallbackError } = await supabase.from("purchases").insert([
-          {
-            username: currentUser.username,
-            item_id: item.id,
-            item_name: item.name,
-            price: totalPrice,
-            quantity: purchaseQty,
-          },
-        ]);
+        const { error: fallbackError } = await supabase
+          .from("purchases")
+          .insert([
+            {
+              username: currentUser.username,
+              item_id: item.id,
+              item_name: item.name,
+              price: totalPrice,
+              quantity: purchaseQty,
+            },
+          ]);
         if (fallbackError) {
           console.error("Fallback purchase insert also failed:", fallbackError);
         }
@@ -2027,7 +2140,11 @@ export default function App() {
           })
           .eq("id", "main");
         // Error will pop up in console if column doesn't exist, but won't crash user app thanks to no strict throw.
-        if (error) console.warn("Database update for ROV sales failed (likely missing column global_sales_rov)", error);
+        if (error)
+          console.warn(
+            "Database update for ROV sales failed (likely missing column global_sales_rov)",
+            error,
+          );
       }
 
       // Reduce Stock natively handled earlier for creds or via fallback
@@ -2056,7 +2173,7 @@ export default function App() {
         purchaseQty,
         liveItemQty - purchaseQty,
         webhookDrops,
-        appScreen
+        appScreen,
       );
 
       setInquiringItem(null);
@@ -2135,30 +2252,34 @@ export default function App() {
     setItems(newItems);
 
     try {
-      const updates = [{
-        id: updated.id,
-        name: updated.name,
-        description: updated.description,
-        price: updated.price,
-        quantity: updated.quantity,
-        image: updated.imageUrls ? JSON.stringify(updated.imageUrls) : updated.imageUrl,
-        game: updated.game,
-        category: updated.category,
-        rarity: updated.saleFormat,
-        popular: updated.isPopular,
-        gacha_pool: {
-          pool: updated.gachaPool || null,
-          saleFormat: updated.saleFormat,
-          initialQuantity: updated.initialQuantity,
-          piecesPerUnit: updated.piecesPerUnit,
-          accountCredentials: updated.accountCredentials || null,
-          fileLink: updated.fileLink || null,
-          filePassword: updated.filePassword || null,
-          isPinned: updated.isPinned || false,
-          originalPrice: updated.originalPrice,
+      const updates = [
+        {
+          id: updated.id,
+          name: updated.name,
+          description: updated.description,
+          price: updated.price,
+          quantity: updated.quantity,
+          image: updated.imageUrls
+            ? JSON.stringify(updated.imageUrls)
+            : updated.imageUrl,
+          game: updated.game,
+          category: updated.category,
+          rarity: updated.saleFormat,
+          popular: updated.isPopular,
+          gacha_pool: {
+            pool: updated.gachaPool || null,
+            saleFormat: updated.saleFormat,
+            initialQuantity: updated.initialQuantity,
+            piecesPerUnit: updated.piecesPerUnit,
+            accountCredentials: updated.accountCredentials || null,
+            fileLink: updated.fileLink || null,
+            filePassword: updated.filePassword || null,
+            isPinned: updated.isPinned || false,
+            originalPrice: updated.originalPrice,
+          },
+          created_at: updated.updatedAt || new Date().toISOString(),
         },
-        created_at: updated.updatedAt || new Date().toISOString(),
-      }];
+      ];
       await supabase.from("items").upsert(updates);
     } catch (e) {
       console.error("Error pinning item", e);
@@ -2293,10 +2414,7 @@ export default function App() {
   // --- Filtering & Sorting Compute ---
   const filteredItems = items.filter((item) => {
     const searchStr = (search || "").toLowerCase();
-    const matchesSearch =
-      (item.name || "").toLowerCase().includes(searchStr) ||
-      (item.description || "").toLowerCase().includes(searchStr) ||
-      (item.category || "").toLowerCase().includes(searchStr);
+    const matchesSearch = (item.name || "").toLowerCase().includes(searchStr);
 
     const matchesCategory =
       selectedCategory === "all" || item.category === selectedCategory;
@@ -2382,27 +2500,25 @@ export default function App() {
 
     // 2.5 Category Grouping: When viewing 'All' categories, group items of the same category together
     if (selectedCategory === "all") {
-      const categoryOrder =
-        true ? [
-
-              "Grow A Garden 2",
-              "ALL STAR",
-              "Coming Soon",
-              "Other services",
-              "VIP Codes"
-
-]
-          : false
-            ? ["รหัส ROV"]
-            : [
-                "Serum",
-                "Bloodline",
-                "Skin",
-                "Artifact",
-                "Scroll/Key",
-                "Perk",
-                "Other",
-              ];
+      const categoryOrder = true
+        ? [
+            "Grow A Garden 2",
+            "ALL STAR",
+            "Coming Soon",
+            "Other services",
+            "VIP Codes",
+          ]
+        : false
+          ? ["รหัส ROV"]
+          : [
+              "Serum",
+              "Bloodline",
+              "Skin",
+              "Artifact",
+              "Scroll/Key",
+              "Perk",
+              "Other",
+            ];
       const indexA = categoryOrder.indexOf(a.category);
       const indexB = categoryOrder.indexOf(b.category);
       if (indexA !== -1 && indexB !== -1 && indexA !== indexB) {
@@ -2456,21 +2572,23 @@ export default function App() {
               {/* Decorative Background Gradients */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] pointer-events-none rounded-full" />
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#0ea5e9]/10 blur-[50px] pointer-events-none rounded-full" />
-              
+
               <div className="relative mb-6 w-20 h-20 flex items-center justify-center">
-                <motion.div 
-                  className="absolute inset-0 border-4 border-emerald-500/20 rounded-full"
-                />
-                <motion.div 
+                <motion.div className="absolute inset-0 border-4 border-emerald-500/20 rounded-full" />
+                <motion.div
                   className="absolute inset-0 border-4 border-emerald-400 border-t-transparent rounded-full"
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
                 />
                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]">
                   <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
                 </div>
               </div>
-              
+
               <h3 className="text-xl font-bold text-white tracking-wide mb-2 font-display">
                 ระบบกำลังทำรายการ...
               </h3>
@@ -2483,21 +2601,26 @@ export default function App() {
       </AnimatePresence>
 
       {/* Inquiry Summary & Clipboard tool modal */}
-      {inquiringItem?.gachaPool && inquiringItem.gachaPool.length > 0 ? (
-        <RandomBoxModal
-          item={inquiringItem}
-          onClose={() => setInquiringItem(null)}
-          onBuy={handleBuyItem}
-          isProcessing={isProcessingPurchase}
-        />
-      ) : (
-        <InquiryModal
-          item={inquiringItem}
-          onClose={() => setInquiringItem(null)}
-          onBuy={handleBuyItem}
-          isProcessing={isProcessingPurchase}
-        />
-      )}
+      <AnimatePresence>
+        {inquiringItem &&
+          (inquiringItem.gachaPool && inquiringItem.gachaPool.length > 0 ? (
+            <RandomBoxModal
+              key="random-box-modal"
+              item={inquiringItem}
+              onClose={() => setInquiringItem(null)}
+              onBuy={handleBuyItem}
+              isProcessing={isProcessingPurchase}
+            />
+          ) : (
+            <InquiryModal
+              key="inquiry-modal"
+              item={inquiringItem}
+              onClose={() => setInquiringItem(null)}
+              onBuy={handleBuyItem}
+              isProcessing={isProcessingPurchase}
+            />
+          ))}
+      </AnimatePresence>
 
       {/* Gacha Result Modal */}
       <GachaResultModal
@@ -2569,9 +2692,9 @@ export default function App() {
         />
       )}
 
-      <TopupTosModal 
-        isOpen={showTopupTos} 
-        onClose={() => setShowTopupTos(false)} 
+      <TopupTosModal
+        isOpen={showTopupTos}
+        onClose={() => setShowTopupTos(false)}
       />
 
       <PaymentSettingsModal
@@ -2580,7 +2703,7 @@ export default function App() {
         globalStats={globalStats}
         setGlobalStats={setGlobalStats}
       />
-      
+
       <CategoryManagerModal
         isOpen={isCategoryManagerOpen}
         onClose={() => setIsCategoryManagerOpen(false)}
@@ -2674,13 +2797,13 @@ export default function App() {
               ขออภัยในความไม่สะดวกครับ
             </p>
             <button
-               onClick={() => {
-                 setAuthMode("login");
-                 setAppScreen("LOGIN");
-               }}
-               className="mt-4 px-4 py-2 text-xs font-bold bg-zinc-800 text-zinc-400 rounded-lg border border-zinc-700 hover:text-white"
+              onClick={() => {
+                setAuthMode("login");
+                setAppScreen("LOGIN");
+              }}
+              className="mt-4 px-4 py-2 text-xs font-bold bg-zinc-800 text-zinc-400 rounded-lg border border-zinc-700 hover:text-white"
             >
-               สำหรับแอดมิน
+              สำหรับแอดมิน
             </button>
             <div className="flex justify-center space-x-2 pb-2">
               <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce"></div>
@@ -2702,7 +2825,20 @@ export default function App() {
               className="mt-6 text-[12px] font-bold text-zinc-600 hover:text-zinc-300 transition-colors bg-zinc-800/50 hover:bg-zinc-800 px-4 py-2 rounded-lg border border-zinc-700/50"
             >
               <span className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
                 เข้าสู่ระบบผู้ดูแลระบบ
               </span>
             </motion.button>
@@ -2711,8 +2847,6 @@ export default function App() {
         </motion.div>
       );
     }
-
-    
 
     if (["SHOP", "TOPUP", "LOGIN", "PROFILE"].includes(appScreen)) {
       return (
@@ -2724,21 +2858,32 @@ export default function App() {
           transition={{ duration: 0.15, ease: "easeOut" }}
           className="min-h-[100vh] min-h-[100dvh] flex flex-col bg-transparent text-zinc-200 font-display tracking-tight selection:bg-indigo-500 selection:text-zinc-100 pb-20 sm:pb-0 relative w-full"
         >
-          <ShopHeader 
+          <ShopHeader
             globalStats={globalStats}
-            toggleSidebar={() => setIsAstdMenuOpen(true)} 
-            onSearchToggle={() => {}} 
-            currentUser={currentUserData || currentUser} 
-            onLoginClick={() => { setAppScreen("LOGIN"); setAuthMode("login"); }} 
+            toggleSidebar={() => setIsAstdMenuOpen(true)}
+            onSearchToggle={() => setIsSearchOpen(true)}
+            currentUser={currentUserData || currentUser}
+            onLoginClick={() => {
+              setAppScreen("LOGIN");
+              setAuthMode("login");
+            }}
             setAppScreen={setAppScreen}
             currentScreen={appScreen}
+            onLogoClick={() => {
+              setIsLoadingStock(true);
+              setTimeout(() => {
+                window.location.href = "/";
+              }, 800);
+            }}
           />
-          {appScreen === 'SHOP' && (
+          {appScreen === "SHOP" && (
             <>
-              <AnnouncementPopup appScreen={appScreen} isLoadingData={isLoadingStock} />
+              <AnnouncementPopup
+                appScreen={appScreen}
+                isLoadingData={isLoadingStock}
+              />
             </>
           )}
-          
 
           {/* Dynamic Floating Toast Notification */}
           <AnimatePresence>
@@ -2769,275 +2914,317 @@ export default function App() {
           </AnimatePresence>
 
           {/* Hero Header Section */}
-          {(appScreen !== "TOPUP" && appScreen !== "LOGIN" && appScreen !== "PROFILE" && selectedCategory === "all") && <ShopBanner globalStats={globalStats} items={items} />}
+          {appScreen !== "TOPUP" &&
+            appScreen !== "LOGIN" &&
+            appScreen !== "PROFILE" &&
+            selectedCategory === "all" &&
+            !search && <ShopBanner globalStats={globalStats} items={items} />}
 
           {/* Main Container */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 flex-grow w-full">
-
             {appScreen === "LOGIN" ? (
-               <AuthPage
-                 authMode={authMode}
-                 setAuthMode={setAuthMode}
-                 authUsername={authUsername}
-                 setAuthUsername={setAuthUsername}
-                 authEmail={authEmail}
-                 setAuthEmail={setAuthEmail}
-                 authPassword={authPassword}
-                 setAuthPassword={setAuthPassword}
-                 authConfirmPassword={authConfirmPassword}
-                 setAuthConfirmPassword={setAuthConfirmPassword}
-                 showAuthPassword={showAuthPassword}
-                 setShowAuthPassword={setShowAuthPassword}
-                 showAuthConfirmPassword={showAuthConfirmPassword}
-                 setShowAuthConfirmPassword={setShowAuthConfirmPassword}
-                 authOtpCode={authOtpCode}
-                 setAuthOtpCode={setAuthOtpCode}
-                 rememberAuth={rememberAuth}
-                 setRememberAuth={setRememberAuth}
-                 authError={authError}
-                 setAuthError={setAuthError}
-                 handleAuthSubmit={handleAuthSubmit}
-                 isProcessing={isAuthLoading}
-                 isCaptchaVerified={isCaptchaVerified}
-                 setIsCaptchaVerified={setIsCaptchaVerified}
-               />
+              <AuthPage
+                authMode={authMode}
+                setAuthMode={setAuthMode}
+                authUsername={authUsername}
+                setAuthUsername={setAuthUsername}
+                authEmail={authEmail}
+                setAuthEmail={setAuthEmail}
+                authPassword={authPassword}
+                setAuthPassword={setAuthPassword}
+                authConfirmPassword={authConfirmPassword}
+                setAuthConfirmPassword={setAuthConfirmPassword}
+                showAuthPassword={showAuthPassword}
+                setShowAuthPassword={setShowAuthPassword}
+                showAuthConfirmPassword={showAuthConfirmPassword}
+                setShowAuthConfirmPassword={setShowAuthConfirmPassword}
+                authOtpCode={authOtpCode}
+                setAuthOtpCode={setAuthOtpCode}
+                rememberAuth={rememberAuth}
+                setRememberAuth={setRememberAuth}
+                authError={authError}
+                setAuthError={setAuthError}
+                handleAuthSubmit={handleAuthSubmit}
+                isProcessing={isAuthLoading}
+                isCaptchaVerified={isCaptchaVerified}
+                setIsCaptchaVerified={setIsCaptchaVerified}
+              />
             ) : appScreen === "PROFILE" ? (
-               <UserProfileDashboard 
-                 currentUser={currentUserData || currentUser}
-                 setAppScreen={setAppScreen}
-                 onChangePassword={handleChangePassword}
-                 onChangeUsername={handleChangeUsername}
-                 onChangeEmail={handleChangeEmail}
-               />
+              <UserProfileDashboard
+                currentUser={currentUserData || currentUser}
+                setAppScreen={setAppScreen}
+                onChangePassword={handleChangePassword}
+                onChangeUsername={handleChangeUsername}
+                onChangeEmail={handleChangeEmail}
+              />
             ) : appScreen === "TOPUP" ? (
-               <TopupPage 
-                 tosAccepted={tosAccepted}
-                 setTosAccepted={setTosAccepted}
-                 topupModalStep={topupModalStep}
-                 setTopupModalStep={setTopupModalStep}
-                 angpaoCode={topupCode}
-                 setAngpaoCode={setTopupCode}
-                 slipFile={slipFile}
-                 setSlipFile={setSlipFile}
-                 setShowTopupTos={setShowTopupTos}
-                 isProcessingTopup={isProcessingTopup}
-                 handleTopup={handleTopupSubmit}
-                 setAppScreen={setAppScreen}
-                 globalStats={globalStats}
-                 successMessage={topupSuccessMessage}
-               />
+              <TopupPage
+                tosAccepted={tosAccepted}
+                setTosAccepted={setTosAccepted}
+                topupModalStep={topupModalStep}
+                setTopupModalStep={setTopupModalStep}
+                angpaoCode={topupCode}
+                setAngpaoCode={setTopupCode}
+                slipFile={slipFile}
+                setSlipFile={setSlipFile}
+                setShowTopupTos={setShowTopupTos}
+                isProcessingTopup={isProcessingTopup}
+                handleTopup={handleTopupSubmit}
+                setAppScreen={setAppScreen}
+                globalStats={globalStats}
+                successMessage={topupSuccessMessage}
+              />
             ) : (
               <>
                 {/* Category Cards Section */}
-                {selectedCategory === "all" ? (
+                {selectedCategory === "all" && !search ? (
                   <>
                     <RecentPurchases appScreen={appScreen} items={items} />
-                    <CategoryList selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} globalStats={globalStats} />
+                    <CategoryList
+                      selectedCategory={selectedCategory}
+                      setSelectedCategory={setSelectedCategory}
+                      globalStats={globalStats}
+                    />
                   </>
                 ) : (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="max-w-7xl mx-auto mb-6 w-full flex flex-col gap-2 mt-2"
-                  >
-                     <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 mb-1">
-                       <button onClick={() => setSelectedCategory("all")} className="hover:text-[#0ea5e9] transition-colors cursor-pointer text-[#0ea5e9]">รายการหมวดหมู่</button>
-                       <span className="text-zinc-600">&gt;</span>
-                       <motion.span 
-                         initial={{ opacity: 0, x: -10 }}
-                         animate={{ opacity: 1, x: 0 }}
-                         transition={{ delay: 0.1 }}
-                         className="text-white uppercase"
-                       >
-                         {selectedCategory}
-                       </motion.span>
-                     </div>
-                     
-                     <div className="flex flex-row justify-between items-center gap-3">
-                         <div className="flex items-center gap-3">
-                           <button 
-                             onClick={() => setSelectedCategory("all")} 
-                             className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer flex-shrink-0"
-                             title="ย้อนกลับ"
-                           >
-                             <ChevronLeft className="w-5 h-5" />
-                           </button>
-                           <motion.h2 
-                             initial={{ opacity: 0, scale: 0.95 }}
-                             animate={{ opacity: 1, scale: 1 }}
-                             transition={{ delay: 0.15, type: "spring", stiffness: 200 }}
-                             className="text-2xl md:text-3xl font-black text-[#0ea5e9] tracking-tight uppercase leading-tight font-display line-clamp-1"
-                           >
-                             {selectedCategory}
-                           </motion.h2>
-                         </div>
-                         <motion.div 
-                           initial={{ opacity: 0, scale: 0.8 }}
-                           animate={{ opacity: 1, scale: 1 }}
-                           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                           className="flex items-center justify-center gap-1 bg-[#002f5d] border border-[#0ea5e9]/30 rounded-full px-2.5 py-1 shadow-md shadow-[#0ea5e9]/10 whitespace-nowrap shrink-0"
-                         >
-                            <Star className="w-3 h-3 fill-[#0ea5e9] text-[#0ea5e9]" />
-                            <span className="text-[#0ea5e9] text-[10px] font-bold">แนะนำ</span>
-                         </motion.div>
-                     </div>
+                  !search && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="max-w-7xl mx-auto mb-6 w-full flex flex-col gap-2 mt-2"
+                    >
+                      <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 mb-1">
+                        <button
+                          onClick={() => setSelectedCategory("all")}
+                          className="hover:text-[#0ea5e9] transition-colors cursor-pointer text-[#0ea5e9]"
+                        >
+                          รายการหมวดหมู่
+                        </button>
+                        <span className="text-zinc-600">&gt;</span>
+                        <motion.span
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="text-white uppercase"
+                        >
+                          {selectedCategory}
+                        </motion.span>
+                      </div>
 
-                     <div className="flex items-center justify-between pt-1 mt-1">
+                      <div className="flex flex-row justify-between items-center gap-3">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setSelectedCategory("all")}
+                            className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer flex-shrink-0"
+                            title="ย้อนกลับ"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          <motion.h2
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{
+                              delay: 0.15,
+                              type: "spring",
+                              stiffness: 200,
+                            }}
+                            className="text-2xl md:text-3xl font-black text-[#0ea5e9] tracking-tight uppercase leading-tight font-display line-clamp-1"
+                          >
+                            {selectedCategory}
+                          </motion.h2>
+                        </div>
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{
+                            delay: 0.2,
+                            type: "spring",
+                            stiffness: 200,
+                          }}
+                          className="flex items-center justify-center gap-1 bg-[#002f5d] border border-[#0ea5e9]/30 rounded-full px-2.5 py-1 shadow-md shadow-[#0ea5e9]/10 whitespace-nowrap shrink-0"
+                        >
+                          <Star className="w-3 h-3 fill-[#0ea5e9] text-[#0ea5e9]" />
+                          <span className="text-[#0ea5e9] text-[10px] font-bold">
+                            แนะนำ
+                          </span>
+                        </motion.div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1 mt-1">
                         <h3 className="text-sm font-bold text-[#0ea5e9]">
                           สินค้าในหมวดหมู่นี้
                         </h3>
                         <div className="text-zinc-300 font-bold text-xs">
-                          ทั้งหมด {items.filter(i => (i.category || "") === selectedCategory).length} สินค้า
+                          ทั้งหมด{" "}
+                          {
+                            items.filter(
+                              (i) => (i.category || "") === selectedCategory,
+                            ).length
+                          }{" "}
+                          สินค้า
                         </div>
-                     </div>
+                      </div>
+                    </motion.div>
+                  )
+                )}
+
+                {/* Admin Tools ASTD */}
+                {isAdmin && (
+                  <section className="bg-zinc-900 shadow-sm border border-zinc-800 border border-indigo-500/20 p-5 rounded-2xl mb-8 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none -z-10" />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 flex-shrink-0 animate-pulse">
+                          <SlidersHorizontal className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
+                            แผงจัดการสต๊อก
+                          </h3>
+                          <p className="text-xs text-zinc-500 mt-0.5">
+                            จัดการเพิ่ม หรือแก้ไขฐานข้อมูลคลังสินค้าได้แบบ
+                            Real-time
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsCustomerDbOpen(true)}
+                          className="py-2 px-4 rounded-2xl bg-purple-500/20 text-purple-400 hover:text-zinc-100 border border-purple-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-purple-500/10"
+                        >
+                          <Users className="w-4 h-4" /> ระบบฐานลูกค้า (Customer
+                          DB)
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={toggleMaintenanceMode}
+                          className={`py-2 px-4 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg ${globalStats?.maintenance_mode ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"}`}
+                        >
+                          <AlertTriangle className="w-4 h-4" />{" "}
+                          {globalStats?.maintenance_mode
+                            ? "เปิดเว็บ"
+                            : "ปิดเว็บซ่อมปรุง"}
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsCouponManagerOpen(true)}
+                          className="py-2 px-4 rounded-2xl bg-emerald-500/20 text-emerald-400 hover:text-zinc-100 border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/10"
+                        >
+                          <Gift className="w-4 h-4" /> จัดการโค้ดคูปอง
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsAnnouncementManagerOpen(true)}
+                          className="py-2 px-4 rounded-2xl bg-amber-500/20 text-amber-400 hover:text-zinc-100 border border-amber-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/10"
+                        >
+                          <Bell className="w-4 h-4" /> จัดการแจ้งเตือนต่างๆ
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsPaymentConfigOpen(true)}
+                          className="py-2 px-4 rounded-2xl bg-blue-500/20 text-blue-400 hover:text-zinc-100 border border-blue-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
+                        >
+                          <Wallet className="w-4 h-4" /> จัดการช่องทางชำระเงิน
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsCategoryManagerOpen(true)}
+                          className="py-2 px-4 rounded-2xl bg-rose-500/20 text-rose-400 hover:text-zinc-100 border border-rose-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-rose-500/10"
+                        >
+                          <FolderPlus className="w-4 h-4" /> จัดการหมวดหมู่
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsStockManagerOpen(true)}
+                          className="py-2 px-4 rounded-2xl bg-indigo-500/20 text-indigo-400 hover:text-zinc-100 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                        >
+                          <Package className="w-4 h-4" /> ระบบผู้ดูแลสต๊อก
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsFormOpen(true)}
+                          className="py-2 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-zinc-100 text-xs font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" /> เพิ่มสินค้า
+                        </motion.button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* Recommended Products Header */}
+                <div className="flex items-center justify-between mb-4 mt-8">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-lg font-bold text-zinc-100">
+                      {search ? `ผลการค้นหา: "${search}"` : "สินค้าแนะนำ"}
+                    </h2>
+                    {search && (
+                      <button
+                        onClick={() => setSearch("")}
+                        className="text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 transition-colors"
+                      >
+                        ยกเลิกการค้นหา
+                      </button>
+                    )}
+                  </div>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-zinc-800 rounded-full text-zinc-300 hover:bg-zinc-800"
+                  >
+                    ดูเพิ่มเติม{" "}
+                    <ChevronRight className="w-4 h-4 text-zinc-500" />
+                  </motion.button>
+                </div>
+
+                {/* Item Grid */}
+                {isLoadingStock ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4">
+                    {Array.from({ length: 8 }).map((_, idx) => (
+                      <ItemCardSkeleton key={`astd-skel-${idx}`} />
+                    ))}
+                  </div>
+                ) : sortedItems.length === 0 ? (
+                  <div className="text-center py-24 bg-zinc-900 border border-zinc-800 rounded-2xl">
+                    <Inbox className="w-16 h-16 text-indigo-500/50 mx-auto mb-6" />
+                    <h2 className="text-lg font-black text-zinc-100 mb-2 uppercase tracking-wide">
+                      ไม่พบสินค้าในสต๊อก
+                    </h2>
+                  </div>
+                ) : (
+                  <motion.div
+                    layout
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4"
+                  >
+                    <AnimatePresence>
+                      {sortedItems.map((item) => (
+                        <ItemCard
+                          appScreen={appScreen}
+                          key={item.id}
+                          item={item}
+                          isAdmin={isAdmin}
+                          onEdit={(it) => {
+                            setEditingItem(it);
+                            setIsFormOpen(true);
+                          }}
+                          onDelete={handleDeleteItem}
+                          onQuickQuantityChange={handleQuickQuantityChange}
+                          onInquire={() => setInquiringItem(item)}
+                          onBuy={handleBuyItem}
+                          onTogglePin={handleTogglePin}
+                          onCategoryClick={(cat) => {
+                            setSelectedCategory(cat);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                        />
+                      ))}
+                    </AnimatePresence>
                   </motion.div>
                 )}
 
-            
-            {/* Admin Tools ASTD */}
-            {isAdmin && (
-              <section className="bg-zinc-900 shadow-sm border border-zinc-800 border border-indigo-500/20 p-5 rounded-2xl mb-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none -z-10" />
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 flex-shrink-0 animate-pulse">
-                      <SlidersHorizontal className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
-                        แผงจัดการสต๊อก
-                      </h3>
-                      <p className="text-xs text-zinc-500 mt-0.5">
-                        จัดการเพิ่ม หรือแก้ไขฐานข้อมูลคลังสินค้าได้แบบ Real-time
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsCustomerDbOpen(true)}
-                      className="py-2 px-4 rounded-2xl bg-purple-500/20 text-purple-400 hover:text-zinc-100 border border-purple-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-purple-500/10"
-                    >
-                      <Users className="w-4 h-4" /> ระบบฐานลูกค้า (Customer DB)
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={toggleMaintenanceMode}
-                      className={`py-2 px-4 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg ${globalStats?.maintenance_mode ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"}`}
-                    >
-                      <AlertTriangle className="w-4 h-4" />{" "}
-                      {globalStats?.maintenance_mode
-                        ? "เปิดเว็บ"
-                        : "ปิดเว็บซ่อมปรุง"}
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsCouponManagerOpen(true)}
-                      className="py-2 px-4 rounded-2xl bg-emerald-500/20 text-emerald-400 hover:text-zinc-100 border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/10"
-                    >
-                      <Gift className="w-4 h-4" /> จัดการโค้ดคูปอง
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsAnnouncementManagerOpen(true)}
-                      className="py-2 px-4 rounded-2xl bg-amber-500/20 text-amber-400 hover:text-zinc-100 border border-amber-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/10"
-                    >
-                      <Bell className="w-4 h-4" /> จัดการแจ้งเตือนต่างๆ
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsPaymentConfigOpen(true)}
-                      className="py-2 px-4 rounded-2xl bg-blue-500/20 text-blue-400 hover:text-zinc-100 border border-blue-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
-                    >
-                      <Wallet className="w-4 h-4" /> จัดการช่องทางชำระเงิน
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsCategoryManagerOpen(true)}
-                      className="py-2 px-4 rounded-2xl bg-rose-500/20 text-rose-400 hover:text-zinc-100 border border-rose-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-rose-500/10"
-                    >
-                      <FolderPlus className="w-4 h-4" /> จัดการหมวดหมู่
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsStockManagerOpen(true)}
-                      className="py-2 px-4 rounded-2xl bg-indigo-500/20 text-indigo-400 hover:text-zinc-100 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
-                    >
-                      <Package className="w-4 h-4" /> ระบบผู้ดูแลสต๊อก
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsFormOpen(true)}
-                      className="py-2 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-zinc-100 text-xs font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" /> เพิ่มสินค้า
-                    </motion.button>
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {/* Recommended Products Header */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-zinc-100">
-                สินค้าแนะนำ
-              </h2>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-zinc-800 rounded-full text-zinc-300 hover:bg-zinc-800"
-              >
-                ดูเพิ่มเติม <ChevronRight className="w-4 h-4 text-zinc-500" />
-              </motion.button>
-            </div>
-
-            {/* Item Grid */}
-            {isLoadingStock ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4">
-                {Array.from({ length: 8 }).map((_, idx) => (
-                  <ItemCardSkeleton key={`astd-skel-${idx}`} />
-                ))}
-              </div>
-            ) : sortedItems.length === 0 ? (
-              <div className="text-center py-24 bg-zinc-900 border border-zinc-800 rounded-2xl">
-                <Inbox className="w-16 h-16 text-indigo-500/50 mx-auto mb-6" />
-                <h2 className="text-lg font-black text-zinc-100 mb-2 uppercase tracking-wide">
-                  ไม่พบสินค้าในสต๊อก
-                </h2>
-              </div>
-            ) : (
-              <motion.div
-                layout
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4"
-              >
-                <AnimatePresence>
-                  {sortedItems.map((item) => (
-                    <ItemCard
-                      appScreen={appScreen}
-                      key={item.id}
-                      item={item}
-                      isAdmin={isAdmin}
-                      onEdit={(it) => {
-                        setEditingItem(it);
-                        setIsFormOpen(true);
-                      }}
-                      onDelete={handleDeleteItem}
-                      onQuickQuantityChange={handleQuickQuantityChange}
-                      onInquire={() => setInquiringItem(item)}
-                      onBuy={handleBuyItem}
-                      onTogglePin={handleTogglePin}
-                      onCategoryClick={(cat) => {
-                        setSelectedCategory(cat);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            )}
-
-            <DiscordBanner />
-            </>
+                <DiscordBanner />
+              </>
             )}
           </main>
 
@@ -3062,21 +3249,31 @@ export default function App() {
             isOpen={isAstdMenuOpen}
             onClose={() => setIsAstdMenuOpen(false)}
             currentUser={currentUserData || currentUser}
-            onLoginClick={() => { setAppScreen('LOGIN'); setAuthMode('login'); }}
+            onLoginClick={() => {
+              setAppScreen("LOGIN");
+              setAuthMode("login");
+            }}
             onLogoutClick={handleLogout}
             setPage={setAppScreen}
             setShowTopupModal={setShowTopupModal}
             openHistoryModal={openHistoryModal}
+          />
+          <SearchOverlay
+            isOpen={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+            initialSearch={search}
+            onSearchSubmit={setSearch}
+            items={items}
+            onItemClick={(item) => {
+              setIsSearchOpen(false);
+              setInquiringItem(item);
+            }}
           />
 
           {renderModals()}
         </motion.div>
       );
     }
-
-    
-
-    
 
     return null;
   }; // end renderAppScreen
