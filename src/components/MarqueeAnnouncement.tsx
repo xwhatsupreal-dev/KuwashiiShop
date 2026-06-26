@@ -48,7 +48,7 @@ export const MarqueeAnnouncement: React.FC<MarqueeAnnouncementProps> = ({ appScr
           >
             {/* Group 1 */}
             <div className="flex items-center gap-8">
-              {[...Array(10)].map((_, i) => (
+              {[...Array(4)].map((_, i) => (
                 <React.Fragment key={`g1-${i}`}>
                   {marqueeItems.map((text, idx) => (
                     <React.Fragment key={`g1-${i}-${idx}`}>
@@ -63,7 +63,7 @@ export const MarqueeAnnouncement: React.FC<MarqueeAnnouncementProps> = ({ appScr
             </div>
             {/* Group 2 (Exact Copy for Seamless Loop) */}
             <div className="flex items-center gap-8">
-              {[...Array(10)].map((_, i) => (
+              {[...Array(4)].map((_, i) => (
                 <React.Fragment key={`g2-${i}`}>
                   {marqueeItems.map((text, idx) => (
                     <React.Fragment key={`g2-${i}-${idx}`}>

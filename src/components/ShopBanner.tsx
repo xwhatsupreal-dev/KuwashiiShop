@@ -75,7 +75,7 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
       {showStatsBlock && (
         <div className="px-4 max-w-7xl mx-auto mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {showStatUsers && (
-            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60 backdrop-blur-sm">
+            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
               <Users className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
               <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">ผู้ใช้งานทั้งหมด</span>
               <div className="flex items-baseline gap-1 z-10">
@@ -86,7 +86,7 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
           )}
 
           {showStatCategories && (
-            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60 backdrop-blur-sm">
+            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
               <Layers className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
               <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">จำนวนหมวดหมู่</span>
               <div className="flex items-baseline gap-1 z-10">
@@ -97,7 +97,7 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
           )}
 
           {showStatItems && (
-            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60 backdrop-blur-sm">
+            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
               <Package className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
               <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">สินค้าพร้อมจำหน่าย</span>
               <div className="flex items-baseline gap-1 z-10">
@@ -108,7 +108,7 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
           )}
 
           {showStatSold && (
-            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60 backdrop-blur-sm">
+            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
               <CheckSquare className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
               <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">จำหน่ายไปแล้ว</span>
               <div className="flex items-baseline gap-1 z-10">
@@ -119,7 +119,7 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
           )}
 
           {showStatTopup && (
-            <div className="border border-amber-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60 backdrop-blur-sm">
+            <div className="border border-amber-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
               <Wallet className="absolute -right-2 -bottom-2 w-16 h-16 text-amber-100/60 stroke-[1.5px]" />
               <span className="text-xs font-semibold text-amber-400 mb-1 z-10">ยอดเติมทั้งหมด</span>
               <div className="flex items-baseline gap-1 z-10">

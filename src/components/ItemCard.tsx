@@ -165,13 +165,13 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           <div className="flex gap-1.5 flex-col items-start">
             <div className="flex gap-1.5 flex-wrap max-w-[80%]">
                 {item.isPinned && (
-                  <div className="bg-black/80 text-yellow-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg backdrop-blur-sm border border-yellow-500/20">
+                  <div className="bg-black/90 text-yellow-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg border border-yellow-500/20">
                     <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                     <span className="text-[10px] font-sans tracking-wide">แนะนำ</span>
                   </div>
                 )}
                 {item.isPopular && (
-                  <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 text-orange-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg border border-orange-500/20 backdrop-blur-sm">
+                  <div className="bg-[#1a0f00] text-orange-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg border border-orange-500/20">
                     <Flame className="w-3 h-3 fill-orange-400 text-orange-400" />
                     <span className="text-[10px] font-sans tracking-wide">ยอดฮิต</span>
                   </div>

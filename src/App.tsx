@@ -83,8 +83,6 @@ import { CouponManagerModal } from "./components/CouponManagerModal";
 import { AnnouncementManagerModal } from "./components/AnnouncementManagerModal";
 import { AnnouncementPopup } from "./components/AnnouncementPopup";
 import { MarqueeAnnouncement } from "./components/MarqueeAnnouncement";
-import Snowfall from "./components/Snowfall";
-import { ShootingStars } from "./components/ShootingStars";
 import { ShopHeader } from "./components/ShopHeader";
 import { ShopBanner } from "./components/ShopBanner";
 import { TopupPage } from "./components/TopupPage";
@@ -3085,7 +3083,6 @@ export default function App() {
 
   return (
     <>
-      <ShootingStars />
       <GlobalLoadingScreen isLoading={isLoadingStock} />
       <AnimatePresence mode="wait">{renderAppScreen()}</AnimatePresence>
     </>
