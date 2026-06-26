@@ -38,11 +38,15 @@ export function SearchOverlay({
     }
   }, [isOpen, initialSearch, onClose]);
 
-  const searchResults = items.filter((it) =>
-    localSearch
-      ? (it.name || "").toLowerCase().includes(localSearch.toLowerCase())
-      : true,
-  );
+  const searchResults = items.filter((it) => {
+    if (!localSearch) return true;
+    const q = localSearch.toLowerCase().trim();
+    return (
+      (it.name || "").toLowerCase().includes(q) ||
+      (it.category || "").toLowerCase().includes(q) ||
+      (it.description || "").toLowerCase().includes(q)
+    );
+  });
 
   // Take top 5 results for preview
   const displayResults = searchResults.slice(0, 5);

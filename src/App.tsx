@@ -2413,8 +2413,12 @@ export default function App() {
 
   // --- Filtering & Sorting Compute ---
   const filteredItems = items.filter((item) => {
-    const searchStr = (search || "").toLowerCase();
-    const matchesSearch = (item.name || "").toLowerCase().includes(searchStr);
+    const searchStr = (search || "").toLowerCase().trim();
+    const matchesSearch =
+      !searchStr ||
+      (item.name || "").toLowerCase().includes(searchStr) ||
+      (item.category || "").toLowerCase().includes(searchStr) ||
+      (item.description || "").toLowerCase().includes(searchStr);
 
     const matchesCategory =
       selectedCategory === "all" || item.category === selectedCategory;
@@ -2598,28 +2602,6 @@ export default function App() {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
-
-      {/* Inquiry Summary & Clipboard tool modal */}
-      <AnimatePresence>
-        {inquiringItem &&
-          (inquiringItem.gachaPool && inquiringItem.gachaPool.length > 0 ? (
-            <RandomBoxModal
-              key="random-box-modal"
-              item={inquiringItem}
-              onClose={() => setInquiringItem(null)}
-              onBuy={handleBuyItem}
-              isProcessing={isProcessingPurchase}
-            />
-          ) : (
-            <InquiryModal
-              key="inquiry-modal"
-              item={inquiringItem}
-              onClose={() => setInquiringItem(null)}
-              onBuy={handleBuyItem}
-              isProcessing={isProcessingPurchase}
-            />
-          ))}
       </AnimatePresence>
 
       {/* Gacha Result Modal */}
@@ -2914,7 +2896,8 @@ export default function App() {
           </AnimatePresence>
 
           {/* Hero Header Section */}
-          {appScreen !== "TOPUP" &&
+          {!inquiringItem &&
+            appScreen !== "TOPUP" &&
             appScreen !== "LOGIN" &&
             appScreen !== "PROFILE" &&
             selectedCategory === "all" &&
@@ -2922,7 +2905,25 @@ export default function App() {
 
           {/* Main Container */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 flex-grow w-full">
-            {appScreen === "LOGIN" ? (
+            {inquiringItem ? (
+              inquiringItem.gachaPool && inquiringItem.gachaPool.length > 0 ? (
+                <RandomBoxModal
+                  key="random-box-modal"
+                  item={inquiringItem}
+                  onClose={() => setInquiringItem(null)}
+                  onBuy={handleBuyItem}
+                  isProcessing={isProcessingPurchase}
+                />
+              ) : (
+                <InquiryModal
+                  key="inquiry-modal"
+                  item={inquiringItem}
+                  onClose={() => setInquiringItem(null)}
+                  onBuy={handleBuyItem}
+                  isProcessing={isProcessingPurchase}
+                />
+              )
+            ) : appScreen === "LOGIN" ? (
               <AuthPage
                 authMode={authMode}
                 setAuthMode={setAuthMode}
