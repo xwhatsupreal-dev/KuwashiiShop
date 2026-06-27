@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import nodemailer from "nodemailer";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const app = express();
 app.set("trust proxy", true);
