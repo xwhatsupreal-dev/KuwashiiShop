@@ -2769,7 +2769,7 @@ export default function App() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15, ease: "easeOut" }}
-          className="min-h-[100vh] min-h-[100dvh] flex flex-col bg-transparent text-zinc-200 font-display tracking-tight selection:bg-indigo-500 selection:text-zinc-100 pb-20 sm:pb-0 relative w-full"
+          className="min-h-[100vh] min-h-[100dvh] flex flex-col bg-transparent text-zinc-200 font-display tracking-tight selection:bg-indigo-500 selection:text-zinc-100 relative w-full"
         >
           <ShopHeader
             globalStats={globalStats}
@@ -3243,17 +3243,11 @@ export default function App() {
           </main>
 
           {/* Custom Footer */}
-          <footer className="mt-auto py-8 relative z-10 border-t border-zinc-800 bg-transparent text-xs w-full">
+          <footer className="mt-auto pt-4 pb-2 sm:pt-6 sm:pb-4 relative z-10 border-t border-zinc-800/60 bg-transparent w-full">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col items-center justify-center gap-2">
-                <p className="text-zinc-600 uppercase tracking-widest text-[11px]">
-                  Development Credit
-                </p>
-                <p className="text-zinc-400 font-display tracking-tight text-center">
-                  Made with passion by{" "}
-                  <strong className="text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer font-bold font-mono">
-                    Kuwashii El ( @_.texraxit )
-                  </strong>
+              <div className="flex flex-col items-center justify-center">
+                <p className="text-zinc-400 tracking-wide text-center flex items-center gap-1.5 text-xs sm:text-sm">
+                  Powered by <span className="font-semibold text-zinc-200">Vercel</span> &middot; Code by <span className="font-semibold text-zinc-200">dis.cord01</span>
                 </p>
               </div>
             </div>
