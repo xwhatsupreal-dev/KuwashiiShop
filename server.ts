@@ -7,14 +7,9 @@ import nodemailer from "nodemailer";
 
 dotenv.config({ override: true });
 
-import { initDiscordBot } from "./src/bot";
-
 const app = express();
 app.set("trust proxy", true);
 const PORT = 3000;
-
-// Initialize Discord Bot
-initDiscordBot();
 
 // Fast Vercel Body hack - if req.body is already an object, prevent body-parser from wiping it
 app.use((req: any, _res, next) => {
