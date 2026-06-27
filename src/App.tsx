@@ -60,6 +60,7 @@ import {
   Star,
   LogOut,
   FolderPlus,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import {
@@ -81,6 +82,7 @@ import { CustomerDatabaseModal } from "./components/CustomerDatabaseModal";
 import { HistoryModal } from "./components/HistoryModal";
 import { CouponManagerModal } from "./components/CouponManagerModal";
 import { AnnouncementManagerModal } from "./components/AnnouncementManagerModal";
+import { ImageSettingsModal } from "./components/ImageSettingsModal";
 import { AnnouncementPopup } from "./components/AnnouncementPopup";
 import { MarqueeAnnouncement } from "./components/MarqueeAnnouncement";
 import { ShopHeader } from "./components/ShopHeader";
@@ -133,6 +135,8 @@ import { fetchItems, fetchUser, getSystemConfig } from "./queries";
 import { SalesChart } from "./components/SalesChart";
 import { MobileDrawer } from "./components/MobileDrawer";
 import { SearchOverlay } from "./components/SearchOverlay";
+import { AIChatWidget } from "./components/AIChatWidget";
+import { ShootingStars } from "./components/ShootingStars";
 
 export const addLiveActivity = async (
   activity: Omit<LiveActivity, "id" | "timestamp">,
@@ -470,6 +474,7 @@ export default function App() {
   const [isCustomerDbOpen, setIsCustomerDbOpen] = useState(false);
   const [isCouponManagerOpen, setIsCouponManagerOpen] = useState(false);
   const [isPaymentConfigOpen, setIsPaymentConfigOpen] = useState(false);
+  const [isImageSettingsOpen, setIsImageSettingsOpen] = useState(false);
   const [isAnnouncementManagerOpen, setIsAnnouncementManagerOpen] =
     useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -2608,6 +2613,11 @@ export default function App() {
         onClose={() => setIsAnnouncementManagerOpen(false)}
       />
 
+      <ImageSettingsModal
+        isOpen={isImageSettingsOpen}
+        onClose={() => setIsImageSettingsOpen(false)}
+      />
+
       {(currentUser || viewingUserHistory) && (
         <HistoryModal
           isOpen={showHistoryModal || !!viewingUserHistory}
@@ -2901,6 +2911,78 @@ export default function App() {
                 {/* Category Cards Section */}
                 {selectedCategory === "all" && !search ? (
                   <>
+                    <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {!currentUser && globalStats?.announcement_settings?.loginBannerUrl && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setAppScreen("LOGIN")}
+                          className="cursor-pointer rounded-2xl overflow-hidden border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)] group"
+                        >
+                          <img 
+                            src={globalStats.announcement_settings.loginBannerUrl} 
+                            alt="Login" 
+                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
+                          />
+                        </motion.div>
+                      )}
+                      
+                      {globalStats?.announcement_settings?.productsBannerUrl && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setSelectedCategory("all")}
+                          className="cursor-pointer rounded-2xl overflow-hidden border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)] group"
+                        >
+                          <img 
+                            src={globalStats.announcement_settings.productsBannerUrl} 
+                            alt="All Products" 
+                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
+                          />
+                        </motion.div>
+                      )}
+
+                      {globalStats?.announcement_settings?.topupBannerUrl && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setAppScreen("TOPUP")}
+                          className="cursor-pointer rounded-2xl overflow-hidden border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] group"
+                        >
+                          <img 
+                            src={globalStats.announcement_settings.topupBannerUrl} 
+                            alt="Topup" 
+                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
+                          />
+                        </motion.div>
+                      )}
+
+                      {globalStats?.announcement_settings?.contactBannerUrl && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => window.open("https://discord.gg/AQKtJpvyva", "_blank")}
+                          className="cursor-pointer rounded-2xl overflow-hidden border border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)] group"
+                        >
+                          <img 
+                            src={globalStats.announcement_settings.contactBannerUrl} 
+                            alt="Contact Admin" 
+                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
+                          />
+                        </motion.div>
+                      )}
+                    </div>
                     <RecentPurchases appScreen={appScreen} items={items} />
                     <CategoryList
                       selectedCategory={selectedCategory}
@@ -3042,6 +3124,13 @@ export default function App() {
                           className="py-2 px-4 rounded-2xl bg-amber-500/20 text-amber-400 hover:text-zinc-100 border border-amber-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/10"
                         >
                           <Bell className="w-4 h-4" /> จัดการแจ้งเตือนต่างๆ
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsImageSettingsOpen(true)}
+                          className="py-2 px-4 rounded-2xl bg-fuchsia-500/20 text-fuchsia-400 hover:text-zinc-100 border border-fuchsia-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-fuchsia-500/10"
+                        >
+                          <ImageIcon className="w-4 h-4" /> จัดการรูปภาพร้านค้า
                         </motion.button>
                         <motion.button
                           whileTap={{ scale: 0.95 }}
@@ -3205,8 +3294,10 @@ export default function App() {
 
   return (
     <>
+      <ShootingStars />
       <GlobalLoadingScreen isLoading={isLoadingStock} />
       <AnimatePresence mode="wait">{renderAppScreen()}</AnimatePresence>
+      {!isLoadingStock && <AIChatWidget items={items} shopLogoUrl={globalStats?.announcement_settings?.shopLogoUrl} currentUser={currentUser} onLoginClick={() => setAppScreen("LOGIN")} />}
     </>
   );
 }
