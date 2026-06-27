@@ -5,6 +5,9 @@ export async function fetchItems() {
   const { data, error } = await supabase.from('items').select('*');
   if (error) {
     console.error('Error fetching items:', error);
+    if (typeof error.message === 'string' && error.message.includes('Authentication Error')) {
+      throw new Error("D1_AUTH_ERROR");
+    }
     return [];
   }
   if (!data || !Array.isArray(data)) {

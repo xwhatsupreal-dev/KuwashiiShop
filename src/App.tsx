@@ -302,6 +302,7 @@ export default function App() {
   // --- States ---
   const [items, setItems] = useState<StockItem[]>([]);
   const [isLoadingStock, setIsLoadingStock] = useState(true);
+  const [d1AuthError, setD1AuthError] = useState(false);
   const [isServerQuotaExceeded, setIsServerQuotaExceeded] = useState(false);
   const [search, setSearch] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -327,9 +328,14 @@ export default function App() {
     const handleSync = async () => {
       const syncId = ++activeSyncId;
 
-      const dbItems = await fetchItems();
-      if (syncId !== activeSyncId) return;
-      if (dbItems) setItems(dbItems);
+      try {
+        const dbItems = await fetchItems();
+        if (syncId !== activeSyncId) return;
+        if (dbItems) setItems(dbItems);
+        setD1AuthError(false);
+      } catch(e: any) {
+        if (e && e.message === "D1_AUTH_ERROR") setD1AuthError(true);
+      }
 
       const config = await getSystemConfig();
       if (syncId !== activeSyncId) return;
@@ -689,8 +695,12 @@ export default function App() {
           setItems([]);
         }
         setIsServerQuotaExceeded(false);
+        setD1AuthError(false);
       } catch (e: any) {
         console.warn("Error loading items from Database", e);
+        if (e && e.message === "D1_AUTH_ERROR") {
+          setD1AuthError(true);
+        }
         setItems([]);
       } finally {
         setIsLoadingStock(false);
@@ -2836,6 +2846,19 @@ export default function App() {
 
           {/* Main Container */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 flex-grow w-full">
+            {d1AuthError && (
+              <div className="mb-8 p-4 bg-red-500/10 border border-red-500/50 rounded-xl flex items-start gap-4 text-red-400 max-w-2xl mx-auto">
+                <div className="p-2 bg-red-500/20 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-red-300">Database Connection Error</h3>
+                  <p className="text-sm mt-1">Failed to connect to Cloudflare D1. The provided API Token is invalid or has expired.</p>
+                  <p className="text-xs mt-2 opacity-80">Please update <code className="bg-red-950/50 px-1 py-0.5 rounded">CF_API_TOKEN</code> in your AI Studio settings.</p>
+                </div>
+              </div>
+            )}
+            
             {inquiringItem ? (
               inquiringItem.gachaPool && inquiringItem.gachaPool.length > 0 ? (
                 <RandomBoxModal

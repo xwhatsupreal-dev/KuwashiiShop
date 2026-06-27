@@ -7,9 +7,14 @@ import nodemailer from "nodemailer";
 
 dotenv.config({ override: true });
 
+import { initDiscordBot } from "./src/bot";
+
 const app = express();
 app.set("trust proxy", true);
 const PORT = 3000;
+
+// Initialize Discord Bot
+initDiscordBot();
 
 // Fast Vercel Body hack - if req.body is already an object, prevent body-parser from wiping it
 app.use((req: any, _res, next) => {
@@ -683,6 +688,9 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
     const data = await response.json();
     if (!data.success) {
        console.error("Init Error:", data.errors, { accountId, dbId, tokenLen: token?.length });
+       if (data.errors && data.errors.some((e: any) => e.code === 10000)) {
+         return res.status(401).json({ error: [{ message: "Cloudflare D1 Authentication Error: Invalid CF_API_TOKEN. Please check your API token in AI Studio settings." }] });
+       }
        return res.status(400).json({ error: data.errors });
     }
     
@@ -832,6 +840,9 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
 
     const data = await response.json();
     if (!data.success) {
+      if (data.errors && data.errors.some((e: any) => e.code === 10000)) {
+         return res.status(401).json({ error: [{ message: "Cloudflare D1 Authentication Error: Invalid CF_API_TOKEN. Please check your API token in AI Studio settings." }] });
+      }
       console.error("D1 Error response:", data.errors, "AccountID matched:", accountId === rawAccountId?.trim(), "DB_ID_LEN:", dbId?.length);
       return res.status(400).json({ error: data.errors });
     }
