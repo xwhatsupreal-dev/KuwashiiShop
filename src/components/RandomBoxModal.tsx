@@ -287,9 +287,9 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({
                 href="https://m.me/DazzRFkaz"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 flex items-center justify-center gap-2 bg-[#0084FF]/10 hover:bg-[#0084FF]/20 text-[#0084FF] border border-[#0084FF]/30 py-2.5 px-4 rounded-xl font-bold transition-colors w-full text-sm"
+                className="mt-2 flex items-center justify-center gap-1.5 bg-[#0084FF]/10 hover:bg-[#0084FF]/20 text-[#0084FF] border border-[#0084FF]/30 py-2 px-3 rounded-lg font-bold transition-colors w-full text-xs"
               >
-                <span className="text-base">💬</span> ช่องทางเคลมของรางวัล (Messenger)
+                <span className="text-sm">💬</span> ช่องทางเคลมของรางวัล (Messenger)
               </a>
             </div>
           </div>
