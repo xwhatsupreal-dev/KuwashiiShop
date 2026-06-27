@@ -577,10 +577,17 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
       if (match) dbId = match[0];
     }
     const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
-    const token = rawToken?.trim();
+    let token = rawToken?.trim();
+    if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
     if (!accountId || !dbId || !token) {
       return res.status(400).json({ error: "Cloudflare D1 credentials not configured.", envCheck: { accountId: !!accountId, dbId: !!dbId, token: !!token } });
+    }
+
+    // UUID validation for Cloudflare D1
+    const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    if (!uuidRegex.test(dbId)) {
+       return res.status(400).json({ error: "Invalid CF_DATABASE_ID format. It must be a UUID (e.g. 12345678-abcd-1234-abcd-1234567890ab), not the database name.", dbId_provided: dbId });
     }
 
     const schemaStr = `
@@ -675,7 +682,7 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
 
     const data = await response.json();
     if (!data.success) {
-       console.error("Init Error:", data.errors);
+       console.error("Init Error:", data.errors, { accountId, dbId, tokenLen: token?.length });
        return res.status(400).json({ error: data.errors });
     }
     
@@ -800,11 +807,18 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
       if (match) dbId = match[0];
     }
     const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
-    const token = rawToken?.trim();
+    let token = rawToken?.trim();
+    if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
     if (!accountId || !dbId || !token) {
       console.warn("D1 Query Failed: Missing CF credentials", { accountId: !!accountId, dbId: !!dbId, token: !!token });
       return res.status(400).json({ error: "Cloudflare D1 credentials not configured.", envCheck: { accountId: !!accountId, dbId: !!dbId, token: !!token } });
+    }
+
+    // UUID validation for Cloudflare D1
+    const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    if (!uuidRegex.test(dbId)) {
+       return res.status(400).json({ error: "Invalid CF_DATABASE_ID format. It must be a UUID (e.g. 12345678-abcd-1234-abcd-1234567890ab), not the database name.", dbId_provided: dbId });
     }
 
     const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
@@ -818,7 +832,7 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
 
     const data = await response.json();
     if (!data.success) {
-      console.error("D1 Error response:", data.errors);
+      console.error("D1 Error response:", data.errors, "AccountID matched:", accountId === rawAccountId?.trim(), "DB_ID_LEN:", dbId?.length);
       return res.status(400).json({ error: data.errors });
     }
     
@@ -845,7 +859,8 @@ async function runCleanStorage(force = false) {
       if (match) dbId = match[0];
     }
     const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
-    const token = rawToken?.trim();
+    let token = rawToken?.trim();
+    if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
     if (!accountId || !dbId || !token) {
       if (force) console.error("Clean Storage Error: Missing D1 credentials");
@@ -976,7 +991,8 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     if (match) dbId = match[0];
   }
   const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
-  const token = rawToken?.trim();
+  let token = rawToken?.trim();
+  if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
   try {
     const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
