@@ -38,19 +38,26 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
   const loadSettings = async () => {
     try {
       const { data, error } = await supabase
-        .from('global_stats')
+        .from('system_config')
         .select('announcement_settings')
-        .eq('id', 'global')
+        .eq('id', 'main')
         .single();
         
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
       
-      if (data?.announcement_settings) {
+      let currentSettings = data?.announcement_settings;
+      if (typeof currentSettings === 'string') {
+        try {
+          currentSettings = JSON.parse(currentSettings);
+        } catch(e) {}
+      }
+      
+      if (currentSettings) {
         setSettings({
           ...settings,
-          ...data.announcement_settings
+          ...currentSettings
         });
       }
     } catch (err) {
@@ -63,12 +70,19 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
     try {
       // Get current to not overwrite other announcement settings
       const { data: currentData } = await supabase
-        .from('global_stats')
+        .from('system_config')
         .select('announcement_settings')
-        .eq('id', 'global')
+        .eq('id', 'main')
         .single();
         
-      const currentSettings = currentData?.announcement_settings || {};
+      let currentSettings = currentData?.announcement_settings || {};
+      if (typeof currentSettings === 'string') {
+        try {
+          currentSettings = JSON.parse(currentSettings);
+        } catch(e) {
+          currentSettings = {};
+        }
+      }
         
       const updatedSettings = {
         ...currentSettings,
@@ -86,11 +100,11 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
       
       // Merge all image related settings into announcement_settings
       const { error } = await supabase
-        .from('global_stats')
-        .upsert({ 
-          id: 'global',
+        .from('system_config')
+        .update({ 
           announcement_settings: updatedSettings
-        });
+        })
+        .eq('id', 'main');
 
       if (error) throw error;
       
