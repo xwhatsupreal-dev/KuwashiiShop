@@ -625,10 +625,11 @@ export default function App() {
   };
 
   // Floating notifications/toast
-  const [toastMessage, setToastMessage] = useState<{
+  const [toasts, setToasts] = useState<{
+    id: string;
     text: string;
     type: "success" | "info" | "error";
-  } | null>(null);
+  }[]>([]);
 
   // Sound chime utility generator
   const playChime = (type: "success" | "warning" | "info") => {
@@ -754,9 +755,10 @@ export default function App() {
     text: string,
     type: "success" | "info" | "error" = "success",
   ) => {
-    setToastMessage({ text, type });
+    const id = Date.now().toString() + Math.random().toString();
+    setToasts((prev) => [{ id, text, type }, ...prev].slice(0, 3));
     setTimeout(() => {
-      setToastMessage(null);
+      setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3000);
   };
 
@@ -2790,6 +2792,7 @@ export default function App() {
               setAppScreen("LOGIN");
               setAuthMode("login");
             }}
+            onLogout={handleLogout}
             setAppScreen={setAppScreen}
             currentScreen={appScreen}
             onLogoClick={() => {
@@ -2809,32 +2812,69 @@ export default function App() {
           )}
 
           {/* Dynamic Floating Toast Notification */}
-          <AnimatePresence>
-            {toastMessage && (
-              <motion.div
-                initial={{ opacity: 0, y: -50, x: "-50%" }}
-                animate={{ opacity: 1, y: 0, x: "-50%" }}
-                exit={{ opacity: 0, y: -30, x: "-50%" }}
-                style={{ zIndex: 9999 }}
-                className={`fixed top-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-xs font-semibold tracking-wide border  ${
-                  toastMessage.type === "success"
-                    ? "bg-emerald-950/90 text-emerald-400 border-emerald-500/30"
-                    : toastMessage.type === "error"
-                      ? "bg-red-950/90 text-red-400 border-red-500/30"
-                      : "bg-zinc-900 shadow-sm border border-zinc-800 text-zinc-400 border-zinc-705"
-                }`}
-              >
-                {toastMessage.type === "success" ? (
-                  <CheckCircle className="w-4 h-4 text-emerald-400" />
-                ) : toastMessage.type === "error" ? (
-                  <AlertTriangle className="w-4 h-4 text-red-500" />
-                ) : (
-                  <Info className="w-4 h-4 text-blue-400" />
-                )}
-                <span>{toastMessage.text}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center pointer-events-none w-full max-w-[340px] px-4">
+            <AnimatePresence mode="popLayout">
+              {toasts.map((toast, index) => {
+                // Stack effect calculations
+                // Index 0 is the newest (top). Index 1 is behind it, etc.
+                const scale = 1 - index * 0.05;
+                const yOffset = index * 8;
+                const opacity = 1 - index * 0.2;
+                
+                return (
+                  <motion.div
+                    key={toast.id}
+                    layout
+                    initial={{ opacity: 0, y: -50, scale: 0.9, filter: "blur(8px)" }}
+                    animate={{ opacity: opacity, y: yOffset, scale: scale, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, scale: 0.9, filter: "blur(8px)", transition: { duration: 0.2, ease: "easeOut" } }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30, mass: 0.8 }}
+                    style={{ zIndex: 100 - index }}
+                    className={`absolute top-0 w-full bg-[#1c1c1e]/90 backdrop-blur-xl px-3 py-3 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-white/10 flex items-start gap-3 pointer-events-auto`}
+                  >
+                    <div className="flex-shrink-0 relative">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 border border-white/10 shadow-sm">
+                        {globalStats?.announcement_settings?.shopLogoUrl ? (
+                          <img src={globalStats.announcement_settings.shopLogoUrl} alt="Logo" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-indigo-500/20 text-indigo-400">
+                            <span className="font-bold text-lg">K</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="absolute -bottom-0.5 -right-0.5 p-[2px] bg-[#1c1c1e] rounded-full">
+                        {toast.type === "success" ? (
+                          <div className="w-3.5 h-3.5 bg-emerald-500 rounded-full flex items-center justify-center">
+                            <CheckCircle className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                          </div>
+                        ) : toast.type === "error" ? (
+                          <div className="w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center">
+                            <AlertTriangle className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                          </div>
+                        ) : (
+                          <div className="w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center">
+                            <Info className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="font-semibold text-[13px] text-zinc-100 truncate tracking-wide">
+                          {globalStats?.announcement_settings?.shopName || 'Kuwashii'}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 font-medium">ตอนนี้</span>
+                      </div>
+                      <p className="text-[13px] text-zinc-300 leading-snug line-clamp-2">
+                        {toast.text}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
 
           {/* Hero Header Section */}
           {!inquiringItem &&

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet } from 'lucide-react';
+import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet, LogOut } from 'lucide-react';
 import { MarqueeAnnouncement } from './MarqueeAnnouncement';
 
-export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, setAppScreen, currentScreen, globalStats, onLogoClick }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any, onLogoClick?: () => void }) => {
+export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, onLogout, setAppScreen, currentScreen, globalStats, onLogoClick }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, onLogout?: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any, onLogoClick?: () => void }) => {
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
 
   return (
@@ -70,21 +70,31 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
           <div className="h-5 w-[1px] bg-zinc-700 hidden sm:block mx-1"></div>
 
           {currentUser ? (
-            <div 
-              onClick={() => setAppScreen?.("PROFILE")}
-              className="flex items-center gap-3 bg-blue-900/20 border border-blue-900/40 px-3 py-1.5 rounded-full cursor-pointer hover:bg-blue-900/20 transition-colors"
-            >
-              <div className="flex flex-col items-end hidden sm:flex">
-                <span className="text-xs font-bold text-zinc-200">{currentUser.username}</span>
-                <span className="text-[10px] text-[#0ea5e9] font-semibold">ยอดคงเหลือ: ฿{(currentUser.balance || 0).toLocaleString()}</span>
+            <div className="flex items-center gap-2">
+              <div 
+                onClick={() => setAppScreen?.("PROFILE")}
+                className="flex items-center gap-3 bg-blue-900/20 border border-blue-900/40 px-3 py-1.5 rounded-full cursor-pointer hover:bg-blue-900/20 transition-colors"
+              >
+                <div className="flex flex-col items-end hidden sm:flex">
+                  <span className="text-xs font-bold text-zinc-200">{currentUser.username}</span>
+                  <span className="text-[10px] text-[#0ea5e9] font-semibold">ยอดคงเหลือ: ฿{(currentUser.balance || 0).toLocaleString()}</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
+                  {currentUser.avatar_url || currentUser.avatar ? (
+                    <img src={currentUser.avatar_url || currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-4 h-4" />
+                  )}
+                </div>
               </div>
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
-                {currentUser.avatar_url || currentUser.avatar ? (
-                  <img src={currentUser.avatar_url || currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-4 h-4" />
-                )}
-              </div>
+              
+              <button 
+                onClick={onLogout}
+                className="hidden md:flex p-2 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
+                title="ออกจากระบบ"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           ) : (
             <button 
@@ -104,4 +114,5 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
     </motion.header>
   );
 };
+
 
