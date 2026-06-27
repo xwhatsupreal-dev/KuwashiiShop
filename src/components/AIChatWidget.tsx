@@ -218,11 +218,19 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, 
                           return <img key={i} src={p.inlineData.data} alt="uploaded" className="rounded-lg max-w-full h-auto mb-2" />;
                         }
                         if (p.text) {
-                          return p.text.split('\n').map((line, j) => (
-                            <p key={`${i}-${j}`} className="mb-1 last:mb-0 break-words">
-                              {line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
-                            </p>
-                          ));
+                          return p.text.split('\n').map((line, j) => {
+                            const parts = line.split(/(\*\*.*?\*\*)/g);
+                            return (
+                              <p key={`${i}-${j}`} className="mb-1 last:mb-0 break-words">
+                                {parts.map((part, k) => {
+                                  if (part.startsWith('**') && part.endsWith('**')) {
+                                    return <strong key={k} className="font-bold">{part.slice(2, -2)}</strong>;
+                                  }
+                                  return <span key={k}>{part}</span>;
+                                })}
+                              </p>
+                            );
+                          });
                         }
                         return null;
                       })}
