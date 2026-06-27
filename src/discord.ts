@@ -15,7 +15,7 @@ export const sendDiscordTopupEmbed = async (username: string, amount: number, ch
         ...isSuccess ? [{ name: "💵 Balance", value: `\`฿${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}\``, inline: true }] : []
       ],
       footer: {
-        text: "Kuwashii Shop - ( kuwashii-shop.vercel.app )",
+        text: "Kuwashii Shop - ( kuwashii-shopv1.vercel.app )",
         icon_url: "https://img2.pic.in.th/1000111145bb818044d3458be6.md.png"
       },
       timestamp: new Date().toISOString()
@@ -69,7 +69,7 @@ export const sendDiscordPurchaseEmbed = async (username: string, itemName: strin
         { name: "🎁 Drops", value: dropsFormatted || 'ไม่มีข้อมูล', inline: false }
       ],
       footer: {
-        text: "Kuwashii Shop - ( kuwashii-shop.vercel.app )",
+        text: "Kuwashii Shop - ( kuwashii-shopv1.vercel.app )",
         icon_url: "https://img2.pic.in.th/1000111145bb818044d3458be6.md.png"
       },
       timestamp: new Date().toISOString()
@@ -107,7 +107,7 @@ export const sendDiscordStockUpdateEmbed = async (webhookUrl: string, itemName: 
         { name: "📦 In Stock", value: `\`${totalStock}\` ชิ้น`, inline: true }
       ],
       footer: {
-        text: "Kuwashii Shop - ( kuwashii-shop.vercel.app )",
+        text: "Kuwashii Shop - ( kuwashii-shopv1.vercel.app )",
         icon_url: "https://img2.pic.in.th/1000111145bb818044d3458be6.md.png"
       },
       timestamp: new Date().toISOString()

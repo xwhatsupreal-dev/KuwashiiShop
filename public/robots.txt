@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://kuwashii-shop.vercel.app/sitemap.xml
+Sitemap: https://kuwashii-shopv1.vercel.app/sitemap.xml

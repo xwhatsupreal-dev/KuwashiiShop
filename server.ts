@@ -939,7 +939,7 @@ app.post("/api/admin/clean_storage", async (req: express.Request, res: express.R
 
 app.get('/api/auth/discord/login', (req, res) => {
   const host = req.headers['x-forwarded-host'] || req.get('host');
-  const resolvedHost = (host && host.includes('vercel.app')) ? host : 'kuwashii-shop.vercel.app';
+  const resolvedHost = (host && host.includes('vercel.app')) ? host : 'kuwashii-shopv1.vercel.app';
   const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
   const redirectUri = process.env.DISCORD_REDIRECT_URI || process.env.VITE_DISCORD_REDIRECT_URI || `https://${resolvedHost}/api/auth/discord/callback`;
   console.log("Discord OAuth Redirect URI:", redirectUri);
@@ -955,7 +955,7 @@ app.get('/api/auth/discord/login', (req, res) => {
 
 app.get('/api/auth/discord/url', (req, res) => {
   const host = req.headers['x-forwarded-host'] || req.get('host');
-  const resolvedHost = (host && host.includes('vercel.app')) ? host : 'kuwashii-shop.vercel.app';
+  const resolvedHost = (host && host.includes('vercel.app')) ? host : 'kuwashii-shopv1.vercel.app';
   const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
   const redirectUri = process.env.DISCORD_REDIRECT_URI || process.env.VITE_DISCORD_REDIRECT_URI || `https://${resolvedHost}/api/auth/discord/callback`;
 
@@ -973,7 +973,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
   if (!code) return res.send("No code provided.");
 
   const host = req.headers['x-forwarded-host'] || req.get('host');
-  const resolvedHost = (host && host.includes('vercel.app')) ? host : 'kuwashii-shop.vercel.app';
+  const resolvedHost = (host && host.includes('vercel.app')) ? host : 'kuwashii-shopv1.vercel.app';
   const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
   const redirectUri = process.env.DISCORD_REDIRECT_URI || process.env.VITE_DISCORD_REDIRECT_URI || `https://${resolvedHost}/api/auth/discord/callback`;
 
