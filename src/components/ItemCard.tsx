@@ -106,11 +106,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 50, scale: 0.95 }}
+      initial={{ opacity: 0, y: 15, scale: 0.98 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "0px 0px -50px 0px" }}
-      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      viewport={{ once: true, margin: "50px 0px 50px 0px" }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      exit={{ opacity: 0, scale: 0.98 }}
       whileHover={{ y: -4, transition: { duration: 0.15 } }}
       whileTap={{ scale: 0.96 }}
       className="group relative flex flex-col justify-between bg-[#0B0B0B] transition-all duration-300 border border-white/5 rounded-[16px] hover:border-[#0ea5e9]/50 hover:shadow-[0_0_30px_-5px_rgba(14,165,233,0.15)] overflow-hidden text-left"

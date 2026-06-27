@@ -328,13 +328,30 @@ export default function App() {
     const handleSync = async () => {
       const syncId = ++activeSyncId;
 
+      const migrateItems = (itemsList: any[]): StockItem[] => {
+        return itemsList.map((item) => {
+          if (item && item.category === "Equipment") {
+            return { ...item, category: "Skin" };
+          }
+          return item as StockItem;
+        });
+      };
+
       try {
         const dbItems = await fetchItems();
         if (syncId !== activeSyncId) return;
-        if (dbItems) setItems(dbItems);
+        if (dbItems && dbItems.length > 0) {
+          setItems(migrateItems(dbItems));
+        } else {
+          setItems([]);
+        }
+        setIsServerQuotaExceeded(false);
         setD1AuthError(false);
       } catch(e: any) {
-        if (e && e.message === "D1_AUTH_ERROR") setD1AuthError(true);
+        if (e && e.message === "D1_AUTH_ERROR") {
+          setD1AuthError(true);
+        }
+        setItems([]);
       }
 
       const config = await getSystemConfig();
@@ -398,6 +415,7 @@ export default function App() {
         }
       }
 
+      setIsLoadingStock(false);
       setSyncCounter((c) => c + 1);
     };
 
@@ -674,41 +692,6 @@ export default function App() {
     }
     cleanupOldData();
   }, []);
-
-  // Load and save localStorage / Server
-  useEffect(() => {
-    async function initStock() {
-      // Helper to map obsolete "Equipment" category to new "Skin" category
-      const migrateItems = (itemsList: any[]): StockItem[] => {
-        return itemsList.map((item) => {
-          if (item && item.category === "Equipment") {
-            return { ...item, category: "Skin" };
-          }
-          return item as StockItem;
-        });
-      };
-
-      try {
-        const dbItems = await fetchItems();
-        if (dbItems && dbItems.length > 0) {
-          setItems(migrateItems(dbItems));
-        } else {
-          setItems([]);
-        }
-        setIsServerQuotaExceeded(false);
-        setD1AuthError(false);
-      } catch (e: any) {
-        console.warn("Error loading items from Database", e);
-        if (e && e.message === "D1_AUTH_ERROR") {
-          setD1AuthError(true);
-        }
-        setItems([]);
-      } finally {
-        setIsLoadingStock(false);
-      }
-    }
-    initStock();
-  }, [syncCounter]);
 
   const saveItemsToStorage = async (newItems: StockItem[]) => {
     setItems(newItems);

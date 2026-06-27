@@ -26,12 +26,12 @@ export const CategoryList = ({ selectedCategory, setSelectedCategory, globalStat
           
           return (
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "0px 0px -40px 0px" }}
+              viewport={{ once: true, margin: "50px 0px 50px 0px" }}
               whileHover={{ y: -4, scale: 1.02 }}
               whileTap={{ scale: 0.95 }}
-              transition={{ delay: index * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ delay: Math.min(index * 0.05, 0.2), duration: 0.3, ease: "easeOut" }}
               key={index} 
               onClick={() => setSelectedCategory(category.title)}
               className={`group relative h-[180px] sm:h-[200px] rounded-[24px] overflow-hidden cursor-pointer transition-all duration-300
