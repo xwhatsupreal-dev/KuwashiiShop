@@ -3314,7 +3314,7 @@ export default function App() {
       <ShootingStars />
       <GlobalLoadingScreen isLoading={isLoadingStock} />
       <AnimatePresence mode="wait">{renderAppScreen()}</AnimatePresence>
-      {!isLoadingStock && <AIChatWidget items={items} shopLogoUrl={globalStats?.announcement_settings?.shopLogoUrl} currentUser={currentUser} onLoginClick={() => setAppScreen("LOGIN")} />}
+      {!isLoadingStock && <AIChatWidget items={items} shopLogoUrl={globalStats?.announcement_settings?.shopLogoUrl} currentUser={currentUser} onLoginClick={() => setAppScreen("LOGIN")} aiStatus={globalStats?.ai_status} />}
     </>
   );
 }

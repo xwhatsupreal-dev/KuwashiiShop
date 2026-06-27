@@ -30,6 +30,7 @@ export interface AnnouncementSettings {
   showStatSold?: boolean;
   showStatTopup?: boolean;
   stock_webhook_url?: string;
+  ai_status?: string; // We will use this to manage ai_status but it will be saved separately
 }
 
 const DEFAULT_SETTINGS: AnnouncementSettings = {
@@ -61,16 +62,25 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
   useEffect(() => {
     if (isOpen) {
       const saved = localStorage.getItem('KUWASHII_ANNOUNCEMENT_SETTINGS');
+      let parsed = DEFAULT_SETTINGS;
       if (saved) {
-        setSettings(JSON.parse(saved));
-      } else {
-        setSettings(DEFAULT_SETTINGS);
+        parsed = JSON.parse(saved);
       }
+      
+      // Fetch current ai_status from DB
+      supabase.from('system_config').select('ai_status').eq('id', 'main').single().then(({data}) => {
+        if (data && data.ai_status) {
+          parsed.ai_status = data.ai_status;
+        }
+        setSettings({...parsed});
+      });
+      
       setSaveSuccess(false);
     }
   }, [isOpen]);
 
   const handleSave = async () => {
+    // Keep local storage mostly for other things, but ai_status goes there too for convenience
     localStorage.setItem('KUWASHII_ANNOUNCEMENT_SETTINGS', JSON.stringify(settings));
     localStorage.setItem('KUWASHII_ANNOUNCEMENT_UPDATED_AT', Date.now().toString());
     
@@ -89,7 +99,8 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
         announcement_settings: {
           ...currentSettings,
           ...settings
-        }
+        },
+        ai_status: settings.ai_status || 'online'
       }).eq('id', 'main');
     } catch(e) {}
     
@@ -145,6 +156,21 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
               />
               <span className="text-white font-bold text-sm">เปิดใช้งานแจ้งเตือน (Enable Popup)</span>
             </label>
+
+            <div className="pt-4 border-t border-white/5/50">
+              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                สถานะผู้ช่วย AI (AI Assistant Status)
+              </label>
+              <select
+                value={settings.ai_status || 'online'}
+                onChange={(e) => setSettings({ ...settings, ai_status: e.target.value })}
+                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-amber-500 transition-all text-sm font-sans mb-4"
+              >
+                <option value="online">ออนไลน์ (Online)</option>
+                <option value="maintenance">ปิดปรับปรุง (Maintenance)</option>
+                <option value="offline">ออฟไลน์ / ปิดใช้งาน (Offline)</option>
+              </select>
+            </div>
 
             <div className="pt-4 border-t border-white/5/50">
               <label className="flex items-center gap-3 p-4 bg-zinc-900 border border-white/5 rounded-2xl cursor-pointer hover:bg-zinc-800 transition-colors mb-4">

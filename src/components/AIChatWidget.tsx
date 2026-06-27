@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, X, ChevronDown, Send, Bot, User, Loader2 } from 'lucide-react';
+import { MessageSquare, X, ChevronDown, Send, Bot, User, Loader2, Image as ImageIcon } from 'lucide-react';
 import { StockItem } from '../types';
 
 interface Message {
   role: 'user' | 'model';
-  parts: [{ text: string }];
+  parts: { text?: string; inlineData?: any }[];
 }
 
 interface AIChatWidgetProps {
@@ -13,9 +13,10 @@ interface AIChatWidgetProps {
   shopLogoUrl?: string;
   currentUser?: any;
   onLoginClick?: () => void;
+  aiStatus?: 'online' | 'maintenance' | 'offline';
 }
 
-export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, currentUser, onLoginClick }) => {
+export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, currentUser, onLoginClick, aiStatus = 'online' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -24,8 +25,10 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, 
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,18 +40,35 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, 
     }
   }, [messages, isOpen]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
     
-    if (!inputMessage.trim() || isLoading) return;
+    if ((!inputMessage.trim() && !selectedImage) || isLoading) return;
 
     const userMsg: Message = {
       role: 'user',
-      parts: [{ text: inputMessage }]
+      parts: []
     };
+    if (inputMessage.trim()) userMsg.parts.push({ text: inputMessage });
+    if (selectedImage) userMsg.parts.push({ inlineData: { data: selectedImage } });
 
     setMessages(prev => [...prev, userMsg]);
+    const currentMessage = inputMessage;
+    const currentImage = selectedImage;
+    
     setInputMessage('');
+    setSelectedImage(null);
     setIsLoading(true);
 
     try {
@@ -58,7 +78,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, 
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: userMsg.parts[0].text,
+          message: currentMessage,
+          imageBase64: currentImage,
           history: messages,
           items: items.map(item => ({
              id: item.id,
@@ -90,6 +111,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, 
       setIsLoading(false);
     }
   };
+
+  if (aiStatus === 'offline') return null;
 
   return (
     <>
@@ -131,8 +154,10 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, 
                 <div>
                   <h3 className="font-bold text-zinc-100 text-sm">Kuwashii AI Assistant</h3>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-xs text-emerald-500">ออนไลน์</span>
+                    <span className={`w-2 h-2 rounded-full animate-pulse ${aiStatus === 'maintenance' ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+                    <span className={`text-xs ${aiStatus === 'maintenance' ? 'text-amber-500' : 'text-emerald-500'}`}>
+                      {aiStatus === 'maintenance' ? 'ปิดปรับปรุง (อาจตอบช้า)' : 'ออนไลน์'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -188,12 +213,19 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, 
                         ? 'bg-indigo-600 text-white rounded-br-sm' 
                         : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-zinc-700/50'
                     }`}>
-                      {/* Simple markdown parsing for the AI responses */}
-                      {msg.parts[0].text.split('\n').map((line, i) => (
-                        <p key={i} className="mb-1 last:mb-0 break-words">
-                          {line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
-                        </p>
-                      ))}
+                      {msg.parts.map((p, i) => {
+                        if (p.inlineData) {
+                          return <img key={i} src={p.inlineData.data} alt="uploaded" className="rounded-lg max-w-full h-auto mb-2" />;
+                        }
+                        if (p.text) {
+                          return p.text.split('\n').map((line, j) => (
+                            <p key={`${i}-${j}`} className="mb-1 last:mb-0 break-words">
+                              {line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
+                            </p>
+                          ));
+                        }
+                        return null;
+                      })}
                     </div>
                   </div>
                 </div>
@@ -223,23 +255,50 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ items, shopLogoUrl, 
             {/* Input Area */}
             <div className="p-4 bg-zinc-900 border-t border-zinc-800 shrink-0">
               {currentUser ? (
-                <form onSubmit={handleSendMessage} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="พิมพ์ข้อความถาม AI..."
-                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="submit"
-                    disabled={!inputMessage.trim() || isLoading}
-                    className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-xl text-white transition-colors"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </form>
+                <div className="flex flex-col gap-2">
+                  {selectedImage && (
+                    <div className="relative inline-block w-20 h-20 mb-2">
+                      <img src={selectedImage} alt="preview" className="w-full h-full object-cover rounded-xl border border-zinc-700" />
+                      <button 
+                        onClick={() => setSelectedImage(null)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                  <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <input 
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleImageSelect}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-400 transition-colors shrink-0"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="text"
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      placeholder={aiStatus === 'maintenance' ? "ระบบ AI ขัดข้องชั่วคราว..." : "พิมพ์ข้อความถาม AI..."}
+                      className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                      disabled={isLoading || aiStatus === 'maintenance'}
+                    />
+                    <button
+                      type="submit"
+                      disabled={(!inputMessage.trim() && !selectedImage) || isLoading || aiStatus === 'maintenance'}
+                      className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-xl text-white transition-colors shrink-0"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </form>
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center p-2 text-center">
                   <p className="text-sm text-zinc-400 mb-3">กรุณาเข้าสู่ระบบเพื่อใช้งาน AI</p>
