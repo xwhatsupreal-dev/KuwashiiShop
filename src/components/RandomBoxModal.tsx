@@ -273,10 +273,7 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({
               <p className="text-red-400 font-bold text-sm">
                 🚨 โปรดอ่านก่อนสั่งซื้อ! 🚨
               </p>
-              <p className="text-zinc-300 text-sm">
-                💰 เมื่อได้ตัวละคร ให้ทักแอดมินตามช่องทางที่กำหนดเพื่อรับของรางวัล
-              </p>
-              <ul className="text-zinc-400 space-y-1 ml-4 list-disc marker:text-[#0ea5e9] text-sm">
+              <ul className="text-zinc-400 space-y-1 ml-4 list-disc marker:text-[#0ea5e9] text-sm mt-2">
                 <li>มีเกลือ (โอกาสไม่ได้ของแรร์)</li>
                 <li>ลุ้นรับของรางวัลสุดแรร์ ✨</li>
               </ul>
@@ -284,11 +281,16 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({
                 ⚠️ แค่กดสั่งซื้อ ระบบจะสุ่มรางวัลให้ทันที
               </p>
               <p className="mt-2 text-red-400 font-bold text-xs">
-                ‼️ หากลูกค้าได้รับชื่อตัวละครที่ได้จากการสุ่ม ให้เเคปส่งให้เจ้าของสินค้าได้เลย
+                ‼️ หากลูกค้าได้รับชื่อตัวละครที่ได้จากการสุ่ม ให้เเคปภาพผลลัพธ์ส่งไปที่ช่องทางเคลมด้านล่างได้เลย
               </p>
-              <p className="mt-2 text-emerald-400 font-bold text-xs flex items-start gap-1">
-                <span className="text-sm">✅</span> เมื่อได้ข้อความ ทักแอดมินทางเพจเพื่อรับของรางวัล
-              </p>
+              <a 
+                href="https://m.me/DazzRFkaz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 flex items-center justify-center gap-2 bg-[#0084FF]/10 hover:bg-[#0084FF]/20 text-[#0084FF] border border-[#0084FF]/30 py-2.5 px-4 rounded-xl font-bold transition-colors w-full text-sm"
+              >
+                <span className="text-base">💬</span> ช่องทางเคลมของรางวัล (Messenger)
+              </a>
             </div>
           </div>
 

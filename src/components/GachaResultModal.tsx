@@ -222,22 +222,18 @@ export const GachaResultModal: React.FC<GachaResultModalProps> = ({
                   className="mt-8 flex flex-col items-center"
                 >
                   <p className="text-zinc-400 text-[13px] mb-3 font-medium bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
-                    กรุณาติดต่อแอดมินพร้อมแคปหน้าจอเพื่อรับรางวัล
+                    แคปหน้าจอผลลัพธ์นี้เพื่อใช้เคลมของรางวัล
                   </p>
                   <a
-                    href={
-                      result.item?.game === "ASTD" || !result.item?.game
-                        ? "https://m.me/DazzRFkaz"
-                        : "https://discord.gg/AQKtJpvyva"
-                    }
+                    href="https://m.me/DazzRFkaz"
                     target="_blank"
                     rel="noreferrer noopener"
                     className="w-full py-4 px-4 rounded-xl border border-[#0ea5e9]/30 bg-gradient-to-r from-[#0ea5e9]/10 to-blue-600/10 hover:from-[#0ea5e9]/20 hover:to-blue-600/20 text-[#0ea5e9] hover:text-white font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(14,165,233,0.15)] hover:shadow-[0_0_30px_rgba(14,165,233,0.25)] hover:-translate-y-0.5 active:translate-y-0 backdrop-blur-sm relative overflow-hidden group/btn"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] skew-x-[-15deg] group-hover/btn:translate-x-[150%] transition-transform duration-700 ease-out" />
-                    <MessageCircle className="w-5 h-5 relative z-10" />
+                    <span className="text-base relative z-10">💬</span>
                     <span className="relative z-10">
-                      ติดต่อรับของรางวัลทันที
+                      ช่องทางเคลมของรางวัล (Messenger)
                     </span>
                   </a>
                 </motion.div>
