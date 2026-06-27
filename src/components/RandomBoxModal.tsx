@@ -266,30 +266,6 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({
             
             <div className="bg-black/20 border border-white/5 p-4 rounded-xl text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap mb-4">
               {item.description || <span className="text-zinc-500 italic">ไม่มีคำอธิบายเพิ่มเติม</span>}
-              
-              {/* Additional Images */}
-              {item.imageUrls && item.imageUrls.length > 0 && (
-                <div className="mt-6">
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block mb-3 font-sans">
-                    📸 รูปภาพเพิ่มเติม:
-                  </span>
-                  <div className="flex flex-col gap-4">
-                    {item.imageUrls.map((url, idx) => (
-                      <div
-                        key={idx}
-                        className="w-full rounded-xl overflow-hidden border border-white/5 bg-zinc-800/30"
-                      >
-                        <img
-                          src={url}
-                          alt={`Additional ${idx + 1}`}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-auto object-contain"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
             
             {/* Warning Section */}
