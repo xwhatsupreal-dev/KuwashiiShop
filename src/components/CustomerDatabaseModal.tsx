@@ -84,25 +84,18 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
         setUsers(users.map(u => u.username === username ? { ...u, [balanceField]: amount } : u));
         
         if (difference !== 0) {
-          const targetGame = appScreen;
           await supabase.from('topups').insert([{
             username: username,
             amount: difference,
-            method: difference > 0 ? 'Admin เพิ่มเครดิต' : 'Admin ลดเครดิต',
-            game: targetGame
+            method: difference > 0 ? 'Admin เพิ่มเครดิต' : 'Admin ลดเครดิต'
           }]);
           
           if (difference > 0) {
             sendDiscordTopupEmbed(username, difference, 'Admin (ระบบ)', amount, true);
             
             const configData = await getSystemConfig();
-            if (targetGame === 'ASTD') {
-              const currentRev = configData ? Number(configData.global_rev_astd || 0) : 0;
-              await supabase.from('system_config').update({ global_rev_astd: currentRev + difference }).eq('id', 'main');
-            } else {
-              const currentRev = configData ? Number(configData.global_revenue_aotr || 0) : 0;
-              await supabase.from('system_config').update({ global_revenue_aotr: currentRev + difference }).eq('id', 'main');
-            }
+            const currentRev = configData ? Number(configData.global_rev_astd || 0) : 0;
+            await supabase.from('system_config').update({ global_rev_astd: currentRev + difference }).eq('id', 'main');
           }
 
           window.dispatchEvent(new Event('sync-update'));

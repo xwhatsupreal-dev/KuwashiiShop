@@ -687,8 +687,12 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
         global_rev_rov INTEGER DEFAULT 0,
         global_free_astd INTEGER DEFAULT 0,
         global_free_rov INTEGER DEFAULT 0,
+        global_revenue_aotr INTEGER DEFAULT 0,
+        global_free_aotr INTEGER DEFAULT 0,
         shop_status TEXT DEFAULT 'open',
         ai_status TEXT DEFAULT 'online',
+        maintenance_mode BOOLEAN DEFAULT 0,
+        announcement_settings TEXT,
         last_cleanup_timestamp DATETIME
       );
       INSERT OR IGNORE INTO system_config (id) VALUES ('main');

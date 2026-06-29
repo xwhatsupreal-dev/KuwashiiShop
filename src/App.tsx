@@ -190,7 +190,8 @@ export default function App() {
   });
   const [currentUserData, setCurrentUserData] = useState<any>(null);
 
-  const isUnderMaintenance = globalStats?.maintenance_mode;
+  const isMaintenanceMode = globalStats?.maintenance_mode === "true" || globalStats?.maintenance_mode === true || globalStats?.maintenance_mode === 1 || globalStats?.maintenance_mode === "1";
+  const isUnderMaintenance = isMaintenanceMode;
 
   const getInitialState = () => {
     const path = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -623,18 +624,18 @@ export default function App() {
   const toggleMaintenanceMode = async () => {
     if (
       confirm(
-        `คุณต้องการ${globalStats?.maintenance_mode ? "เปิด" : "ปิด"}เว็บไซต์ใช่หรือไม่?`,
+        `คุณต้องการ${isMaintenanceMode ? "เปิด" : "ปิด"}เว็บไซต์ใช่หรือไม่?`,
       )
     ) {
       await supabase
         .from("system_config")
         .update({
-          maintenance_mode: !globalStats?.maintenance_mode,
+          maintenance_mode: !isMaintenanceMode,
         })
         .eq("id", "main");
       window.dispatchEvent(new Event("sync-update"));
       showToast(
-        globalStats?.maintenance_mode
+        isMaintenanceMode
           ? "เปิดเว็บไซต์เรียบร้อยแล้ว"
           : "ปิดเว็บไซต์เรียบร้อยแล้ว",
         "info",
@@ -871,25 +872,13 @@ export default function App() {
             const ownerName = data.owner_profile || "ไม่ทราบชื่อ";
 
             const configData = await getSystemConfig();
-            if (appScreen === "SHOP") {
-              const currentRev = configData
-                ? Number(configData.global_rev_astd || 0)
-                : 0;
-              await supabase
-                .from("system_config")
-                .update({ global_rev_astd: currentRev + amount })
-                .eq("id", "main");
-            } else if (false) {
-              const currentRev = configData
-                ? Number(configData.global_revenue_aotr || 0)
-                : 0;
-              await supabase
-                .from("system_config")
-                .update({
-                  global_revenue_aotr: currentRev + amount,
-                })
-                .eq("id", "main");
-            }
+            const currentRev = configData
+              ? Number(configData.global_rev_astd || 0)
+              : 0;
+            await supabase
+              .from("system_config")
+              .update({ global_rev_astd: currentRev + amount })
+              .eq("id", "main");
 
             const balanceField = "balance";
             const userBalance = Number(liveUser[balanceField] || 0);
@@ -1097,26 +1086,13 @@ export default function App() {
             }
 
             const configData = await getSystemConfig();
-            if (appScreen === "SHOP") {
-              const currentRev = configData
-                ? Number(configData.global_rev_astd || 0)
-                : 0;
-              await supabase
-                .from("system_config")
-                .update({ global_rev_astd: currentRev + amount })
-                .eq("id", "main");
-            } else if (false) {
-              const currentRev = configData
-                ? Number(configData.global_revenue_aotr || 0)
-                : 0;
-              await supabase
-                .from("system_config")
-                .update({
-                  global_revenue_aotr: currentRev + amount,
-                })
-                .eq("id", "main");
-            }
-            // If ROV, we do nothing to system_config because we don't track global_revenue_rov currently.
+            const currentRev = configData
+              ? Number(configData.global_rev_astd || 0)
+              : 0;
+            await supabase
+              .from("system_config")
+              .update({ global_rev_astd: currentRev + amount })
+              .eq("id", "main");
 
             const balanceField = "balance";
             const userBalance = Number(liveUser[balanceField] || 0);
@@ -2654,7 +2630,7 @@ export default function App() {
 
   const renderAppScreen = () => {
     if (
-      isUnderMaintenance &&
+      isMaintenanceMode &&
       !isAdmin &&
       appScreen !== "LOADING" &&
       appScreen !== "TRANSITION" &&
@@ -3131,10 +3107,10 @@ export default function App() {
                         <motion.button
                           whileTap={{ scale: 0.95 }}
                           onClick={toggleMaintenanceMode}
-                          className={`py-2 px-4 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg ${globalStats?.maintenance_mode ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"}`}
+                          className={`py-2 px-4 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg ${isMaintenanceMode ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"}`}
                         >
                           <AlertTriangle className="w-4 h-4" />{" "}
-                          {globalStats?.maintenance_mode
+                          {isMaintenanceMode
                             ? "เปิดเว็บ"
                             : "ปิดเว็บซ่อมปรุง"}
                         </motion.button>
