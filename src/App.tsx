@@ -674,23 +674,12 @@ export default function App() {
   // --- AI Chat Assistant States & Handlers ---
   // Chat feature removed
 
-  // Cleanup logic (7 days retention)
+  // Cleanup logic removed to prevent total purchases/topups from decreasing
   useEffect(() => {
-    async function cleanupOldData() {
-      try {
-        const sevenDaysAgo = new Date(
-          Date.now() - 7 * 24 * 60 * 60 * 1000,
-        ).toISOString();
-        await supabase.from("topups").delete().lt("created_at", sevenDaysAgo);
-        await supabase
-          .from("purchases")
-          .delete()
-          .lt("created_at", sevenDaysAgo);
-      } catch (e) {
-        console.warn("Error cleaning up old histories", e);
-      }
-    }
-    cleanupOldData();
+    // Intentionally left blank to preserve hook order if necessary, 
+    // though React doesn't mind if a top-level hook is removed, 
+    // but safer to just leave an empty effect or remove entirely if it doesn't break rules of hooks order conditionally.
+    // Wait, it's not conditional, so we can just remove it. Let's just remove the logic inside.
   }, []);
 
   const saveItemsToStorage = async (newItems: StockItem[]) => {
@@ -2869,18 +2858,7 @@ export default function App() {
 
           {/* Main Container */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 flex-grow w-full">
-            {d1AuthError && (
-              <div className="mb-8 p-4 bg-red-500/10 border border-red-500/50 rounded-xl flex items-start gap-4 text-red-400 max-w-2xl mx-auto">
-                <div className="p-2 bg-red-500/20 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-red-300">Database Connection Error</h3>
-                  <p className="text-sm mt-1">Failed to connect to Cloudflare D1. The provided API Token is invalid or has expired.</p>
-                  <p className="text-xs mt-2 opacity-80">Please update <code className="bg-red-950/50 px-1 py-0.5 rounded">CF_API_TOKEN</code> in your AI Studio settings.</p>
-                </div>
-              </div>
-            )}
+            {/* d1AuthError block removed as requested */}
             
             {inquiringItem ? (
               inquiringItem.gachaPool && inquiringItem.gachaPool.length > 0 ? (
@@ -2934,6 +2912,7 @@ export default function App() {
                 onChangePassword={handleChangePassword}
                 onChangeUsername={handleChangeUsername}
                 onChangeEmail={handleChangeEmail}
+                items={items}
               />
             ) : appScreen === "TOPUP" ? (
               <TopupPage
