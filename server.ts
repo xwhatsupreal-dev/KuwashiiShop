@@ -831,10 +831,7 @@ async function runCleanStorage(force = false) {
       return; // Already cleaned recently
     }
 
-    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
-    
-    // Delete activities older than 1 day
-    await fetchQuery("DELETE FROM activities WHERE timestamp < ?", [oneDayAgo]);
+    // Clean up older items logic removed to preserve history.
     
     // Delete items with missing/invalid game
     await fetchQuery("DELETE FROM items WHERE game IS NULL OR game = '' OR game NOT IN ('AOTR', 'ASTD', 'ROV')", []);

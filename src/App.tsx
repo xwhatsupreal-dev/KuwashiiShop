@@ -156,10 +156,7 @@ export const addLiveActivity = async (
       },
     ]);
 
-    // Clean up old activities (older than 72 hours to match recent purchases, or 7 hours?)
-    const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
-    await supabase.from("activities").delete().lt("timestamp", cutoff);
-
+    // No cleanup
     if (!error) {
       window.dispatchEvent(new Event("sync-update"));
     }
