@@ -58,19 +58,19 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/80 "
+          className="absolute inset-0 bg-black/80"
           onClick={onClose}
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-[#121215] rounded-t-[2rem] sm:rounded-3xl mt-12 sm:mt-0 shadow-2xl p-4 sm:p-6 w-full sm:max-w-4xl relative z-10 flex flex-col h-[calc(100dvh-3rem)] sm:h-auto sm:max-h-[85dvh]"
+          className="bg-[#121215] rounded-t-[2rem] sm:rounded-3xl shadow-2xl p-4 sm:p-6 pb-8 sm:pb-6 w-full sm:max-w-4xl relative z-10 flex flex-col h-[90dvh] sm:max-h-[85dvh]"
         >
           <div className="flex justify-between items-start mb-6 shrink-0 pt-2 sm:pt-0">
             <div>
@@ -100,7 +100,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 space-y-4">
+          <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 space-y-4 min-h-0">
             {activeTab === 'purchases' && (
               <div>
                 <div className="mb-4 bg-zinc-900/50 rounded-xl p-4 border border-white/5 space-y-3">
@@ -186,7 +186,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                             
                             <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3">
                               <div className="flex gap-3 items-center flex-1 min-w-0">
-                                <img src={items.find(item => item.id === purchase.itemId || item.name === purchase.itemName)?.imageUrls?.[0] || items.find(item => item.id === purchase.itemId || item.name === purchase.itemName)?.imageUrl || (purchase as any).imageUrl || "https://img2.pic.in.th/pic/Screenshot_20241029_163939_Facebook.jpg"} alt="" className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border border-white/5 shrink-0 shadow-sm" />
+                                <img src={items.find(item => String(item.id) === String(purchase.itemId) || item.name === purchase.itemName)?.imageUrls?.[0] || items.find(item => String(item.id) === String(purchase.itemId) || item.name === purchase.itemName)?.imageUrl || (purchase as any).imageUrl || "https://img2.pic.in.th/pic/Screenshot_20241029_163939_Facebook.jpg"} alt="" className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border border-white/5 shrink-0 shadow-sm" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-zinc-100 font-bold text-sm sm:text-base pr-2 mb-1.5 whitespace-normal leading-tight">
                                     {purchase.itemName}

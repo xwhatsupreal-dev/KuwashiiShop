@@ -26,6 +26,7 @@ interface UserProfileDashboardProps {
   onChangePassword: (newPass: string) => void;
   onChangeUsername: (newUsername: string) => Promise<boolean>;
   onChangeEmail: (newEmail: string) => Promise<boolean>;
+  items?: any[];
 }
 
 export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
@@ -34,6 +35,7 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
   onChangePassword,
   onChangeUsername,
   onChangeEmail,
+  items: globalItems = [],
 }) => {
   const [activeTab, setActiveTab] = useState<
     "profile" | "purchases" | "topups"
@@ -42,6 +44,7 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
   // History state
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [topups, setTopups] = useState<TopupRecord[]>([]);
+  const items = globalItems;
   const [expandedPurchases, setExpandedPurchases] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -115,6 +118,9 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
   };
 
   const sortedPurchases = [...purchases].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
+  const sortedTopups = [...topups].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
   const filteredPurchases = sortedPurchases.filter(
@@ -306,233 +312,223 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="space-y-4"
+              className="max-h-[600px] sm:max-h-[70dvh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 space-y-4"
             >
-              <div className="bg-zinc-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="w-4 h-4 text-zinc-500" />
+              <div>
+                <div className="mb-4 bg-zinc-900/50 rounded-xl p-4 border border-white/5 space-y-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="w-4 h-4 text-zinc-500" />
+                      </div>
+                      <input 
+                        type="text" 
+                        placeholder="ค้นหาสินค้า..." 
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="w-full bg-[#121215] border border-white/10 text-zinc-100 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-[#0ca5e9] focus:ring-1 focus:ring-[#0ca5e9] transition-all"
+                      />
+                    </div>
+                    <button 
+                      className="bg-white/5 border border-white/5 hover:bg-white/10 text-zinc-300 px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2 font-medium transition-all shadow-sm"
+                      onClick={() => {
+                        const texts = selectedItems.map(id => sortedPurchases.find(p => p.id === id)?.credentialData).filter(Boolean);
+                        if (texts.length) navigator.clipboard.writeText(texts.join('\n'));
+                      }}
+                    >
+                      <Copy className="w-4 h-4 text-zinc-500" /> คัดลอกที่เลือก
+                    </button>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="ค้นหาสินค้า..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-[#121215] border border-white/10 text-zinc-100 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-[#0ca5e9] transition-all"
-                  />
-                </div>
-                <button
-                  className="bg-white/5 border border-white/5 hover:bg-white/10 text-zinc-300 px-5 py-3 rounded-xl text-sm flex items-center justify-center gap-2 font-medium transition-all"
-                  onClick={() => {
-                    const texts = selectedItems
-                      .map(
-                        (id) =>
-                          sortedPurchases.find((p) => p.id === id)
-                            ?.credentialData,
-                      )
-                      .filter(Boolean);
-                    if (texts.length)
-                      navigator.clipboard.writeText(texts.join("\n"));
-                  }}
-                >
-                  <Copy className="w-4 h-4 text-zinc-500" /> คัดลอกที่เลือก
-                </button>
-                <button
-                  className="bg-white/5 border border-white/5 hover:bg-white/10 text-zinc-300 px-5 py-3 rounded-xl text-sm flex items-center justify-center gap-2 font-medium transition-all"
-                  onClick={() => {
-                    const texts = filteredPurchases
-                      .map((p) => p.credentialData)
-                      .filter(Boolean);
-                    if (texts.length)
-                      navigator.clipboard.writeText(texts.join("\n"));
-                  }}
-                >
-                  <Copy className="w-4 h-4 text-zinc-500" /> คัดลอกทั้งหมด
-                </button>
-              </div>
-
-              {filteredPurchases.length === 0 ? (
-                <div className="text-center py-16 bg-zinc-900 border border-white/5 rounded-2xl">
-                  <div className="w-16 h-16 rounded-full bg-[#121215] border border-white/5 flex items-center justify-center mx-auto mb-4 text-zinc-500">
-                    <ShoppingCart className="w-8 h-8" />
+                  <div className="flex items-center justify-between">
+                    <button 
+                      className="bg-white/5 border border-white/5 hover:bg-white/10 text-zinc-300 px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-medium transition-all shadow-sm"
+                      onClick={() => {
+                        const texts = filteredPurchases.map(p => p.credentialData).filter(Boolean);
+                        if (texts.length) navigator.clipboard.writeText(texts.join('\n'));
+                      }}
+                    >
+                      <Copy className="w-4 h-4 text-zinc-500" /> คัดลอกทั้งหมด
+                    </button>
+                    <div className="relative">
+                      <select className="appearance-none bg-[#121215] border border-white/10 text-zinc-300 px-4 py-2 pr-8 rounded-lg text-sm font-medium focus:outline-none focus:border-[#0ca5e9]">
+                        <option>{filteredPurchases.length} รายการ</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                    </div>
                   </div>
-                  <p className="text-zinc-400 font-medium">
-                    ยังไม่มีประวัติการทำรายการ
-                  </p>
                 </div>
-              ) : (
-                <div className="bg-zinc-900 border border-white/5 rounded-2xl divide-y divide-white/5 overflow-hidden">
-                  {filteredPurchases.map((purchase) => {
-                    const date = formatThaiDate(purchase.date);
-                    const time = formatThaiTime(purchase.date);
-                    const hasGachaDrops =
-                      purchase.gachaDrops && purchase.gachaDrops.length > 0;
-                    const hasCredentialData = !!purchase.credentialData;
-                    const canExpand = hasGachaDrops || hasCredentialData;
 
-                    return (
-                      <motion.div
-                        key={purchase.id}
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "0px 0px -20px 0px" }}
-                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className="flex flex-col"
-                      >
-                        <div className="p-4 sm:p-5 flex gap-4 items-start sm:items-center relative w-full">
-                          <div className="shrink-0 mt-1 sm:mt-0">
-                            <input
-                              type="checkbox"
-                              className="w-5 h-5 rounded border-zinc-700 bg-[#121215] checked:bg-[#0ca5e9] focus:ring-[#0ca5e9] cursor-pointer"
-                              checked={selectedItems.includes(purchase.id)}
-                              onChange={(e) => {
-                                if (e.target.checked)
-                                  setSelectedItems([
-                                    ...selectedItems,
-                                    purchase.id,
-                                  ]);
-                                else
-                                  setSelectedItems(
-                                    selectedItems.filter(
-                                      (id) => id !== purchase.id,
-                                    ),
-                                  );
-                              }}
-                            />
-                          </div>
+                {filteredPurchases.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mx-auto mb-4 text-zinc-500">
+                      <ShoppingCart className="w-8 h-8" />
+                    </div>
+                    <p className="text-zinc-400 font-medium">ยังไม่มีประวัติการทำรายการ</p>
+                  </div>
+                ) : (
+                  <div className="border border-white/5 rounded-xl overflow-hidden divide-y divide-white/5 bg-[#121215]">
+                    {filteredPurchases.map((purchase) => {
+                      const date = formatThaiDate(purchase.date);
+                      const time = formatThaiTime(purchase.date);
+                      const hasGachaDrops = purchase.gachaDrops && purchase.gachaDrops.length > 0;
+                      const hasCredentialData = !!purchase.credentialData;
+                      const canExpand = hasGachaDrops || hasCredentialData;
 
-                          <img
-                            src={
-                              (purchase as any).imageUrl ||
-                              "https://img2.pic.in.th/pic/Screenshot_20241029_163939_Facebook.jpg"
-                            }
-                            alt=""
-                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border border-white/5 shrink-0"
-                          />
-
-                          <div className="flex-1 min-w-0">
-                            <p className="text-zinc-100 font-bold text-sm sm:text-base mb-1 truncate">
-                              {purchase.itemName}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2 gap-y-1">
-                              <span className="flex items-center text-xs font-bold text-emerald-400">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></div>
-                                จัดส่งสำเร็จ
-                              </span>
-                              <span className="text-xs text-zinc-500 font-mono">
-                                {date} {time}
-                              </span>
+                      return (
+                        <motion.div 
+                          key={purchase.id} 
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: "0px 0px -20px 0px" }}
+                          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                          className="flex flex-col"
+                        >
+                          <div className="p-4 flex gap-3 items-start relative w-full">
+                            <div className="pt-1 sm:pt-3.5 shrink-0">
+                               <input 
+                                 type="checkbox" 
+                                 className="w-5 h-5 rounded border-zinc-700 bg-[#121215] checked:bg-[#0ca5e9] checked:border-[#0ca5e9] focus:ring-[#0ca5e9] transition-colors cursor-pointer" 
+                                 checked={selectedItems.includes(purchase.id)}
+                                 onChange={(e) => {
+                                   if (e.target.checked) setSelectedItems([...selectedItems, purchase.id]);
+                                   else setSelectedItems(selectedItems.filter(id => id !== purchase.id));
+                                 }}
+                               />
                             </div>
-                          </div>
-
-                          <div className="shrink-0">
-                            <button
-                              onClick={() => {
-                                if (canExpand) {
-                                  setExpandedPurchases((prev) =>
-                                    prev.includes(purchase.id)
-                                      ? prev.filter((id) => id !== purchase.id)
-                                      : [...prev, purchase.id],
-                                  );
-                                }
-                              }}
-                              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-sm font-medium text-zinc-300 transition-all font-sans"
-                            >
-                              {expandedPurchases.includes(purchase.id)
-                                ? "ปิดข้อมูล"
-                                : "ดูข้อมูล"}
-                            </button>
-                          </div>
-                        </div>
-
-                        <AnimatePresence>
-                          {expandedPurchases.includes(purchase.id) && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden bg-[#121215]/50 border-t border-white/5"
-                            >
-                              {hasCredentialData && (
-                                <div className="p-4 sm:p-5">
-                                  <div className="text-xs font-semibold text-zinc-400 mb-3 uppercase tracking-widest font-mono">
-                                    {purchase.game === "ROV"
-                                      ? "Username : Password"
-                                      : "ข้อมูลบัญชี / โค้ด"}
-                                  </div>
-                                  <div className="space-y-2">
-                                    {purchase
-                                      .credentialData!.split("\n")
-                                      .map((cred, idx) => (
-                                        <div
-                                          key={idx}
-                                          className="bg-[#121215] border border-white/5 text-zinc-200 px-4 py-3 rounded-lg font-mono text-sm break-all select-all shadow-inner"
-                                        >
-                                          {cred}
-                                        </div>
-                                      ))}
+                            
+                            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3">
+                              <div className="flex gap-3 items-center flex-1 min-w-0">
+                                <img src={items.find(item => String(item.id) === String(purchase.itemId) || item.name === purchase.itemName)?.imageUrls?.[0] || items.find(item => String(item.id) === String(purchase.itemId) || item.name === purchase.itemName)?.imageUrl || (purchase as any).imageUrl || "https://img2.pic.in.th/pic/Screenshot_20241029_163939_Facebook.jpg"} alt="" className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border border-white/5 shrink-0 shadow-sm" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-zinc-100 font-bold text-sm sm:text-base pr-2 mb-1.5 whitespace-normal leading-tight">
+                                    {purchase.itemName}
+                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <span className="flex items-center text-xs font-bold text-[#10b981]">
+                                       <div className="w-1.5 h-1.5 rounded-full bg-[#10b981] mr-1.5"></div> 
+                                       จัดส่งสำเร็จ
+                                    </span>
+                                    <span className="text-xs text-zinc-500">
+                                      {date} {time}
+                                    </span>
                                   </div>
                                 </div>
-                              )}
+                              </div>
+                              
+                              <div className="flex gap-2 shrink-0 justify-end w-full sm:w-auto mt-1 sm:mt-0">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (canExpand) {
+                                      setExpandedPurchases(prev => 
+                                        prev.includes(purchase.id) 
+                                          ? prev.filter(id => id !== purchase.id) 
+                                          : [...prev, purchase.id]
+                                      );
+                                    }
+                                  }}
+                                  className="px-4 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-sm font-medium text-zinc-300 transition-all shadow-sm"
+                                >
+                                  {expandedPurchases.includes(purchase.id) ? 'ปิดข้อมูล' : 'ดูข้อมูล'}
+                                </button>
+                                  {/* claim button removed */}
+                               </div>
+                            </div>
+                          </div>
+                          
+                          {/* Expanded content */}
+                          {hasCredentialData && expandedPurchases.includes(purchase.id) && (
+                            <div className="p-4 bg-zinc-900 border-t border-white/5">
+                              <div className="text-xs font-semibold text-zinc-300 mb-2 flex items-center gap-1.5 uppercase tracking-widest font-mono">
+                                {purchase.credentialData!.includes('ลิ้งค์ดาวน์โหลด:') ? 'ดาวน์โหลดไฟล์ตัวรัน' : purchase.game === 'ROV' ? 'Username:Password' : 'ข้อมูลบัญชี / โค้ด'}
+                              </div>
+                              <div className="space-y-2">
+                                {purchase.credentialData!.split('\n').map((cred, idx) => {
+                                  if (cred.includes('ลิ้งค์ดาวน์โหลด:')) {
+                                    const [linkPart, passPart] = cred.split(' | รหัสผ่านเข้าถึงลิ้งค์:');
+                                    const link = linkPart.replace('ลิ้งค์ดาวน์โหลด: ', '').trim();
+                                    const pass = passPart ? passPart.trim() : '';
+                                    return (
+                                      <div key={idx} className="bg-[#121215] border border-white/10 text-zinc-200 px-4 py-3 rounded-lg font-mono text-xs shadow-sm flex flex-col gap-2">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
+                                           <span className="text-zinc-400">ลิ้งค์ดาวน์โหลด:</span>
+                                           <a href={link} target="_blank" rel="noopener noreferrer" className="text-[#0ca5e9] hover:underline break-all">{link}</a>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
+                                           <span className="text-zinc-400">รหัสผ่าน:</span>
+                                           <span className="select-all text-amber-400">{pass}</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div key={idx} className="bg-[#121215] border border-white/10 text-zinc-200 px-4 py-3 rounded-lg font-mono text-xs flex-1 break-all select-all shadow-sm">
+                                      {cred}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
 
-                              {hasGachaDrops && (
-                                <div className="p-4 sm:p-5 border-t border-white/5">
-                                  <div className="text-xs font-semibold text-zinc-400 mb-3 flex items-center gap-1.5 uppercase tracking-widest">
-                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />{" "}
-                                    ไอเทมที่ได้รับ
-                                  </div>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {Object.values(
-                                      purchase.gachaDrops!.reduce(
-                                        (acc: any, drop) => {
-                                          const key = drop.name;
-                                          if (!acc[key])
-                                            acc[key] = { ...drop, count: 0 };
-                                          acc[key].count++;
-                                          return acc;
-                                        },
-                                        {},
-                                      ),
-                                    ).map((item: any, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex items-center gap-3 bg-[#121215] px-4 py-3 rounded-xl border border-white/5"
+                          {hasGachaDrops && expandedPurchases.includes(purchase.id) && (
+                            <div className="p-4 bg-zinc-900 border-t border-white/5">
+                              <div className="text-xs font-semibold text-zinc-400 mb-3 flex items-center gap-1.5 uppercase tracking-widest">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                ไอเทมที่ได้รับจากกล่องสุ่ม
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {Object.values(
+                                  purchase.gachaDrops!.reduce((acc: any, drop) => {
+                                    const key = drop.name;
+                                    if (!acc[key]) acc[key] = { ...drop, count: 0 };
+                                    acc[key].count++;
+                                    return acc;
+                                  }, {})
+                                ).sort((a: any, b: any) => {
+                                  if (a.isSalt && !b.isSalt) return 1;
+                                  if (!a.isSalt && b.isSalt) return -1;
+                                  return 0;
+                                }).map((drop: any, idx) => {
+                                  const isSalt = drop.isSalt;
+                                  return (
+                                    <div key={idx} className="flex items-center gap-2.5 p-2.5 bg-[#121215] rounded-lg border border-white/10 shadow-sm relative overflow-hidden">
+                                      <div 
+                                        className="w-8 h-8 rounded-md flex items-center justify-center font-bold text-sm bg-zinc-900 border border-white/5 shrink-0"
+                                        style={{ color: drop.color || (isSalt ? '#6b7280' : '#F59E0B') }}
                                       >
-                                        <div
-                                          className="w-8 h-8 rounded bg-zinc-900 flex flex-col overflow-hidden mx-auto shrink-0 border border-white/10"
-                                          style={{ borderColor: item.color }}
-                                        >
-                                          <div
-                                            className="flex-1 w-full"
-                                            style={{
-                                              backgroundColor: item.color,
-                                            }}
-                                          ></div>
-                                          <div className="h-1/3 w-full bg-zinc-900 border-t border-white/5 flex items-center justify-center">
-                                            <div className="w-1 h-1 rounded-full bg-white/20"></div>
-                                          </div>
+                                        {isSalt ? '🧂' : '✨'}
+                                      </div>
+                                      <div className="flex-1 truncate flex justify-between items-center gap-2">
+                                        <div className="truncate">
+                                          <p className={`text-sm font-bold truncate ${isSalt ? 'text-zinc-400' : 'text-zinc-100'}`}>{drop.name}</p>
+                                          <p className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase truncate">
+                                            {isSalt ? 'SALT' : 'DROP REWARD'}
+                                          </p>
                                         </div>
-                                        <div className="flex-1 min-w-0 pr-2 font-medium text-zinc-200 truncate font-mono text-sm leading-tight">
-                                          {item.name}
-                                        </div>
-                                        {item.count > 1 && (
-                                          <div className="font-bold text-amber-400 shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-md text-xs">
-                                            x{item.count}
+                                        {drop.count > 1 && (
+                                          <div className="text-xs font-bold font-mono text-zinc-300 bg-zinc-800 px-2 py-0.5 rounded shrink-0 border border-white/10 shadow-sm hidden sm:block">
+                                            x{drop.count}
                                           </div>
                                         )}
                                       </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </motion.div>
+                                      {drop.count > 1 && (
+                                          <div className="absolute top-0 right-0 sm:hidden text-[10px] font-bold font-mono text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded-bl shrink-0 border-b border-l border-white/10 ">
+                                            x{drop.count}
+                                          </div>
+                                        )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           )}
-                        </AnimatePresence>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
 
@@ -540,57 +536,67 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-zinc-900 border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5"
+              className="max-h-[600px] sm:max-h-[70dvh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 space-y-4"
             >
-              {topups.length === 0 ? (
-                <div className="text-center py-16">
-                  <DollarSign className="w-10 h-10 text-zinc-600 mx-auto mb-4" />
-                  <p className="text-zinc-400 font-medium font-sans">
-                    ประวัติการเติมเงินจะแสดงที่นี่เมื่อคุณเริ่มทำรายการ
-                  </p>
-                </div>
-              ) : (
-                <table className="w-full text-left text-sm whitespace-nowrap">
-                  <thead className="bg-[#121215] text-zinc-400 text-xs uppercase tracking-wider font-bold">
-                    <tr>
-                      <th className="px-6 py-4">จำนวนเงิน</th>
-                      <th className="px-6 py-4 hidden sm:table-cell">
-                        อ้างอิง/เลขอ้างอิง
-                      </th>
-                      <th className="px-6 py-4">วัน-เวลา</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 text-zinc-300 font-mono">
-                    {topups.map((topup) => {
+              {sortedTopups.length === 0 ? (
+                  <div className="text-center py-12 bg-zinc-900 border border-white/5 rounded-2xl">
+                    <div className="w-16 h-16 rounded-full bg-[#121215] border border-white/5 flex items-center justify-center mx-auto mb-4 text-zinc-500">
+                      <DollarSign className="w-8 h-8" />
+                    </div>
+                    <p className="text-zinc-400 font-medium">ยังไม่มีประวัติการเติมเงิน</p>
+                  </div>
+                ) : (
+                  <div className="border border-white/5 rounded-xl overflow-hidden divide-y divide-white/5 bg-[#121215]">
+                    {sortedTopups.map((topup) => {
                       const date = formatThaiDate(topup.date);
                       const time = formatThaiTime(topup.date);
                       return (
-                        <motion.tr
-                          key={topup.id}
+                        <motion.div 
+                          key={topup.id} 
                           initial={{ opacity: 0, y: 30 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true, margin: "0px 0px -20px 0px" }}
                           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                          className="hover:bg-white/5 transition-colors"
+                          className="bg-[#121215] flex flex-col"
                         >
-                          <td className="px-6 py-4 font-bold text-emerald-400 flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                            + ฿{Number(topup.amount).toLocaleString()}
-                          </td>
-                          <td className="px-6 py-4 text-zinc-500 hidden sm:table-cell">
-                            {topup.refCode || "-"}
-                          </td>
-                          <td className="px-6 py-4 text-zinc-500">
-                            {date} {time}
-                          </td>
-                        </motion.tr>
+                          <div className="p-4 flex gap-3 items-start relative w-full">
+                            <div className="w-12 h-12 rounded-lg border border-white/5 bg-zinc-900 flex items-center justify-center shrink-0">
+                              <DollarSign className="w-6 h-6 text-[#10b981]" />
+                            </div>
+                            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3">
+                              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <p className="text-zinc-100 font-bold text-sm sm:text-base truncate pr-2 mb-1.5 align-middle">
+                                  การเติมเงินผ่าน {topup.method}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <span className="flex items-center text-xs font-bold text-[#10b981]">
+                                     <div className="w-1.5 h-1.5 rounded-full bg-[#10b981] mr-1.5"></div> 
+                                     สำเร็จเรียบร้อย
+                                  </span>
+                                  <span className="text-xs text-zinc-500">
+                                    {date} {time}
+                                  </span>
+                                </div>
+                                {topup.refCode && (
+                                  <div className="text-[10px] text-zinc-500 font-mono mt-1 w-full truncate">
+                                    อ้างอิง: {topup.refCode}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end items-end sm:items-center">
+                                <div className={`font-mono font-bold text-right text-lg sm:text-xl px-2 ${topup.amount > 0 ? (topup.game === 'ROV' ? 'text-amber-500' : 'text-[#10b981]') : 'text-rose-500'}`}>
+                                  {topup.amount > 0 ? '+' : ''}{topup.amount} {topup.game === 'ROV' ? 'เครดิต' : '฿'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
                       );
                     })}
-                  </tbody>
-                </table>
-              )}
-            </motion.div>
-          )}
+                  </div>
+                )}
+              </motion.div>
+            )}
         </div>
       </div>
     </motion.div>

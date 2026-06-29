@@ -606,8 +606,8 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
-    let token = rawToken?.trim();
+    let token = "cfut_YWijwb70tr420mqjGZc2hgcDEWgQhc9FWv8s0xMv54fc32c5";
+    token = token?.trim();
     if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
     if (!accountId || !dbId || !token) {
@@ -617,7 +617,7 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
     // UUID validation for Cloudflare D1
     const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
     if (!uuidRegex.test(dbId)) {
-       return res.status(400).json({ error: "Invalid CF_DATABASE_ID format. It must be a UUID (e.g. 12345678-abcd-1234-abcd-1234567890ab), not the database name.", dbId_provided: dbId });
+       return res.status(400).json({ error: "Invalid CF_DATABASE_ID format. It must be a UUID.", dbId_provided: dbId });
     }
 
     const schemaStr = `
@@ -648,12 +648,9 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
         id TEXT PRIMARY KEY,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         username TEXT,
-        item_id TEXT,
         item_name TEXT,
-        price INTEGER,
         quantity INTEGER,
-        gacha_drops TEXT,
-        credential_data TEXT,
+        price INTEGER,
         game TEXT
       );
       CREATE TABLE IF NOT EXISTS topups (
@@ -662,43 +659,40 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
         username TEXT,
         amount INTEGER,
         method TEXT,
-        game TEXT
+        status TEXT
       );
       CREATE TABLE IF NOT EXISTS items (
         id TEXT PRIMARY KEY,
-        name TEXT,
+        name TEXT NOT NULL,
         category TEXT,
         rarity TEXT,
-        quantity INTEGER,
-        initial_quantity INTEGER,
-        price INTEGER,
+        quantity INTEGER DEFAULT 0,
+        initial_quantity INTEGER DEFAULT 0,
+        price INTEGER DEFAULT 0,
         description TEXT,
         is_pinned BOOLEAN DEFAULT FALSE,
         popular BOOLEAN DEFAULT FALSE,
         image TEXT,
-        gacha_pool TEXT,
-        pieces_per_unit INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        game TEXT
-      );
-      CREATE TABLE IF NOT EXISTS claimed_jackpots (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        item_id TEXT NOT NULL,
-        stock_trigger INTEGER NOT NULL,
-        reward_name TEXT NOT NULL,
-        username TEXT NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(item_id, stock_trigger)
+        gacha_pool TEXT,
+        credentials TEXT,
+        game TEXT DEFAULT 'ASTD',
+        sale_format TEXT DEFAULT 'DIRECT'
       );
       CREATE TABLE IF NOT EXISTS system_config (
         id TEXT PRIMARY KEY,
-        maintenance_mode BOOLEAN DEFAULT FALSE,
-        global_revenue_aotr INTEGER DEFAULT 0,
+        global_sales_astd INTEGER DEFAULT 0,
+        global_sales_rov INTEGER DEFAULT 0,
         global_rev_astd INTEGER DEFAULT 0,
-        announcement_settings TEXT,
-        last_cleanup_timestamp TEXT
+        global_rev_rov INTEGER DEFAULT 0,
+        global_free_astd INTEGER DEFAULT 0,
+        global_free_rov INTEGER DEFAULT 0,
+        shop_status TEXT DEFAULT 'open',
+        ai_status TEXT DEFAULT 'online',
+        last_cleanup_timestamp DATETIME
       );
+      INSERT OR IGNORE INTO system_config (id) VALUES ('main');
+      INSERT OR IGNORE INTO profiles (username, password, is_admin) VALUES ('Kuwashii_admin', 'S4e0P9', 1);
     `;
 
     const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
@@ -718,117 +712,6 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
        }
        return res.status(400).json({ error: data.errors });
     }
-    
-    // Add announcement_settings column to existing tables (ignoring errors if it exists)
-    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ sql: "ALTER TABLE system_config ADD COLUMN announcement_settings TEXT;" })
-    });
-    
-    // Add ai_status column to system_config
-    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ sql: "ALTER TABLE system_config ADD COLUMN ai_status TEXT DEFAULT 'online';" })
-    });
-
-    // Add columns to profiles for discord integration
-    const alterProfilesStrs = [
-      "ALTER TABLE profiles ADD COLUMN email TEXT;",
-      "ALTER TABLE profiles ADD COLUMN avatar_url TEXT;",
-      "ALTER TABLE profiles ADD COLUMN discord_id TEXT;"
-    ];
-    for (const sqlStr of alterProfilesStrs) {
-      await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ sql: sqlStr })
-      });
-    }
-    
-    // Add game column to existing items table
-    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ sql: "ALTER TABLE items ADD COLUMN game TEXT;" })
-    });
-    
-    // Add claimed_jackpots table explicitly
-    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ sql: "CREATE TABLE IF NOT EXISTS claimed_jackpots (id INTEGER PRIMARY KEY AUTOINCREMENT, item_id TEXT NOT NULL, stock_trigger INTEGER NOT NULL, reward_name TEXT NOT NULL, username TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(item_id, stock_trigger));" })
-    });
-    
-    // Add timestamp/id columns to activities safely
-    const alterActivitiesStrs = [
-      "ALTER TABLE activities ADD COLUMN timestamp DATETIME DEFAULT CURRENT_TIMESTAMP;",
-      "ALTER TABLE activities ADD COLUMN id TEXT;"
-    ];
-    for (const sqlStr of alterActivitiesStrs) {
-      await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ sql: sqlStr })
-      });
-    }
-
-    // Also insert main system config if not exists
-    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ sql: "INSERT OR IGNORE INTO system_config (id) VALUES ('main')" })
-    });
-
-    // Also insert Admin user if not exists
-    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ sql: "INSERT OR IGNORE INTO profiles (username, password, is_admin) VALUES ('Kuwashii_admin', 'S4e0P9', TRUE)" })
-    });
-
-    // Seed items if empty
-    /*
-    const checkItems = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ sql: "SELECT count(*) as count FROM items" })
-    }).then(r => r.json());
-
-    if (checkItems.success && checkItems.result && checkItems.result[0] && checkItems.result[0].results[0].count === 0) {
-      console.log("Seeding items into D1...");
-      for (const item of SEED_ITEMS) {
-         const packed = packExtraData(item);
-         const sql = `INSERT INTO items (id, name, category, rarity, quantity, initial_quantity, price, description, is_pinned, popular, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-         await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
-           method: "POST",
-           headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-           body: JSON.stringify({ sql, params: [
-             packed.id, packed.name, packed.category, packed.rarity, packed.quantity, packed.initialQuantity, packed.price, packed.description, packed.isPinned ? 1 : 0, packed.isPopular ? 1 : 0, packed.imageUrl
-           ] })
-         }).then(r => r.json()).catch(err => console.error("Seeding item error:", err));
-      }
-    }
-    */
 
     res.json({ success: true, message: "D1 Initialized" });
   } catch (err: any) {
@@ -849,8 +732,8 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
-    let token = rawToken?.trim();
+    let token = "cfut_YWijwb70tr420mqjGZc2hgcDEWgQhc9FWv8s0xMv54fc32c5";
+    token = token?.trim();
     if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
     if (!accountId || !dbId || !token) {
@@ -904,14 +787,11 @@ async function runCleanStorage(force = false) {
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+    const rawToken = "cfut_YWijwb70tr420mqjGZc2hgcDEWgQhc9FWv8s0xMv54fc32c5";
     let token = rawToken?.trim();
     if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
-    if (!accountId || !dbId || !token) {
-      if (force) console.error("Clean Storage Error: Missing D1 credentials");
-      return;
-    }
+    
 
     const fetchQuery = async (query: string, params: any[]) => {
       const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
@@ -920,9 +800,9 @@ async function runCleanStorage(force = false) {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ sql: query, params })
+        body: JSON.stringify({ sql: query, params: params || [] })
       });
-      return response.json();
+      return await response.json();
     };
 
     const now = Date.now();
@@ -1036,7 +916,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     const match = dbId.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
     if (match) dbId = match[0];
   }
-  const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+  const rawToken = "cfut_YWijwb70tr420mqjGZc2hgcDEWgQhc9FWv8s0xMv54fc32c5";
   let token = rawToken?.trim();
   if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 

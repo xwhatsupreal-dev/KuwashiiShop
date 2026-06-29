@@ -105,34 +105,46 @@ export async function createUser(username: string, passwordHash: string) {
 export async function fetchLiveActivities() {
   const { data, error } = await supabase.from('activities').select('*').order('timestamp', { ascending: false }).limit(50);
   if (error || !data) return [];
-  return data.filter(d => Boolean(d)).map((d: any) => ({
-    id: d.id,
-    type: d.type,
-    username: d.username,
-    itemName: d.item_name,
-    quantity: d.quantity,
-    price: d.price,
-    remainingStock: d.remaining_stock,
-    game: d.game,
-    gachaDrops: d.gacha_drops,
-    timestamp: d.timestamp
-  }));
+  return data.filter(d => Boolean(d)).map((d: any) => {
+    let drops = d.gacha_drops;
+    if (typeof drops === 'string') {
+      try { drops = JSON.parse(drops); } catch(e) {}
+    }
+    return {
+      id: d.id,
+      type: d.type,
+      username: d.username,
+      itemName: d.item_name,
+      quantity: d.quantity,
+      price: d.price,
+      remainingStock: d.remaining_stock,
+      game: d.game,
+      gachaDrops: drops,
+      timestamp: d.timestamp
+    };
+  });
 }
 
 export async function fetchUserPurchases(username: string) {
   const { data, error } = await supabase.from('purchases').select('*').eq('username', username).order('created_at', { ascending: false });
   if (error) return [];
-  return data.map((d: any) => ({
-    id: d.id,
-    itemId: d.item_id,
-    itemName: d.item_name,
-    price: parseFloat(d.price),
-    quantity: d.quantity,
-    date: d.created_at,
-    gachaDrops: d.gacha_drops,
-    credentialData: d.credential_data,
-    game: d.game
-  }));
+  return data.map((d: any) => {
+    let drops = d.gacha_drops;
+    if (typeof drops === 'string') {
+      try { drops = JSON.parse(drops); } catch(e) {}
+    }
+    return {
+      id: d.id,
+      itemId: d.item_id,
+      itemName: d.item_name,
+      price: parseFloat(d.price),
+      quantity: d.quantity,
+      date: d.created_at,
+      gachaDrops: drops,
+      credentialData: d.credential_data,
+      game: d.game
+    };
+  });
 }
 
 export async function fetchUserTopups(username: string) {
