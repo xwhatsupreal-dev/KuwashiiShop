@@ -468,7 +468,7 @@ export default function App() {
     username: string;
     password: string;
   } | null>(null);
-  const [rememberAuth, setRememberAuth] = useState(false);
+  const [rememberAuth, setRememberAuth] = useState(true);
 
   // --- Top Up State ---
   const [showTopupModal, setShowTopupModal] = useState(false);
@@ -1252,7 +1252,7 @@ export default function App() {
         sessionStorage.removeItem("KUWASHII_IS_ADMIN");
 
         if (
-          authUsername.trim() === "Kuwashii_admin" &&
+          authUsername.trim().toLowerCase() === "kuwashii_admin" &&
           authPassword === "ZAZACI09"
         ) {
           setIsAdmin(true);
@@ -2657,7 +2657,9 @@ export default function App() {
       isUnderMaintenance &&
       !isAdmin &&
       appScreen !== "LOADING" &&
-      appScreen !== "TRANSITION"
+      appScreen !== "TRANSITION" &&
+      appScreen !== "LOGIN" &&
+      appScreen !== "REGISTER"
     ) {
       return (
         <motion.div
