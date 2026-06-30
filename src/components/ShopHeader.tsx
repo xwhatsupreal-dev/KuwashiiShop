@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet, LogOut } from 'lucide-react';
+import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet, LogOut, Gamepad2 } from 'lucide-react';
 import { MarqueeAnnouncement } from './MarqueeAnnouncement';
 
 export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, onLogout, setAppScreen, currentScreen, globalStats, onLogoClick }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, onLogout?: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any, onLogoClick?: () => void }) => {
@@ -58,6 +58,19 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
             >
               <Wallet className="w-4 h-4" />
               เติมเงิน
+            </button>
+            <button 
+              onClick={() => {
+                if (!currentUser) {
+                  onLoginClick();
+                } else {
+                  setAppScreen?.("GAMETOPUP");
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${currentScreen === "GAMETOPUP" ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"}`}
+            >
+              <Gamepad2 className="w-4 h-4" />
+              รับเติมเกม
             </button>
           </nav>
         </div>

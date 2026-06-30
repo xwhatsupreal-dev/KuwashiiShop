@@ -25,7 +25,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 import fs from "fs";
 import path from "path";
 
-const APP_VERSION = (() => {
+const APP_VERSION = process.env.K_REVISION || (() => {
   try {
     const stats = fs.statSync(path.join(process.cwd(), "dist", "index.html"));
     return stats.mtimeMs.toString();
@@ -34,7 +34,7 @@ const APP_VERSION = (() => {
       const stats = fs.statSync(__filename);
       return stats.mtimeMs.toString();
     } catch (e2) {
-      return Date.now().toString();
+      return "1.0.0";
     }
   }
 })();
@@ -612,6 +612,76 @@ app.post("/api/send-otp", async (req: express.Request, res: express.Response) =>
 });
 
 // health endpoint
+// --- WONDD Game Topup API ---
+app.get("/api/topup/game/packlist", async (req: express.Request, res: express.Response) => {
+  try {
+    const { game } = req.query;
+    const url = game ? `https://www.wondd.com/member/bot-game-packlist.php?game=${game}` : `https://www.wondd.com/member/bot-game-packlist.php`;
+    const response = await fetch(url);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Game Topup Packlist Error:", error);
+    res.status(500).json({ error: "Failed to fetch packlist" });
+  }
+});
+
+app.post("/api/topup/game/process", async (req: express.Request, res: express.Response) => {
+  try {
+    const { servicecode, packcode, gameid } = req.body;
+    
+    const params = new URLSearchParams();
+    params.append('method', 'topup');
+    params.append('username', process.env.WONDD_USERNAME || ''); // Wondd username from env
+    params.append('password', process.env.WONDD_PASSWORD || ''); // Wondd password from env
+    params.append('servicecode', servicecode);
+    params.append('packcode', packcode);
+    if (gameid) {
+       params.append('gameid', gameid);
+    }
+
+    const response = await fetch("https://www.wondd.com/member/bot-game.php", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString()
+    });
+    
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Game Topup Process Error:", error);
+    res.status(500).json({ error: "Failed to process topup" });
+  }
+});
+
+app.post("/api/topup/game/status", async (req: express.Request, res: express.Response) => {
+  try {
+    const { orderid } = req.body;
+    
+    const params = new URLSearchParams();
+    params.append('method', 'checkstatus');
+    params.append('username', process.env.WONDD_USERNAME || '');
+    params.append('password', process.env.WONDD_PASSWORD || '');
+    params.append('orderid', orderid);
+
+    const response = await fetch("https://www.wondd.com/member/bot-game.php", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString()
+    });
+    
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Game Topup Status Error:", error);
+    res.status(500).json({ error: "Failed to check topup status" });
+  }
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });

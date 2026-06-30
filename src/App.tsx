@@ -93,6 +93,7 @@ import { TopupTosModal } from "./components/TopupTosModal";
 import { PaymentSettingsModal } from "./components/PaymentSettingsModal";
 import { CategoryManagerModal } from "./components/CategoryManagerModal";
 import { AuthPage } from "./components/AuthPage";
+import { GameTopupPage } from "./components/GameTopupPage";
 import { GlobalLoadingScreen } from "./components/GlobalLoadingScreen";
 import { UserProfileDashboard } from "./components/UserProfileDashboard";
 import jsQR from "jsqr";
@@ -193,7 +194,7 @@ export default function App() {
         if (data.version) {
           if (!initialVersion) {
             initialVersion = data.version;
-          } else if (Number(data.version) > Number(initialVersion)) {
+          } else if (initialVersion !== data.version) {
             setShowUpdateOverlay(true);
           }
         }
@@ -225,6 +226,8 @@ export default function App() {
       initAppScreen = "LOGIN";
     } else if (path === "/topup") {
       initAppScreen = "TOPUP";
+    } else if (path === "/game-topup") {
+      initAppScreen = "GAMETOPUP";
     } else if (path === "/profile") {
       initAppScreen = "PROFILE";
     } else if (path.startsWith("/categories/")) {
@@ -388,19 +391,12 @@ export default function App() {
           if (!error && count !== null) {
             config.user_count = count;
           }
-          const { count: purchaseCount, error: pError } = await supabase
-            .from("purchases")
-            .select("*", { count: "exact", head: true });
-            
-          const legacyCount = (!pError && purchaseCount !== null) ? purchaseCount : 0;
-          let trackedSalesCount = Number(config.all_time_sales_count) || 0;
+          const legacyGlobalSum = (Number(config.global_sales_astd) || 0) + 
+                                  (Number(config.global_sales_rov) || 0) + 
+                                  (Number(config.global_sales_aotr) || 0);
+          const trackedSalesCount = Number(config.all_time_sales_count) || 0;
           
-          if (legacyCount > trackedSalesCount) {
-             trackedSalesCount = legacyCount;
-             supabase.from("system_config").update({ all_time_sales_count: legacyCount }).eq("id", "main").then();
-          }
-          
-          config.total_purchases = trackedSalesCount;
+          config.total_purchases = Math.max(legacyGlobalSum, trackedSalesCount);
 
           const { data: allTopups } = await supabase
             .from("topups")
@@ -568,6 +564,8 @@ export default function App() {
       newPath = "/login";
     } else if (appScreen === "TOPUP") {
       newPath = "/topup";
+    } else if (appScreen === "GAMETOPUP") {
+      newPath = "/game-topup";
     } else if (appScreen === "PROFILE") {
       newPath = "/profile";
     } else if (inquiringItem) {
@@ -599,6 +597,9 @@ export default function App() {
       newInquiringItem = null;
     } else if (path === "/topup") {
       newAppScreen = "TOPUP";
+      newInquiringItem = null;
+    } else if (path === "/game-topup") {
+      newAppScreen = "GAMETOPUP";
       newInquiringItem = null;
     } else if (path === "/profile") {
       newAppScreen = "PROFILE";
@@ -2764,7 +2765,7 @@ export default function App() {
       );
     }
 
-    if (["SHOP", "TOPUP", "LOGIN", "PROFILE"].includes(appScreen)) {
+    if (["SHOP", "TOPUP", "GAMETOPUP", "LOGIN", "PROFILE"].includes(appScreen)) {
       return (
         <motion.div
           key={appScreen}
@@ -2870,6 +2871,7 @@ export default function App() {
           {/* Hero Header Section */}
           {!inquiringItem &&
             appScreen !== "TOPUP" &&
+            appScreen !== "GAMETOPUP" &&
             appScreen !== "LOGIN" &&
             appScreen !== "PROFILE" &&
             selectedCategory === "all" &&
@@ -2923,6 +2925,13 @@ export default function App() {
                 isProcessing={isAuthLoading}
                 isCaptchaVerified={isCaptchaVerified}
                 setIsCaptchaVerified={setIsCaptchaVerified}
+              />
+            ) : appScreen === "GAMETOPUP" ? (
+              <GameTopupPage
+                onBack={() => setAppScreen("SHOP")}
+                currentUser={currentUserData || currentUser}
+                showToast={showToast}
+                fetchUser={fetchUser}
               />
             ) : appScreen === "PROFILE" ? (
               <UserProfileDashboard

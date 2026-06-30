@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, ShoppingBag, Wallet, Phone, HelpCircle, LogOut, Facebook, MessageSquare, ChevronRight, Lock, History, Settings, ArrowUpRight, Target, Zap } from 'lucide-react';
+import { Home, ShoppingBag, Wallet, Phone, HelpCircle, LogOut, Facebook, MessageSquare, ChevronRight, Lock, History, Settings, ArrowUpRight, Target, Zap, Gamepad2 } from 'lucide-react';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -102,6 +102,12 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
                           <Zap className="w-5 h-5 text-zinc-400 group-hover:text-emerald-400 transition-colors" />
                         </div>
                         <span className="text-[11px] font-medium text-zinc-500 group-hover:text-zinc-300">เติมเงิน</span>
+                      </button>
+                      <button onClick={() => { setPage?.('GAMETOPUP'); onClose(); }} className="flex flex-col items-center gap-2 group">
+                        <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:bg-cyan-500/10 group-hover:border-cyan-500/30 transition-all duration-200">
+                          <Gamepad2 className="w-5 h-5 text-zinc-400 group-hover:text-cyan-400 transition-colors" />
+                        </div>
+                        <span className="text-[11px] font-medium text-zinc-500 group-hover:text-zinc-300">เติมเกม</span>
                       </button>
                       <button onClick={() => { openHistoryModal?.('purchases'); onClose(); }} className="flex flex-col items-center gap-2 group">
                         <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:bg-pink-500/10 group-hover:border-pink-500/30 transition-all duration-200">
