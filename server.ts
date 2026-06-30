@@ -22,9 +22,26 @@ app.use((req: any, _res, next) => {
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-const SERVER_STARTUP_TIME = Date.now().toString();
+import fs from "fs";
+import path from "path";
+
+const APP_VERSION = (() => {
+  try {
+    const stats = fs.statSync(path.join(process.cwd(), "dist", "index.html"));
+    return stats.mtimeMs.toString();
+  } catch (e) {
+    try {
+      const stats = fs.statSync(__filename);
+      return stats.mtimeMs.toString();
+    } catch (e2) {
+      return Date.now().toString();
+    }
+  }
+})();
+
 app.get("/api/version", (req, res) => {
-  res.json({ version: SERVER_STARTUP_TIME });
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.json({ version: APP_VERSION });
 });
 
 // --- Seed Data representing Premium Items from AOT Revolution ---
@@ -716,6 +733,7 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
     // Run silent migrations to add new columns if they don't exist
     const migrationSql = `
       ALTER TABLE system_config ADD COLUMN global_sales_aotr INTEGER DEFAULT 0;
+      ALTER TABLE system_config ADD COLUMN all_time_sales_count INTEGER DEFAULT 0;
     `;
     await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
       method: "POST",
@@ -723,7 +741,16 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ sql: migrationSql })
+      body: JSON.stringify({ sql: "ALTER TABLE system_config ADD COLUMN global_sales_aotr INTEGER DEFAULT 0;" })
+    }).catch(() => {});
+    
+    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: "ALTER TABLE system_config ADD COLUMN all_time_sales_count INTEGER DEFAULT 0;" })
     }).catch(() => {});
 
     const data = await response.json();

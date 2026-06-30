@@ -193,7 +193,7 @@ export default function App() {
         if (data.version) {
           if (!initialVersion) {
             initialVersion = data.version;
-          } else if (initialVersion !== data.version) {
+          } else if (Number(data.version) > Number(initialVersion)) {
             setShowUpdateOverlay(true);
           }
         }
@@ -388,10 +388,19 @@ export default function App() {
           if (!error && count !== null) {
             config.user_count = count;
           }
-          // Calculate total purchases safely without using COUNT(*) on purchases which can decrease when users are deleted
-          config.total_purchases = (Number(config.global_sales_astd) || 0) + 
-                                   (Number(config.global_sales_rov) || 0) + 
-                                   (Number(config.global_sales_aotr) || 0);
+          const { count: purchaseCount, error: pError } = await supabase
+            .from("purchases")
+            .select("*", { count: "exact", head: true });
+            
+          const legacyCount = (!pError && purchaseCount !== null) ? purchaseCount : 0;
+          let trackedSalesCount = Number(config.all_time_sales_count) || 0;
+          
+          if (legacyCount > trackedSalesCount) {
+             trackedSalesCount = legacyCount;
+             supabase.from("system_config").update({ all_time_sales_count: legacyCount }).eq("id", "main").then();
+          }
+          
+          config.total_purchases = trackedSalesCount;
 
           const { data: allTopups } = await supabase
             .from("topups")
@@ -2051,46 +2060,28 @@ export default function App() {
         }
       }
 
+      const configData = await getSystemConfig();
+      const currentAllTime = configData ? Number(configData.all_time_sales_count || 0) : 0;
+      const updatePayload: any = {
+        all_time_sales_count: currentAllTime + purchaseQty
+      };
+
       if (item.game === "ASTD") {
-        const configData = await getSystemConfig();
-        const currentSales = configData
-          ? Number(configData.global_sales_astd || 0)
-          : 0;
-        await supabase
-          .from("system_config")
-          .update({
-            global_sales_astd: currentSales + purchaseQty,
-          })
-          .eq("id", "main");
+        const currentSales = configData ? Number(configData.global_sales_astd || 0) : 0;
+        updatePayload.global_sales_astd = currentSales + purchaseQty;
       } else if (item.game === "ROV") {
-        const configData = await getSystemConfig();
-        const currentSales = configData
-          ? Number(configData.global_sales_rov || 0)
-          : 0;
-        const { error } = await supabase
-          .from("system_config")
-          .update({
-            global_sales_rov: currentSales + purchaseQty,
-          })
-          .eq("id", "main");
-        // Error will pop up in console if column doesn't exist, but won't crash user app thanks to no strict throw.
-        if (error)
-          console.warn(
-            "Database update for ROV sales failed (likely missing column global_sales_rov)",
-            error,
-          );
+        const currentSales = configData ? Number(configData.global_sales_rov || 0) : 0;
+        updatePayload.global_sales_rov = currentSales + purchaseQty;
       } else if (item.game === "AOTR") {
-        const configData = await getSystemConfig();
-        const currentSales = configData
-          ? Number(configData.global_sales_aotr || 0)
-          : 0;
-        await supabase
-          .from("system_config")
-          .update({
-            global_sales_aotr: currentSales + purchaseQty,
-          })
-          .eq("id", "main");
+        const currentSales = configData ? Number(configData.global_sales_aotr || 0) : 0;
+        updatePayload.global_sales_aotr = currentSales + purchaseQty;
       }
+
+      await supabase
+        .from("system_config")
+        .update(updatePayload)
+        .eq("id", "main")
+        .catch(err => console.warn("Failed to update global sales", err));
 
       // Reduce Stock natively handled earlier for creds or via fallback
 
