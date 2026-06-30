@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Clock } from 'lucide-react';
+import { X, Clock, ChevronDown } from 'lucide-react';
 import { AnnouncementSettings } from './AnnouncementManagerModal';
 
 interface AnnouncementPopupProps {
@@ -13,6 +13,7 @@ export const AnnouncementPopup: React.FC<AnnouncementPopupProps> = ({ appScreen,
   const [settings, setSettings] = useState<AnnouncementSettings | null>(null);
   const [activeAnnouncements, setActiveAnnouncements] = useState<{ image: string, link: string, originalIndex: number }[]>([]);
   const [currentActiveIndex, setCurrentActiveIndex] = useState(0);
+  const [muteHours, setMuteHours] = useState(1);
 
   useEffect(() => {
     if (isLoadingData) return;
@@ -81,7 +82,7 @@ export const AnnouncementPopup: React.FC<AnnouncementPopupProps> = ({ appScreen,
 
   const handleMute = () => {
     const currentInfo = activeAnnouncements[currentActiveIndex];
-    const hideUntil = Date.now() + 60 * 60 * 1000; // 1 hour
+    const hideUntil = Date.now() + muteHours * 60 * 60 * 1000;
     
     try {
       const mutedDataRaw = localStorage.getItem('KUWASHII_MUTED_ANNOUNCEMENTS');
@@ -165,12 +166,29 @@ export const AnnouncementPopup: React.FC<AnnouncementPopupProps> = ({ appScreen,
                 >
                   <X className="w-3 h-3" /> ปิดหน้าต่างนี้
                 </motion.button>
-                <motion.button whileTap={{ scale: 0.95 }}
-                  onClick={handleMute}
-                  className="flex-1 justify-center flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-zinc-400 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:text-white font-medium text-[11px] transition-colors"
-                >
-                  <Clock className="w-3 h-3" /> ไม่แสดง 1 ชม.
-                </motion.button>
+                <div className="flex-1 flex gap-1 items-center bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800 transition-colors relative">
+                  <motion.button whileTap={{ scale: 0.95 }}
+                    onClick={handleMute}
+                    className="flex-1 justify-center flex items-center gap-1.5 py-1.5 pl-3 pr-1 text-zinc-400 hover:text-white font-medium text-[11px] transition-colors"
+                  >
+                    <Clock className="w-3 h-3" /> ไม่แสดง
+                  </motion.button>
+                  <div className="relative flex items-center pr-2">
+                    <select 
+                      value={muteHours}
+                      onChange={(e) => setMuteHours(Number(e.target.value))}
+                      className="bg-transparent text-zinc-400 hover:text-white text-[11px] font-medium outline-none cursor-pointer py-1.5 pr-4 appearance-none relative z-10"
+                      style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+                    >
+                      <option value={1} className="bg-zinc-900 text-zinc-300">1 ชม.</option>
+                      <option value={3} className="bg-zinc-900 text-zinc-300">3 ชม.</option>
+                      <option value={6} className="bg-zinc-900 text-zinc-300">6 ชม.</option>
+                      <option value={12} className="bg-zinc-900 text-zinc-300">12 ชม.</option>
+                      <option value={24} className="bg-zinc-900 text-zinc-300">24 ชม.</option>
+                    </select>
+                    <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-1 pointer-events-none" />
+                  </div>
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>
