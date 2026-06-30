@@ -61,6 +61,7 @@ import {
   LogOut,
   FolderPlus,
   Image as ImageIcon,
+  RefreshCw,
 } from "lucide-react";
 
 import {
@@ -179,6 +180,31 @@ const DiscordBanner = () => (
 import { RecentPurchases } from "./components/RecentPurchases";
 
 export default function App() {
+  const [showUpdateOverlay, setShowUpdateOverlay] = useState(false);
+
+  // Version checking
+  useEffect(() => {
+    let initialVersion: string | null = null;
+    
+    const checkVersion = async () => {
+      try {
+        const res = await fetch("/api/version");
+        const data = await res.json();
+        if (data.version) {
+          if (!initialVersion) {
+            initialVersion = data.version;
+          } else if (initialVersion !== data.version) {
+            setShowUpdateOverlay(true);
+          }
+        }
+      } catch (e) {}
+    };
+
+    checkVersion();
+    const interval = setInterval(checkVersion, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const [globalStats, setGlobalStats] = useState<any>({
     global_sales_astd: 0,
     global_rev_astd: 0,
@@ -362,12 +388,10 @@ export default function App() {
           if (!error && count !== null) {
             config.user_count = count;
           }
-          const { count: purchaseCount, error: pError } = await supabase
-            .from("purchases")
-            .select("*", { count: "exact", head: true });
-          if (!pError && purchaseCount !== null) {
-            config.total_purchases = purchaseCount;
-          }
+          // Calculate total purchases safely without using COUNT(*) on purchases which can decrease when users are deleted
+          config.total_purchases = (Number(config.global_sales_astd) || 0) + 
+                                   (Number(config.global_sales_rov) || 0) + 
+                                   (Number(config.global_sales_aotr) || 0);
 
           const { data: allTopups } = await supabase
             .from("topups")
@@ -2055,6 +2079,17 @@ export default function App() {
             "Database update for ROV sales failed (likely missing column global_sales_rov)",
             error,
           );
+      } else if (item.game === "AOTR") {
+        const configData = await getSystemConfig();
+        const currentSales = configData
+          ? Number(configData.global_sales_aotr || 0)
+          : 0;
+        await supabase
+          .from("system_config")
+          .update({
+            global_sales_aotr: currentSales + purchaseQty,
+          })
+          .eq("id", "main");
       }
 
       // Reduce Stock natively handled earlier for creds or via fallback
@@ -2592,6 +2627,24 @@ export default function App() {
         isOpen={showTopupTos}
         onClose={() => setShowTopupTos(false)}
       />
+
+      {showUpdateOverlay && (
+        <div className="fixed inset-0 z-[99999] bg-zinc-950/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-amber-500/30 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl">
+            <div className="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto mb-4">
+              <RefreshCw className="w-8 h-8 animate-spin" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">มีอัพเดทเวอร์ชั่นใหม่</h2>
+            <p className="text-sm text-zinc-400 mb-6">กรุณารีเฟรชเว็บไซต์เพื่อให้ระบบอัพเดทเป็นเวอร์ชั่นล่าสุดก่อนเข้าใช้งาน</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" /> อัพเดทระบบ / รีเฟรช
+            </button>
+          </div>
+        </div>
+      )}
 
       <PaymentSettingsModal
         isOpen={isPaymentConfigOpen}

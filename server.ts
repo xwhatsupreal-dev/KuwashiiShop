@@ -22,6 +22,11 @@ app.use((req: any, _res, next) => {
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+const SERVER_STARTUP_TIME = Date.now().toString();
+app.get("/api/version", (req, res) => {
+  res.json({ version: SERVER_STARTUP_TIME });
+});
+
 // --- Seed Data representing Premium Items from AOT Revolution ---
 const SEED_ITEMS = [
   {
@@ -707,6 +712,19 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
       },
       body: JSON.stringify({ sql: schemaStr })
     });
+
+    // Run silent migrations to add new columns if they don't exist
+    const migrationSql = `
+      ALTER TABLE system_config ADD COLUMN global_sales_aotr INTEGER DEFAULT 0;
+    `;
+    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: migrationSql })
+    }).catch(() => {});
 
     const data = await response.json();
     if (!data.success) {

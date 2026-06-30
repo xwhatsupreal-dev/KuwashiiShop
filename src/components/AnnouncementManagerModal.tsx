@@ -31,6 +31,7 @@ export interface AnnouncementSettings {
   showStatTopup?: boolean;
   stock_webhook_url?: string;
   ai_status?: string; // We will use this to manage ai_status but it will be saved separately
+  muteHours?: number;
 }
 
 const DEFAULT_SETTINGS: AnnouncementSettings = {
@@ -53,6 +54,7 @@ const DEFAULT_SETTINGS: AnnouncementSettings = {
   showStatItems: true,
   showStatSold: true,
   showStatTopup: true,
+  muteHours: 1,
 };
 
 export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> = ({ isOpen, onClose }) => {
@@ -156,6 +158,23 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
               />
               <span className="text-white font-bold text-sm">เปิดใช้งานแจ้งเตือน (Enable Popup)</span>
             </label>
+
+            <div className="pt-4 border-t border-white/5/50">
+              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                ระยะเวลาซ่อนเมื่อผู้ใช้กดปิด (Mute Duration)
+              </label>
+              <select
+                value={settings.muteHours || 1}
+                onChange={(e) => setSettings({ ...settings, muteHours: Number(e.target.value) })}
+                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-amber-500 transition-all text-sm font-sans mb-4"
+              >
+                <option value={1}>1 ชั่วโมง</option>
+                <option value={3}>3 ชั่วโมง</option>
+                <option value={6}>6 ชั่วโมง</option>
+                <option value={12}>12 ชั่วโมง</option>
+                <option value={24}>24 ชั่วโมง</option>
+              </select>
+            </div>
 
             <div className="pt-4 border-t border-white/5/50">
               <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
