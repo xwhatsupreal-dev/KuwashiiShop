@@ -95,23 +95,9 @@ import { PaymentSettingsModal } from "./components/PaymentSettingsModal";
 import { CategoryManagerModal } from "./components/CategoryManagerModal";
 import { AuthPage } from "./components/AuthPage";
 import { GameTopupPage } from "./components/GameTopupPage";
-import { AdminDashboard } from "./components/AdminDashboard";
 import { GlobalLoadingScreen } from "./components/GlobalLoadingScreen";
 import { UserProfileDashboard } from "./components/UserProfileDashboard";
 import jsQR from "jsqr";
-import {
-  sendDiscordTopupEmbed,
-  sendDiscordPurchaseEmbed,
-  sendDiscordStockUpdateEmbed,
-} from "./discord";
-import { LiveActivities, LiveActivity } from "./components/LiveActivities";
-import { supabase } from "./supabase";
-import { fetchItems, fetchUser, getSystemConfig } from "./queries";
-import { SalesChart } from "./components/SalesChart";
-import { MobileDrawer } from "./components/MobileDrawer";
-import { SearchOverlay } from "./components/SearchOverlay";
-import { AIChatWidget } from "./components/AIChatWidget";
-import { ShootingStars } from "./components/ShootingStars";
 
 const readQRFromImage = (file: File): Promise<string | null> => {
   return new Promise((resolve, reject) => {
@@ -139,6 +125,21 @@ const readQRFromImage = (file: File): Promise<string | null> => {
     reader.readAsDataURL(file);
   });
 };
+
+import {
+  sendDiscordTopupEmbed,
+  sendDiscordPurchaseEmbed,
+  sendDiscordStockUpdateEmbed,
+} from "./discord";
+import { LiveActivities, LiveActivity } from "./components/LiveActivities";
+import { supabase } from "./supabase";
+import { fetchItems, fetchUser, getSystemConfig } from "./queries";
+
+import { SalesChart } from "./components/SalesChart";
+import { MobileDrawer } from "./components/MobileDrawer";
+import { SearchOverlay } from "./components/SearchOverlay";
+import { AIChatWidget } from "./components/AIChatWidget";
+import { ShootingStars } from "./components/ShootingStars";
 
 export const addLiveActivity = async (
   activity: Omit<LiveActivity, "id" | "timestamp">,
@@ -228,8 +229,6 @@ export default function App() {
       initAppScreen = "TOPUP";
     } else if (path === "/game-topup") {
       initAppScreen = "GAMETOPUP";
-    } else if (path === "/admin") {
-      initAppScreen = "ADMIN";
     } else if (path === "/profile") {
       initAppScreen = "PROFILE";
     } else if (path.startsWith("/categories/")) {
@@ -568,8 +567,6 @@ export default function App() {
       newPath = "/topup";
     } else if (appScreen === "GAMETOPUP") {
       newPath = "/game-topup";
-    } else if (appScreen === "ADMIN") {
-      newPath = "/admin";
     } else if (appScreen === "PROFILE") {
       newPath = "/profile";
     } else if (inquiringItem) {
@@ -2937,10 +2934,6 @@ export default function App() {
                 showToast={showToast}
                 fetchUser={fetchUser}
               />
-            ) : appScreen === "ADMIN" ? (
-              <AdminDashboard
-                onBack={() => setAppScreen("SHOP")}
-              />
             ) : appScreen === "PROFILE" ? (
               <UserProfileDashboard
                 currentUser={currentUserData || currentUser}
@@ -3171,14 +3164,6 @@ export default function App() {
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setAppScreen("ADMIN")}
-                          className="py-2 px-4 rounded-2xl bg-indigo-500/20 text-indigo-400 hover:text-zinc-100 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-indigo-500/10"
-                        >
-                          <Activity className="w-4 h-4" />
-                          <span>ระบบหลังบ้าน</span>
-                        </motion.button>
                         <motion.button
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setIsCustomerDbOpen(true)}
