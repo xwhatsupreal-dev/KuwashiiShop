@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { StockItem } from '../types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from "motion/react";
 import { parseUTCDate } from '../utils/date';
 
 export const RecentPurchases: React.FC<{ appScreen: string, items: StockItem[] }> = ({ appScreen, items }) => {
