@@ -97,6 +97,7 @@ import { AuthPage } from "./components/AuthPage";
 import { GameTopupPage } from "./components/GameTopupPage";
 import { GlobalLoadingScreen } from "./components/GlobalLoadingScreen";
 import { UserProfileDashboard } from "./components/UserProfileDashboard";
+import { AdminDashboardPage } from "./components/AdminDashboardPage";
 import jsQR from "jsqr";
 
 const readQRFromImage = (file: File): Promise<string | null> => {
@@ -569,6 +570,8 @@ export default function App() {
       newPath = "/game-topup";
     } else if (appScreen === "PROFILE") {
       newPath = "/profile";
+    } else if (appScreen === "ADMIN") {
+      newPath = "/admin";
     } else if (inquiringItem) {
       newPath = `/products/${inquiringItem.id}`;
     } else if (selectedCategory && selectedCategory !== "all") {
@@ -604,6 +607,9 @@ export default function App() {
       newInquiringItem = null;
     } else if (path === "/profile") {
       newAppScreen = "PROFILE";
+      newInquiringItem = null;
+    } else if (path === "/admin") {
+      newAppScreen = "ADMIN";
       newInquiringItem = null;
     } else if (path.startsWith("/categories/")) {
       newAppScreen = "SHOP";
@@ -2079,11 +2085,14 @@ export default function App() {
         updatePayload.global_sales_aotr = currentSales + purchaseQty;
       }
 
-      await supabase
-        .from("system_config")
-        .update(updatePayload)
-        .eq("id", "main")
-        .catch(err => console.warn("Failed to update global sales", err));
+      try {
+        await supabase
+          .from("system_config")
+          .update(updatePayload)
+          .eq("id", "main");
+      } catch (err) {
+        console.warn("Failed to update global sales", err);
+      }
 
       // Reduce Stock natively handled earlier for creds or via fallback
 
@@ -2788,6 +2797,7 @@ export default function App() {
             onLogout={handleLogout}
             setAppScreen={setAppScreen}
             currentScreen={appScreen}
+            isAdmin={isAdmin}
             onLogoClick={() => {
               setIsLoadingStock(true);
               setTimeout(() => {
@@ -2959,6 +2969,11 @@ export default function App() {
                 setAppScreen={setAppScreen}
                 globalStats={globalStats}
                 successMessage={topupSuccessMessage}
+              />
+            ) : appScreen === "ADMIN" && isAdmin ? (
+              <AdminDashboardPage 
+                onBack={() => setAppScreen("SHOP")} 
+                globalStats={globalStats} 
               />
             ) : (
               <>

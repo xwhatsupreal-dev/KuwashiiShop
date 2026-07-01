@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet, LogOut, Gamepad2 } from 'lucide-react';
 import { MarqueeAnnouncement } from './MarqueeAnnouncement';
 
-export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, onLogout, setAppScreen, currentScreen, globalStats, onLogoClick }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, onLogout?: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any, onLogoClick?: () => void }) => {
+export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, onLogout, setAppScreen, currentScreen, globalStats, onLogoClick, isAdmin }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, onLogout?: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any, onLogoClick?: () => void, isAdmin?: boolean }) => {
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
 
   return (
@@ -68,6 +68,17 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
               <Gamepad2 className="w-4 h-4" />
               รับเติมเกม
             </button>
+            {isAdmin && (
+              <button 
+                onClick={() => setAppScreen?.("ADMIN")}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${currentScreen === "ADMIN" ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10"}`}
+              >
+                <div className="w-4 h-4 rounded bg-amber-500/20 flex items-center justify-center">
+                  <span className="text-[10px]">A</span>
+                </div>
+                หลังบ้าน
+              </button>
+            )}
           </nav>
         </div>
 

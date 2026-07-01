@@ -827,6 +827,24 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+app.get("/api/admin/status", (req, res) => {
+  const hasGemini = !!(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY);
+  const hasSmtp = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+  const hasWondd = !!(process.env.WONDD_USERNAME && process.env.WONDD_PASSWORD);
+  const hasD1 = !!(process.env.CF_ACCOUNT_ID && process.env.CF_DATABASE_ID && process.env.CF_API_TOKEN);
+
+  res.json({
+    apis: [
+      { name: "True Wallet Topup API", status: "online", type: "Payment", connected: true },
+      { name: "Bank Slip Checker API", status: "online", type: "Payment", connected: true },
+      { name: "Wondd Game Topup", status: hasWondd ? "online" : "offline", type: "Integration", connected: hasWondd },
+      { name: "SMTP Email (OTP)", status: hasSmtp ? "online" : "offline", type: "Service", connected: hasSmtp },
+      { name: "Gemini AI Assistant", status: hasGemini ? "online" : "offline", type: "AI", connected: hasGemini },
+      { name: "Cloudflare D1 Database", status: hasD1 ? "online" : "offline", type: "Database", connected: hasD1 }
+    ]
+  });
+});
+
 app.post("/api/d1/init", async (req: express.Request, res: express.Response) => {
   console.log("HIT /api/d1/init endpoint!");
   try {
