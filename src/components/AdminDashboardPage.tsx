@@ -18,7 +18,31 @@ interface ApiStatus {
   connected: boolean;
 }
 
-export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onBack, globalStats }) => {
+export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = (props) => {
+  return (
+    <ErrorBoundary>
+      <AdminDashboardPageContent {...props} />
+    </ErrorBoundary>
+  );
+};
+
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div className="p-10 text-white font-mono bg-red-900/50 rounded-xl"><h1>Error Rendering Admin Dashboard</h1><pre>{String(this.state.error)}</pre></div>;
+    }
+    return this.props.children;
+  }
+}
+
+const AdminDashboardPageContent: React.FC<AdminDashboardPageProps> = ({ onBack, globalStats }) => {
   const [apiStatuses, setApiStatuses] = useState<ApiStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
