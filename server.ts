@@ -750,7 +750,17 @@ app.get("/api/topup/game/packlist", async (req: express.Request, res: express.Re
         packs = [];
     }
 
-    res.json(packs);
+    const packsWithProfit = packs.map(pack => {
+      // Add 10% profit margin and round up to nearest integer
+      const originalPrice = parseFloat(pack.amount);
+      const newPrice = Math.ceil(originalPrice * 1.10);
+      return {
+        ...pack,
+        amount: newPrice.toString()
+      };
+    });
+
+    res.json(packsWithProfit);
   } catch (error) {
     console.error("Game Topup Packlist Error:", error);
     res.status(500).json({ error: "Failed to fetch packlist" });
