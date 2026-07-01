@@ -3351,6 +3351,7 @@ export default function App() {
             setPage={setAppScreen}
             setShowTopupModal={setShowTopupModal}
             openHistoryModal={openHistoryModal}
+            isAdmin={isAdmin}
           />
           <SearchOverlay
             isOpen={isSearchOpen}

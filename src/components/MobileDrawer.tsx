@@ -11,6 +11,7 @@ interface MobileDrawerProps {
   setPage?: (page: string) => void;
   setShowTopupModal?: (show: boolean) => void;
   openHistoryModal?: (tab: 'purchases' | 'topups') => void;
+  isAdmin?: boolean;
 }
 
 const MenuListItem = ({ icon, title, onClick, rightElement, className = "", iconClassName = "" }: any) => (
@@ -25,7 +26,7 @@ const MenuListItem = ({ icon, title, onClick, rightElement, className = "", icon
   </button>
 );
 
-export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLogoutClick, setPage, setShowTopupModal, openHistoryModal }: MobileDrawerProps) => {
+export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLogoutClick, setPage, setShowTopupModal, openHistoryModal, isAdmin }: MobileDrawerProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -122,6 +123,19 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
                       <div>
                         <h5 className="text-[12px] font-semibold text-zinc-500 tracking-wide mb-2 px-2 uppercase">การตั้งค่า</h5>
                         <div className="space-y-1">
+                          {isAdmin && (
+                            <MenuListItem 
+                              icon={
+                                <div className="w-5 h-5 rounded bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold text-xs">A</div>
+                              } 
+                              iconClassName="bg-amber-500/10 group-hover:bg-amber-500/20"
+                              title="จัดการหลังบ้าน (Admin)" 
+                              onClick={() => {
+                                setPage?.('ADMIN');
+                                onClose();
+                              }} 
+                            />
+                          )}
                           <MenuListItem 
                              icon={<Settings className="w-[18px] h-[18px] text-zinc-400" />} 
                              iconClassName="bg-white/5 text-zinc-400 group-hover:bg-white/10 group-hover:text-white"
