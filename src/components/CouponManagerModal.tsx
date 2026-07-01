@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Trash2, Gift, Save } from 'lucide-react';
 import { formatThaiDate } from '../utils/date';
+import { supabase } from '../supabase';
 
 export interface CouponRecord {
   code: string;
@@ -23,21 +24,24 @@ export const CouponManagerModal: React.FC<CouponManagerModalProps> = ({ isOpen, 
   const [newMaxUses, setNewMaxUses] = useState<number | string>(1);
   const [newExpiryDate, setNewExpiryDate] = useState('');
 
+  const fetchCoupons = async () => {
+    const { data, error } = await supabase.from('coupons').select('*');
+    if (data && !error) {
+      const parsedCoupons = data.map((c: any) => ({
+        ...c,
+        usedBy: typeof c.usedBy === 'string' ? JSON.parse(c.usedBy || '[]') : (c.usedBy || []),
+      }));
+      setCoupons(parsedCoupons);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
-      const saved = localStorage.getItem('KUWASHII_COUPONS');
-      if (saved) {
-        setCoupons(JSON.parse(saved));
-      }
+      fetchCoupons();
     }
   }, [isOpen]);
 
-  const handleSaveCoupons = (updatedCoupons: CouponRecord[]) => {
-    setCoupons(updatedCoupons);
-    localStorage.setItem('KUWASHII_COUPONS', JSON.stringify(updatedCoupons));
-  };
-
-  const handleAddCoupon = () => {
+  const handleAddCoupon = async () => {
     if (!newCode.trim() || !newAmount || isNaN(Number(newAmount))) return;
     const amount = Number(newAmount);
     const maxUses = Number(newMaxUses) || 1;
@@ -47,20 +51,34 @@ export const CouponManagerModal: React.FC<CouponManagerModalProps> = ({ isOpen, 
         return;
     }
 
-    const updated = [
-      ...coupons,
-      { code: newCode.trim(), amount, maxUses, usedBy: [], expiresAt: newExpiryDate || undefined }
-    ];
-    handleSaveCoupons(updated);
-    setNewCode('');
-    setNewAmount('');
-    setNewMaxUses(1);
-    setNewExpiryDate('');
+    const newCoupon = { 
+      code: newCode.trim(), 
+      amount, 
+      maxUses, 
+      usedBy: [], 
+      expiresAt: newExpiryDate || undefined 
+    };
+
+    const { error } = await supabase.from('coupons').insert(newCoupon);
+    if (!error) {
+      setCoupons([...coupons, newCoupon]);
+      setNewCode('');
+      setNewAmount('');
+      setNewMaxUses(1);
+      setNewExpiryDate('');
+    } else {
+      alert('เกิดข้อผิดพลาดในการบันทึกคูปอง');
+    }
   };
 
-  const handleDelete = (code: string) => {
+  const handleDelete = async (code: string) => {
     if (confirm(`ต้องการลบโค้ด ${code} หรือไม่?`)) {
-      handleSaveCoupons(coupons.filter(c => c.code !== code));
+      const { error } = await supabase.from('coupons').delete().eq('code', code);
+      if (!error) {
+        setCoupons(coupons.filter(c => c.code !== code));
+      } else {
+        alert('เกิดข้อผิดพลาดในการลบคูปอง');
+      }
     }
   };
 

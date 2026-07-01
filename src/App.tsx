@@ -799,11 +799,22 @@ export default function App() {
     }
 
     if (topupModalStep === "coupon") {
-      const savedCoupons = localStorage.getItem("KUWASHII_COUPONS");
-      let coupons: any[] = savedCoupons ? JSON.parse(savedCoupons) : [];
-      let coupon = coupons.find(
-        (c) => c.code.toLowerCase() === topupCode.trim().toLowerCase(),
-      );
+      const { data: couponData, error: couponError } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("code", topupCode.trim())
+        .maybeSingle();
+
+      if (!couponData) {
+        showToast("โค้ดไม่ถูกต้องหรือไม่มีในระบบ", "error");
+        setIsProcessingTopup(false);
+        return;
+      }
+
+      let coupon = {
+        ...couponData,
+        usedBy: typeof couponData.usedBy === 'string' ? JSON.parse(couponData.usedBy || '[]') : (couponData.usedBy || []),
+      };
 
       if (coupon) {
         if (coupon.usedBy && coupon.usedBy.includes(activeUsername)) {
@@ -827,7 +838,11 @@ export default function App() {
 
         if (!coupon.usedBy) coupon.usedBy = [];
         coupon.usedBy.push(activeUsername);
-        localStorage.setItem("KUWASHII_COUPONS", JSON.stringify(coupons));
+        
+        await supabase
+          .from("coupons")
+          .update({ usedBy: coupon.usedBy })
+          .eq("code", coupon.code);
 
         const configData = await getSystemConfig();
         const currentFree = configData

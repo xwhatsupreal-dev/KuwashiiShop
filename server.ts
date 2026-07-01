@@ -925,6 +925,14 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
         method TEXT,
         status TEXT
       );
+      CREATE TABLE IF NOT EXISTS coupons (
+        code TEXT PRIMARY KEY,
+        amount INTEGER,
+        maxUses INTEGER,
+        usedBy TEXT,
+        expiresAt TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
       CREATE TABLE IF NOT EXISTS items (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
