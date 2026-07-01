@@ -99,6 +99,19 @@ import { AdminDashboard } from "./components/AdminDashboard";
 import { GlobalLoadingScreen } from "./components/GlobalLoadingScreen";
 import { UserProfileDashboard } from "./components/UserProfileDashboard";
 import jsQR from "jsqr";
+import {
+  sendDiscordTopupEmbed,
+  sendDiscordPurchaseEmbed,
+  sendDiscordStockUpdateEmbed,
+} from "./discord";
+import { LiveActivities, LiveActivity } from "./components/LiveActivities";
+import { supabase } from "./supabase";
+import { fetchItems, fetchUser, getSystemConfig } from "./queries";
+import { SalesChart } from "./components/SalesChart";
+import { MobileDrawer } from "./components/MobileDrawer";
+import { SearchOverlay } from "./components/SearchOverlay";
+import { AIChatWidget } from "./components/AIChatWidget";
+import { ShootingStars } from "./components/ShootingStars";
 
 const readQRFromImage = (file: File): Promise<string | null> => {
   return new Promise((resolve, reject) => {
@@ -126,21 +139,6 @@ const readQRFromImage = (file: File): Promise<string | null> => {
     reader.readAsDataURL(file);
   });
 };
-
-import {
-  sendDiscordTopupEmbed,
-  sendDiscordPurchaseEmbed,
-  sendDiscordStockUpdateEmbed,
-} from "./discord";
-import { LiveActivities, LiveActivity } from "./components/LiveActivities";
-import { supabase } from "./supabase";
-import { fetchItems, fetchUser, getSystemConfig } from "./queries";
-
-import { SalesChart } from "./components/SalesChart";
-import { MobileDrawer } from "./components/MobileDrawer";
-import { SearchOverlay } from "./components/SearchOverlay";
-import { AIChatWidget } from "./components/AIChatWidget";
-import { ShootingStars } from "./components/ShootingStars";
 
 export const addLiveActivity = async (
   activity: Omit<LiveActivity, "id" | "timestamp">,
