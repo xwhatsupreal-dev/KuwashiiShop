@@ -79,6 +79,7 @@ import { InquiryModal } from "./components/InquiryModal";
 import { RandomBoxModal } from "./components/RandomBoxModal";
 import { GachaResultModal } from "./components/GachaResultModal";
 import { AdminModal } from "./components/AdminModal";
+import { ApiStatusWidget } from "./components/ApiStatusWidget";
 import { StockManagerModal } from "./components/StockManagerModal";
 import { CustomerDatabaseModal } from "./components/CustomerDatabaseModal";
 import { HistoryModal } from "./components/HistoryModal";
@@ -97,7 +98,6 @@ import { AuthPage } from "./components/AuthPage";
 import { GameTopupPage } from "./components/GameTopupPage";
 import { GlobalLoadingScreen } from "./components/GlobalLoadingScreen";
 import { UserProfileDashboard } from "./components/UserProfileDashboard";
-import { AdminDashboardPage } from "./components/AdminDashboardPage";
 import jsQR from "jsqr";
 
 const readQRFromImage = (file: File): Promise<string | null> => {
@@ -570,8 +570,6 @@ export default function App() {
       newPath = "/game-topup";
     } else if (appScreen === "PROFILE") {
       newPath = "/profile";
-    } else if (appScreen === "ADMIN") {
-      newPath = "/admin";
     } else if (inquiringItem) {
       newPath = `/products/${inquiringItem.id}`;
     } else if (selectedCategory && selectedCategory !== "all") {
@@ -607,9 +605,6 @@ export default function App() {
       newInquiringItem = null;
     } else if (path === "/profile") {
       newAppScreen = "PROFILE";
-      newInquiringItem = null;
-    } else if (path === "/admin") {
-      newAppScreen = "ADMIN";
       newInquiringItem = null;
     } else if (path.startsWith("/categories/")) {
       newAppScreen = "SHOP";
@@ -2085,14 +2080,11 @@ export default function App() {
         updatePayload.global_sales_aotr = currentSales + purchaseQty;
       }
 
-      try {
-        await supabase
-          .from("system_config")
-          .update(updatePayload)
-          .eq("id", "main");
-      } catch (err) {
-        console.warn("Failed to update global sales", err);
-      }
+      await supabase
+        .from("system_config")
+        .update(updatePayload)
+        .eq("id", "main")
+        .catch(err => console.warn("Failed to update global sales", err));
 
       // Reduce Stock natively handled earlier for creds or via fallback
 
@@ -2797,7 +2789,6 @@ export default function App() {
             onLogout={handleLogout}
             setAppScreen={setAppScreen}
             currentScreen={appScreen}
-            isAdmin={isAdmin}
             onLogoClick={() => {
               setIsLoadingStock(true);
               setTimeout(() => {
@@ -2885,7 +2876,6 @@ export default function App() {
             appScreen !== "GAMETOPUP" &&
             appScreen !== "LOGIN" &&
             appScreen !== "PROFILE" &&
-            appScreen !== "ADMIN" &&
             selectedCategory === "all" &&
             !search && <ShopBanner globalStats={globalStats} items={items} />}
 
@@ -2970,11 +2960,6 @@ export default function App() {
                 setAppScreen={setAppScreen}
                 globalStats={globalStats}
                 successMessage={topupSuccessMessage}
-              />
-            ) : appScreen === "ADMIN" && isAdmin ? (
-              <AdminDashboardPage 
-                onBack={() => setAppScreen("SHOP")} 
-                globalStats={globalStats} 
               />
             ) : (
               <>
@@ -3162,94 +3147,99 @@ export default function App() {
 
                 {/* Admin Tools ASTD */}
                 {isAdmin && (
-                  <section className="bg-zinc-900 shadow-sm border border-zinc-800 border border-indigo-500/20 p-5 rounded-2xl mb-8 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none -z-10" />
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 flex-shrink-0 animate-pulse">
-                          <SlidersHorizontal className="w-5 h-5" />
+                  <>
+                    <section className="bg-zinc-900 shadow-sm border border-zinc-800 border border-indigo-500/20 p-5 rounded-2xl mb-8 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none -z-10" />
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 flex-shrink-0 animate-pulse">
+                            <SlidersHorizontal className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
+                              แผงจัดการสต๊อก
+                            </h3>
+                            <p className="text-xs text-zinc-500 mt-0.5">
+                              จัดการเพิ่ม หรือแก้ไขฐานข้อมูลคลังสินค้าได้แบบ
+                              Real-time
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
-                            แผงจัดการสต๊อก
-                          </h3>
-                          <p className="text-xs text-zinc-500 mt-0.5">
-                            จัดการเพิ่ม หรือแก้ไขฐานข้อมูลคลังสินค้าได้แบบ
-                            Real-time
-                          </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsCustomerDbOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-purple-500/20 text-purple-400 hover:text-zinc-100 border border-purple-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-purple-500/10"
+                          >
+                            <Users className="w-4 h-4" /> ระบบฐานลูกค้า (Customer
+                            DB)
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={toggleMaintenanceMode}
+                            className={`py-2 px-4 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg ${isMaintenanceMode ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"}`}
+                          >
+                            <AlertTriangle className="w-4 h-4" />{" "}
+                            {isMaintenanceMode
+                              ? "เปิดเว็บ"
+                              : "ปิดเว็บซ่อมปรุง"}
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsCouponManagerOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-emerald-500/20 text-emerald-400 hover:text-zinc-100 border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/10"
+                          >
+                            <Gift className="w-4 h-4" /> จัดการโค้ดคูปอง
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsAnnouncementManagerOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-amber-500/20 text-amber-400 hover:text-zinc-100 border border-amber-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/10"
+                          >
+                            <Bell className="w-4 h-4" /> จัดการแจ้งเตือนต่างๆ
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsImageSettingsOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-fuchsia-500/20 text-fuchsia-400 hover:text-zinc-100 border border-fuchsia-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-fuchsia-500/10"
+                          >
+                            <ImageIcon className="w-4 h-4" /> จัดการรูปภาพร้านค้า
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsPaymentConfigOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-blue-500/20 text-blue-400 hover:text-zinc-100 border border-blue-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
+                          >
+                            <Wallet className="w-4 h-4" /> จัดการช่องทางชำระเงิน
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsCategoryManagerOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-rose-500/20 text-rose-400 hover:text-zinc-100 border border-rose-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-rose-500/10"
+                          >
+                            <FolderPlus className="w-4 h-4" /> จัดการหมวดหมู่
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsStockManagerOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-indigo-500/20 text-indigo-400 hover:text-zinc-100 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                          >
+                            <Package className="w-4 h-4" /> ระบบผู้ดูแลสต๊อก
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsFormOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-zinc-100 text-xs font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2"
+                          >
+                            <Plus className="w-4 h-4" /> เพิ่มสินค้า
+                          </motion.button>
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setIsCustomerDbOpen(true)}
-                          className="py-2 px-4 rounded-2xl bg-purple-500/20 text-purple-400 hover:text-zinc-100 border border-purple-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-purple-500/10"
-                        >
-                          <Users className="w-4 h-4" /> ระบบฐานลูกค้า (Customer
-                          DB)
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={toggleMaintenanceMode}
-                          className={`py-2 px-4 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg ${isMaintenanceMode ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"}`}
-                        >
-                          <AlertTriangle className="w-4 h-4" />{" "}
-                          {isMaintenanceMode
-                            ? "เปิดเว็บ"
-                            : "ปิดเว็บซ่อมปรุง"}
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setIsCouponManagerOpen(true)}
-                          className="py-2 px-4 rounded-2xl bg-emerald-500/20 text-emerald-400 hover:text-zinc-100 border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/10"
-                        >
-                          <Gift className="w-4 h-4" /> จัดการโค้ดคูปอง
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setIsAnnouncementManagerOpen(true)}
-                          className="py-2 px-4 rounded-2xl bg-amber-500/20 text-amber-400 hover:text-zinc-100 border border-amber-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/10"
-                        >
-                          <Bell className="w-4 h-4" /> จัดการแจ้งเตือนต่างๆ
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setIsImageSettingsOpen(true)}
-                          className="py-2 px-4 rounded-2xl bg-fuchsia-500/20 text-fuchsia-400 hover:text-zinc-100 border border-fuchsia-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-fuchsia-500/10"
-                        >
-                          <ImageIcon className="w-4 h-4" /> จัดการรูปภาพร้านค้า
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setIsPaymentConfigOpen(true)}
-                          className="py-2 px-4 rounded-2xl bg-blue-500/20 text-blue-400 hover:text-zinc-100 border border-blue-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
-                        >
-                          <Wallet className="w-4 h-4" /> จัดการช่องทางชำระเงิน
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setIsCategoryManagerOpen(true)}
-                          className="py-2 px-4 rounded-2xl bg-rose-500/20 text-rose-400 hover:text-zinc-100 border border-rose-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-rose-500/10"
-                        >
-                          <FolderPlus className="w-4 h-4" /> จัดการหมวดหมู่
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setIsStockManagerOpen(true)}
-                          className="py-2 px-4 rounded-2xl bg-indigo-500/20 text-indigo-400 hover:text-zinc-100 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
-                        >
-                          <Package className="w-4 h-4" /> ระบบผู้ดูแลสต๊อก
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setIsFormOpen(true)}
-                          className="py-2 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-zinc-100 text-xs font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2"
-                        >
-                          <Plus className="w-4 h-4" /> เพิ่มสินค้า
-                        </motion.button>
-                      </div>
+                    </section>
+                    <div className="mb-8">
+                      <ApiStatusWidget />
                     </div>
-                  </section>
+                  </>
                 )}
 
                 {/* Recommended Products Header */}
@@ -3352,7 +3342,6 @@ export default function App() {
             setPage={setAppScreen}
             setShowTopupModal={setShowTopupModal}
             openHistoryModal={openHistoryModal}
-            isAdmin={isAdmin}
           />
           <SearchOverlay
             isOpen={isSearchOpen}

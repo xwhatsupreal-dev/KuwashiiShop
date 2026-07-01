@@ -611,6 +611,37 @@ app.post("/api/send-otp", async (req: express.Request, res: express.Response) =>
   }
 });
 
+app.get("/api/admin/wondd-status", async (req, res) => {
+  try {
+    const start = Date.now();
+    const response = await fetch("https://www.wondd.com/member/bot-game.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "method=checkstatus"
+    });
+    const latency = Date.now() - start;
+    res.json({
+      online: true,
+      latency,
+      endpoints: {
+        packlist: { online: true, latency: 2, name: "Packlist API (Local)" },
+        process: { online: true, latency, name: "Topup Process API (Wondd)" },
+        status: { online: true, latency, name: "Check Status API (Wondd)" }
+      }
+    });
+  } catch (error) {
+    res.json({
+      online: false,
+      latency: 0,
+      endpoints: {
+        packlist: { online: true, latency: 2, name: "Packlist API (Local)" },
+        process: { online: false, latency: 0, name: "Topup Process API (Wondd)" },
+        status: { online: false, latency: 0, name: "Check Status API (Wondd)" }
+      }
+    });
+  }
+});
+
 // health endpoint
 // --- WONDD Game Topup API ---
 app.get("/api/topup/game/packlist", async (req: express.Request, res: express.Response) => {
@@ -825,24 +856,6 @@ app.post("/api/topup/game/status", async (req: express.Request, res: express.Res
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
-});
-
-app.get("/api/admin/status", (req, res) => {
-  const hasGemini = !!(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY);
-  const hasSmtp = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
-  const hasWondd = !!(process.env.WONDD_USERNAME && process.env.WONDD_PASSWORD);
-  const hasD1 = !!(process.env.CF_ACCOUNT_ID && process.env.CF_DATABASE_ID && process.env.CF_API_TOKEN);
-
-  res.json({
-    apis: [
-      { name: "True Wallet Topup API", status: "online", type: "Payment", connected: true },
-      { name: "Bank Slip Checker API", status: "online", type: "Payment", connected: true },
-      { name: "Wondd Game Topup", status: hasWondd ? "online" : "offline", type: "Integration", connected: hasWondd },
-      { name: "SMTP Email (OTP)", status: hasSmtp ? "online" : "offline", type: "Service", connected: hasSmtp },
-      { name: "Gemini AI Assistant", status: hasGemini ? "online" : "offline", type: "AI", connected: hasGemini },
-      { name: "Cloudflare D1 Database", status: hasD1 ? "online" : "offline", type: "Database", connected: hasD1 }
-    ]
-  });
 });
 
 app.post("/api/d1/init", async (req: express.Request, res: express.Response) => {
