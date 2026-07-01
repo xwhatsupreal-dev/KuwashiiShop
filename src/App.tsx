@@ -2885,6 +2885,7 @@ export default function App() {
             appScreen !== "GAMETOPUP" &&
             appScreen !== "LOGIN" &&
             appScreen !== "PROFILE" &&
+            appScreen !== "ADMIN" &&
             selectedCategory === "all" &&
             !search && <ShopBanner globalStats={globalStats} items={items} />}
 

@@ -18,40 +18,17 @@ interface ApiStatus {
   connected: boolean;
 }
 
-export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = (props) => {
-  return (
-    <ErrorBoundary>
-      <AdminDashboardPageContent {...props} />
-    </ErrorBoundary>
-  );
-};
-
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
-  constructor(props: {children: React.ReactNode}) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-  render() {
-    if (this.state.hasError) {
-      return <div className="p-10 text-white font-mono bg-red-900/50 rounded-xl"><h1>Error Rendering Admin Dashboard</h1><pre>{String(this.state.error)}</pre></div>;
-    }
-    return this.props.children;
-  }
-}
-
-const AdminDashboardPageContent: React.FC<AdminDashboardPageProps> = ({ onBack, globalStats }) => {
+export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onBack, globalStats }) => {
   const [apiStatuses, setApiStatuses] = useState<ApiStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchStatuses = async () => {
       try {
         const res = await fetch('/api/admin/status');
         const data = await res.json();
-        setApiStatuses(data.apis || []);
+        setApiStatuses(Array.isArray(data?.apis) ? data.apis : []);
       } catch (err) {
         console.error("Failed to fetch API statuses", err);
       } finally {
@@ -77,7 +54,7 @@ const AdminDashboardPageContent: React.FC<AdminDashboardPageProps> = ({ onBack, 
   const totalPurchases = globalStats?.total_purchases || 0;
 
   return (
-    <div className="w-full max-w-7xl mx-auto pb-24 pt-4 px-4 sm:px-6">
+    <div className="w-full max-w-7xl mx-auto pb-24 pt-4 px-4 sm:px-6 bg-zinc-950/50 rounded-3xl min-h-[50vh]">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <motion.button 
@@ -115,7 +92,7 @@ const AdminDashboardPageContent: React.FC<AdminDashboardPageProps> = ({ onBack, 
               <h3 className="text-zinc-400 font-medium text-sm">รายได้รวมของระบบ</h3>
             </div>
             <p className="text-3xl font-bold text-white font-mono mt-3">
-              ฿{Number(revenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ฿{!isNaN(Number(revenue)) ? Number(revenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
             </p>
           </div>
           
@@ -130,7 +107,7 @@ const AdminDashboardPageContent: React.FC<AdminDashboardPageProps> = ({ onBack, 
               <h3 className="text-zinc-400 font-medium text-sm">ยอดเติมเงินทั้งหมด</h3>
             </div>
             <p className="text-3xl font-bold text-white font-mono mt-3">
-              ฿{Number(totalTopups).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ฿{!isNaN(Number(totalTopups)) ? Number(totalTopups).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
             </p>
           </div>
 
@@ -145,7 +122,7 @@ const AdminDashboardPageContent: React.FC<AdminDashboardPageProps> = ({ onBack, 
               <h3 className="text-zinc-400 font-medium text-sm">จำนวนการซื้อขายสะสม</h3>
             </div>
             <p className="text-3xl font-bold text-white font-mono mt-3">
-              {Number(totalPurchases).toLocaleString()} <span className="text-sm font-normal text-zinc-500">รายการ</span>
+              {!isNaN(Number(totalPurchases)) ? Number(totalPurchases).toLocaleString() : "0"} <span className="text-sm font-normal text-zinc-500">รายการ</span>
             </p>
           </div>
         </div>
@@ -163,6 +140,12 @@ const AdminDashboardPageContent: React.FC<AdminDashboardPageProps> = ({ onBack, 
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="bg-zinc-900/30 border border-white/5 p-5 rounded-2xl animate-pulse h-[100px]" />
             ))}
+          </div>
+        ) : apiStatuses.length === 0 ? (
+          <div className="text-center py-10 bg-zinc-900/40 rounded-2xl border border-white/5">
+            <Server className="w-10 h-10 text-zinc-500 mx-auto mb-3 opacity-50" />
+            <h3 className="text-zinc-400 text-sm font-medium">ไม่สามารถโหลดข้อมูล API ได้</h3>
+            <p className="text-xs text-zinc-600 mt-1">กรุณาลองรีเฟรชหน้าเว็บอีกครั้ง</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
