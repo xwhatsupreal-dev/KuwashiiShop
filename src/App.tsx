@@ -62,6 +62,7 @@ import {
   FolderPlus,
   Image as ImageIcon,
   RefreshCw,
+  Gamepad2,
 } from "lucide-react";
 
 import {
@@ -3017,6 +3018,23 @@ export default function App() {
                           />
                         </motion.div>
                       )}
+
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setAppScreen("GAMETOPUP");
+                        }}
+                        className="cursor-pointer rounded-2xl overflow-hidden border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] group bg-gradient-to-br from-cyan-600 to-blue-800 flex items-center justify-center aspect-[2/1]"
+                      >
+                        <div className="flex flex-col items-center justify-center gap-2 text-white p-4 text-center">
+                          <Gamepad2 className="w-8 h-8 sm:w-10 sm:h-10 opacity-90 group-hover:scale-110 transition-transform" />
+                          <span className="font-bold text-sm sm:text-base">บริการรับเติมเกม</span>
+                        </div>
+                      </motion.div>
 
                       {globalStats?.announcement_settings?.contactBannerUrl && (
                         <motion.div 

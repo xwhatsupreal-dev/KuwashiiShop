@@ -61,11 +61,7 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
             </button>
             <button 
               onClick={() => {
-                if (!currentUser) {
-                  onLoginClick();
-                } else {
-                  setAppScreen?.("GAMETOPUP");
-                }
+                setAppScreen?.("GAMETOPUP");
               }}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${currentScreen === "GAMETOPUP" ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"}`}
             >
