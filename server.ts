@@ -647,157 +647,25 @@ app.get("/api/admin/wondd-status", async (req, res) => {
 app.get("/api/topup/game/packlist", async (req: express.Request, res: express.Response) => {
   try {
     const { game } = req.query;
-    let packs = [];
-
-    switch (game) {
-      case "rov":
-        packs = [
-          { packcode: "R00011", name: "11 คูปอง", point: 11, amount: "9.45", discount: "0", netpricedealer: "9.45" },
-          { packcode: "R00024", name: "24 คูปอง", point: 24, amount: "18.90", discount: "0", netpricedealer: "18.90" },
-          { packcode: "R00060", name: "60 คูปอง", point: 60, amount: "47.25", discount: "0", netpricedealer: "47.25" },
-          { packcode: "R00110", name: "110 คูปอง", point: 110, amount: "85.05", discount: "0", netpricedealer: "85.05" },
-          { packcode: "R00185", name: "185 คูปอง", point: 185, amount: "141.75", discount: "0", netpricedealer: "141.75" },
-          { packcode: "R00209", name: "209 คูปอง", point: 209, amount: "160.65", discount: "0", netpricedealer: "160.65" },
-          { packcode: "R00257", name: "256 คูปอง", point: 256, amount: "198.45", discount: "0", netpricedealer: "198.45" },
-          { packcode: "R00295", name: "295 คูปอง", point: 295, amount: "226.80", discount: "0", netpricedealer: "226.80" },
-          { packcode: "R00385", name: "385 คูปอง", point: 385, amount: "283.50", discount: "0", netpricedealer: "283.50" },
-          { packcode: "R00414", name: "414 คูปอง", point: 414, amount: "321.30", discount: "0", netpricedealer: "321.30" },
-          { packcode: "R00505", name: "505 คูปอง", point: 505, amount: "378.00", discount: "0", netpricedealer: "378.00" },
-          { packcode: "R00600", name: "600 คูปอง", point: 600, amount: "453.60", discount: "0", netpricedealer: "453.60" },
-          { packcode: "R00810", name: "810 คูปอง", point: 810, amount: "614.25", discount: "0", netpricedealer: "614.25" },
-          { packcode: "R01230", name: "1,230 คูปอง", point: 1230, amount: "897.75", discount: "0", netpricedealer: "897.75" },
-          { packcode: "R02510", name: "2,510 คูปอง", point: 2510, amount: "1890.00", discount: "0", netpricedealer: "1890.00" }
-        ];
-        break;
-      case "freefire":
-        packs = [
-          { packcode: "FF0022", name: "22 เพชร", point: 22, amount: "9.45", discount: "0", netpricedealer: "9.45" },
-          { packcode: "FF0045", name: "45 เพชร", point: 45, amount: "18.90", discount: "0", netpricedealer: "18.90" },
-          { packcode: "FF0113", name: "113 เพชร", point: 113, amount: "47.25", discount: "0", netpricedealer: "47.25" },
-          { packcode: "FF0204", name: "204 เพชร", point: 204, amount: "85.05", discount: "0", netpricedealer: "85.05" },
-          { packcode: "FF0341", name: "341 เพชร", point: 341, amount: "141.75", discount: "0", netpricedealer: "141.75" },
-          { packcode: "FF0386", name: "386 เพชร", point: 386, amount: "160.65", discount: "0", netpricedealer: "160.65" },
-          { packcode: "FF0478", name: "478 เพชร", point: 478, amount: "198.45", discount: "0", netpricedealer: "198.45" },
-          { packcode: "FF0546", name: "546 เพชร", point: 546, amount: "226.80", discount: "0", netpricedealer: "226.80" },
-          { packcode: "FF0727", name: "727 เพชร", point: 727, amount: "283.50", discount: "0", netpricedealer: "283.50" },
-          { packcode: "FF0955", name: "955 เพชร", point: 955, amount: "378.00", discount: "0", netpricedealer: "378.00" },
-          { packcode: "FF1136", name: "1,136 เพชร", point: 1136, amount: "453.60", discount: "0", netpricedealer: "453.60" },
-          { packcode: "FF1546", name: "1,546 เพชร", point: 1546, amount: "614.25", discount: "0", netpricedealer: "614.25" },
-          { packcode: "FF2319", name: "2,319 เพชร", point: 2319, amount: "897.75", discount: "0", netpricedealer: "897.75" },
-          { packcode: "FF4738", name: "4,738 เพชร", point: 4738, amount: "1890.00", discount: "0", netpricedealer: "1890.00" }
-        ];
-        break;
-      case "undawn":
-        packs = [
-          { packcode: "UD0045", name: "45 RC", point: 45, amount: "47.25", discount: "0", netpricedealer: "47.25" },
-          { packcode: "UD0090", name: "90 RC", point: 90, amount: "94.50", discount: "0", netpricedealer: "94.50" },
-          { packcode: "UD0180", name: "180 RC", point: 180, amount: "189.00", discount: "0", netpricedealer: "189.00" },
-          { packcode: "UD0270", name: "270 RC", point: 270, amount: "283.50", discount: "0", netpricedealer: "283.50" },
-          { packcode: "UD0450", name: "450 RC", point: 450, amount: "472.50", discount: "0", netpricedealer: "472.50" },
-          { packcode: "UD0900", name: "900 RC", point: 900, amount: "945.00", discount: "0", netpricedealer: "945.00" },
-          { packcode: "UD1800", name: "1800 RC", point: 1800, amount: "1890.00", discount: "0", netpricedealer: "1890.00" },
-          { packcode: "UD2700", name: "2700 RC", point: 2700, amount: "2835.00", discount: "0", netpricedealer: "2835.00" }
-        ];
-        break;
-      case "deltaforce":
-        packs = [
-          { packcode: "DF0090", name: "90 CP", point: 90, amount: "33.00", discount: "0", netpricedealer: "33.00" },
-          { packcode: "DF0300", name: "300 CP", point: 300, amount: "99.00", discount: "0", netpricedealer: "99.00" },
-          { packcode: "DF0760", name: "760 CP", point: 760, amount: "229.00", discount: "0", netpricedealer: "229.00" },
-          { packcode: "DF1600", name: "1600 CP", point: 1600, amount: "465.00", discount: "0", netpricedealer: "465.00" },
-          { packcode: "DF3200", name: "3200 CP", point: 3200, amount: "930.00", discount: "0", netpricedealer: "930.00" },
-          { packcode: "DF5000", name: "5000 CP", point: 5000, amount: "1400.00", discount: "0", netpricedealer: "1400.00" },
-          { packcode: "DF8000", name: "8000 CP", point: 8000, amount: "2190.00", discount: "0", netpricedealer: "2190.00" },
-          { packcode: "DF12000", name: "12000 CP", point: 12000, amount: "3290.00", discount: "0", netpricedealer: "3290.00" }
-        ];
-        break;
-      case "codm":
-        packs = [
-          { packcode: "CODM001", name: "1 CP", point: 1, amount: "1.00", discount: "0", netpricedealer: "1.00" },
-          { packcode: "CODM080", name: "80 CP", point: 80, amount: "28.35", discount: "0", netpricedealer: "28.35" },
-          { packcode: "CODM160", name: "160 CP", point: 160, amount: "56.70", discount: "0", netpricedealer: "56.70" },
-          { packcode: "CODM420", name: "420 CP", point: 420, amount: "141.75", discount: "0", netpricedealer: "141.75" },
-          { packcode: "CODM880", name: "880 CP", point: 880, amount: "283.50", discount: "0", netpricedealer: "283.50" },
-          { packcode: "CODM2400", name: "2400 CP", point: 2400, amount: "708.75", discount: "0", netpricedealer: "708.75" },
-          { packcode: "CODM5000", name: "5000 CP", point: 5000, amount: "1417.50", discount: "0", netpricedealer: "1417.50" },
-          { packcode: "CODM10800", name: "10800 CP", point: 10800, amount: "2835.00", discount: "0", netpricedealer: "2835.00" }
-        ];
-        break;
-      case "haikyu":
-        packs = [
-          { packcode: "HK0060", name: "60 เพชร", point: 60, amount: "35.00", discount: "0", netpricedealer: "35.00" },
-          { packcode: "HK0300", name: "300 เพชร", point: 300, amount: "149.00", discount: "0", netpricedealer: "149.00" },
-          { packcode: "HK0680", name: "680 เพชร", point: 680, amount: "329.00", discount: "0", netpricedealer: "329.00" },
-          { packcode: "HK0980", name: "980 เพชร", point: 980, amount: "499.00", discount: "0", netpricedealer: "499.00" },
-          { packcode: "HK1980", name: "1980 เพชร", point: 1980, amount: "999.00", discount: "0", netpricedealer: "999.00" },
-          { packcode: "HK3280", name: "3280 เพชร", point: 3280, amount: "1590.00", discount: "0", netpricedealer: "1590.00" },
-          { packcode: "HK6480", name: "6480 เพชร", point: 6480, amount: "2990.00", discount: "0", netpricedealer: "2990.00" }
-        ];
-        break;
-      case "pubgm":
-        packs = [
-          { packcode: "PUBG60", name: "60 UC", point: 60, amount: "29.00", discount: "0", netpricedealer: "29.00" },
-          { packcode: "PUBG325", name: "325 UC", point: 325, amount: "149.00", discount: "0", netpricedealer: "149.00" },
-          { packcode: "PUBG660", name: "660 UC", point: 660, amount: "299.00", discount: "0", netpricedealer: "299.00" },
-          { packcode: "PUBG1800", name: "1800 UC", point: 1800, amount: "799.00", discount: "0", netpricedealer: "799.00" },
-          { packcode: "PUBG3850", name: "3850 UC", point: 3850, amount: "1599.00", discount: "0", netpricedealer: "1599.00" },
-          { packcode: "PUBG8100", name: "8100 UC", point: 8100, amount: "3199.00", discount: "0", netpricedealer: "3199.00" }
-        ];
-        break;
-      case "mlbb":
-        packs = [
-          { packcode: "ML14", name: "14 Diamonds", point: 14, amount: "4.75", discount: "0", netpricedealer: "4.75" },
-          { packcode: "ML70", name: "70 Diamonds", point: 70, amount: "23.75", discount: "0", netpricedealer: "23.75" },
-          { packcode: "ML275", name: "275 Diamonds", point: 275, amount: "94.00", discount: "0", netpricedealer: "94.00" },
-          { packcode: "ML345", name: "345 Diamonds", point: 345, amount: "118.00", discount: "0", netpricedealer: "118.00" },
-          { packcode: "ML706", name: "706 Diamonds", point: 706, amount: "238.00", discount: "0", netpricedealer: "238.00" },
-          { packcode: "ML1412", name: "1412 Diamonds", point: 1412, amount: "475.00", discount: "0", netpricedealer: "475.00" },
-          { packcode: "ML3540", name: "3540 Diamonds", point: 3540, amount: "1190.00", discount: "0", netpricedealer: "1190.00" },
-          { packcode: "ML7080", name: "7080 Diamonds", point: 7080, amount: "2350.00", discount: "0", netpricedealer: "2350.00" }
-        ];
-        break;
-      case "valorant":
-        packs = [
-          { packcode: "VAL145", name: "145 VP", point: 145, amount: "50.00", discount: "0", netpricedealer: "50.00" },
-          { packcode: "VAL300", name: "300 VP", point: 300, amount: "99.00", discount: "0", netpricedealer: "99.00" },
-          { packcode: "VAL725", name: "725 VP", point: 725, amount: "229.00", discount: "0", netpricedealer: "229.00" },
-          { packcode: "VAL1500", name: "1500 VP", point: 1500, amount: "449.00", discount: "0", netpricedealer: "449.00" },
-          { packcode: "VAL3050", name: "3050 VP", point: 3050, amount: "899.00", discount: "0", netpricedealer: "899.00" },
-          { packcode: "VAL5350", name: "5350 VP", point: 5350, amount: "1499.00", discount: "0", netpricedealer: "1499.00" },
-          { packcode: "VAL11000", name: "11000 VP", point: 11000, amount: "2990.00", discount: "0", netpricedealer: "2990.00" }
-        ];
-        break;
-      case "heartopia":
-        packs = [
-          { packcode: "HTP60", name: "60 เพชร", point: 60, amount: "35.00", discount: "0", netpricedealer: "35.00" },
-          { packcode: "HTP300", name: "300 เพชร", point: 300, amount: "149.00", discount: "0", netpricedealer: "149.00" },
-          { packcode: "HTP680", name: "680 เพชร", point: 680, amount: "329.00", discount: "0", netpricedealer: "329.00" },
-          { packcode: "HTP1980", name: "1980 เพชร", point: 1980, amount: "999.00", discount: "0", netpricedealer: "999.00" },
-          { packcode: "HTP3280", name: "3280 เพชร", point: 3280, amount: "1590.00", discount: "0", netpricedealer: "1590.00" },
-          { packcode: "HTP6480", name: "6480 เพชร", point: 6480, amount: "2990.00", discount: "0", netpricedealer: "2990.00" }
-        ];
-        break;
-      default:
-        packs = [];
+    if (!game) {
+      return res.status(400).json({ error: "Missing game parameter" });
     }
 
-    const packsWithProfit = packs.map(pack => {
-      // Add 10% profit margin and round up to nearest integer
-      const originalPrice = parseFloat(pack.amount);
-      const newPrice = Math.ceil(originalPrice * 1.10);
-      return {
-        ...pack,
-        amount: newPrice.toString()
-      };
-    });
+    const fetchRes = await fetch(`https://www.wondd.com/member/bot-game-packlist.php?game=${game}`);
+    const data = await fetchRes.json();
+    
+    // Map amount to netpricedealer (cost price) because user wants no profit added yet
+    const packs = data.map((p: any) => ({
+      ...p,
+      amount: p.netpricedealer // Use cost price as the retail price for now
+    }));
 
-    res.json(packsWithProfit);
+    res.json(packs);
   } catch (error) {
     console.error("Game Topup Packlist Error:", error);
     res.status(500).json({ error: "Failed to fetch packlist" });
   }
 });
-
 app.post("/api/topup/game/process", async (req: express.Request, res: express.Response) => {
   try {
     const { servicecode, packcode, gameid } = req.body;
@@ -870,7 +738,7 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    let token = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+    let token = "cfut_CAocuU6UlkyPs3rkQ9PyHL6sGWN6yU0QZrasxiJL548fbed2";
     token = token?.trim();
     if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
@@ -1031,7 +899,7 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    let token = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+    let token = "cfut_CAocuU6UlkyPs3rkQ9PyHL6sGWN6yU0QZrasxiJL548fbed2";
     token = token?.trim();
     if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
@@ -1086,7 +954,7 @@ async function runCleanStorage(force = false) {
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+    const rawToken = "cfut_CAocuU6UlkyPs3rkQ9PyHL6sGWN6yU0QZrasxiJL548fbed2";
     let token = rawToken?.trim();
     if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
@@ -1212,7 +1080,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     const match = dbId.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
     if (match) dbId = match[0];
   }
-  const rawToken = process.env.CF_API_TOKEN || process.env.VITE_CF_API_TOKEN;
+  const rawToken = "cfut_CAocuU6UlkyPs3rkQ9PyHL6sGWN6yU0QZrasxiJL548fbed2";
   let token = rawToken?.trim();
   if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
