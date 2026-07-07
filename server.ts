@@ -22,8 +22,6 @@ app.use((req: any, _res, next) => {
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-import fs from "fs";
-import path from "path";
 
 const APP_VERSION = process.env.K_REVISION || (() => {
   try {
