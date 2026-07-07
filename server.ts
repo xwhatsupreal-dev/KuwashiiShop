@@ -1185,6 +1185,12 @@ app.get("/api/proxy-image", async (req: express.Request, res: express.Response) 
   }
 });
 
+
+app.get('/download-source', (req, res) => {
+  const file = path.join(process.cwd(), 'public', 'KuwashiiShop.zip');
+  res.download(file);
+});
+
 // Configure Vite integration or static file serving
 const setupServer = async () => {
   if (process.env.NODE_ENV !== "production") {

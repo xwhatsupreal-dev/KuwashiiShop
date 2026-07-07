@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Gamepad2, ShoppingCart, CheckCircle, AlertTriangle, Send } from "lucide-react";
 import { supabase } from "../supabase";
+import { sendDiscordPurchaseEmbed } from "../discord";
 
 interface Pack {
   packcode: string;
@@ -133,6 +134,7 @@ export function GameTopupPage({ onBack, currentUser, showToast, fetchUser }: Gam
           }
         ]);
 
+        sendDiscordPurchaseEmbed(currentUser.username, `เติมเกม ${selectedGame.toUpperCase()} - ${selectedPack.name}`, 1, 0, []);
         showToast("เติมเกมสำเร็จ!", "success");
         setGameId("");
         setSelectedPack(null);
