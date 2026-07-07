@@ -738,7 +738,7 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    let token = "cfut_CAocuU6UlkyPs3rkQ9PyHL6sGWN6yU0QZrasxiJL548fbed2";
+    let token = "cfut_iLQ6P7ycYrURTEUO57VkHby1C1DWOusMnhnoJyFK2c29c41f";
     token = token?.trim();
     if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
@@ -899,7 +899,7 @@ app.post("/api/d1", async (req: express.Request, res: express.Response) => {
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    let token = "cfut_CAocuU6UlkyPs3rkQ9PyHL6sGWN6yU0QZrasxiJL548fbed2";
+    let token = "cfut_iLQ6P7ycYrURTEUO57VkHby1C1DWOusMnhnoJyFK2c29c41f";
     token = token?.trim();
     if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
@@ -954,7 +954,7 @@ async function runCleanStorage(force = false) {
       const match = dbIdRaw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
       if (match) dbId = match[0];
     }
-    const rawToken = "cfut_CAocuU6UlkyPs3rkQ9PyHL6sGWN6yU0QZrasxiJL548fbed2";
+    const rawToken = "cfut_iLQ6P7ycYrURTEUO57VkHby1C1DWOusMnhnoJyFK2c29c41f";
     let token = rawToken?.trim();
     if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
@@ -1080,7 +1080,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     const match = dbId.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
     if (match) dbId = match[0];
   }
-  const rawToken = "cfut_CAocuU6UlkyPs3rkQ9PyHL6sGWN6yU0QZrasxiJL548fbed2";
+  const rawToken = "cfut_iLQ6P7ycYrURTEUO57VkHby1C1DWOusMnhnoJyFK2c29c41f";
   let token = rawToken?.trim();
   if (token?.startsWith('Bearer ')) token = token.substring(7).trim();
 
