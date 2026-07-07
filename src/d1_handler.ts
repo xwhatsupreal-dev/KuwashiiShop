@@ -6,7 +6,7 @@ export async function handleD1Query(req: any, res: any) {
     // Cloudflare D1 requires params to be passed but doesn't support complex substitutions sometimes, but it does support ? bindings!
     const accountId = process.env.CF_ACCOUNT_ID;
     const dbId = process.env.CF_DATABASE_ID;
-    const token = "cfut_CAocuU6UlkyPs3rkQ9PyHL6sGWN6yU0QZrasxiJL548fbed2";
+    const token = "cfut_iLQ6P7ycYrURTEUO57VkHby1C1DWOusMnhnoJyFK2c29c41f";
 
     if (!accountId || !dbId || !token) {
       throw new Error("CF credentials not configured in settings");
