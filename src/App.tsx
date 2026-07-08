@@ -486,7 +486,7 @@ export default function App() {
   const [authOtpCode, setAuthOtpCode] = useState("");
   const [authError, setAuthError] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(!import.meta.env.VITE_TURNSTILE_SITE_KEY || import.meta.env.VITE_TURNSTILE_SITE_KEY === "1x00000000000000000000AA");
   const [showAuthPassword, setShowAuthPassword] = useState(false);
 
   const [showAuthConfirmPassword, setShowAuthConfirmPassword] = useState(false);

@@ -28,8 +28,28 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
   const [bankAccountNoRov, setBankAccountNoRov] = useState('');
   const [bankNameRov, setBankNameRov] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'allstar' | 'general' | 'rov'>('general');
+  const [activeTab, setActiveTab] = useState<'allstar' | 'general' | 'rov' | 'api_status'>('general');
   const [isSaving, setIsSaving] = useState(false);
+  const [apiStatus, setApiStatus] = useState<{angpao: string, checkslip: string} | null>(null);
+  const [isCheckingApi, setIsCheckingApi] = useState(false);
+
+  const checkApiStatus = async () => {
+    setIsCheckingApi(true);
+    setApiStatus(null);
+    try {
+      const res = await fetch('/api/admin/check-api-status');
+      if (res.ok) {
+        const data = await res.json();
+        setApiStatus(data);
+      } else {
+        setApiStatus({ angpao: 'error', checkslip: 'error' });
+      }
+    } catch(e) {
+      setApiStatus({ angpao: 'error', checkslip: 'error' });
+    } finally {
+      setIsCheckingApi(false);
+    }
+  };
 
   useEffect(() => {
     if (globalStats) {

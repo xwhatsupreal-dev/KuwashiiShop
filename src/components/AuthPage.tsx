@@ -186,11 +186,15 @@ export const AuthPage = ({
                 )}
 
                 <div className="flex justify-center my-4">
-                  <Turnstile 
-                    siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
-                    onSuccess={() => setIsCaptchaVerified(true)}
-                    options={{ theme: 'dark' }}
-                  />
+                  
+                  {import.meta.env.VITE_TURNSTILE_SITE_KEY && import.meta.env.VITE_TURNSTILE_SITE_KEY !== "1x00000000000000000000AA" && (
+                    <Turnstile 
+                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                      onSuccess={() => setIsCaptchaVerified(true)}
+                      options={{ theme: 'dark' }}
+                    />
+                  )}
+
                 </div>
 
                 {authError && (
