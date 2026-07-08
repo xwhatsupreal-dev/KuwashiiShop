@@ -93,6 +93,7 @@ import { ShopBanner } from "./components/ShopBanner";
 import { TopupPage } from "./components/TopupPage";
 import { TopupTosModal } from "./components/TopupTosModal";
 import { PaymentSettingsModal } from "./components/PaymentSettingsModal";
+import { ApiStatusModal } from "./components/ApiStatusModal";
 import { CategoryManagerModal } from "./components/CategoryManagerModal";
 import { AuthPage } from "./components/AuthPage";
 import { GameTopupPage } from "./components/GameTopupPage";
@@ -528,6 +529,7 @@ export default function App() {
   const [isCustomerDbOpen, setIsCustomerDbOpen] = useState(false);
   const [isCouponManagerOpen, setIsCouponManagerOpen] = useState(false);
   const [isPaymentConfigOpen, setIsPaymentConfigOpen] = useState(false);
+  const [isApiStatusOpen, setIsApiStatusOpen] = useState(false);
   const [isImageSettingsOpen, setIsImageSettingsOpen] = useState(false);
   const [isAnnouncementManagerOpen, setIsAnnouncementManagerOpen] =
     useState(false);
@@ -2676,6 +2678,10 @@ export default function App() {
         globalStats={globalStats}
         setGlobalStats={setGlobalStats}
       />
+      <ApiStatusModal
+        isOpen={isApiStatusOpen}
+        onClose={() => setIsApiStatusOpen(false)}
+      />
 
       <CategoryManagerModal
         isOpen={isCategoryManagerOpen}
@@ -3259,6 +3265,13 @@ export default function App() {
                             className="py-2 px-4 rounded-2xl bg-blue-500/20 text-blue-400 hover:text-zinc-100 border border-blue-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
                           >
                             <Wallet className="w-4 h-4" /> จัดการช่องทางชำระเงิน
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsApiStatusOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-indigo-500/20 text-indigo-400 hover:text-zinc-100 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-indigo-500/10"
+                          >
+                            <RefreshCw className="w-4 h-4" /> เช็คสถานะ API
                           </motion.button>
                           <motion.button
                             whileTap={{ scale: 0.95 }}
