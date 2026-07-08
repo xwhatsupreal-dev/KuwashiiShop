@@ -18,6 +18,7 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
   const [users, setUsers] = useState<UserData[]>([]);
   const [search, setSearch] = useState('');
   const [editingBalanceUser, setEditingBalanceUser] = useState<string | null>(null);
+  const [editingBalanceType, setEditingBalanceType] = useState<"balance"|"balance_rov">("balance");
   const [newBalance, setNewBalance] = useState('');
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<string | null>(null);
 
@@ -40,6 +41,7 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
           username: d.username,
           email: d.email,
           balance: Number(d.balance),
+          balance_rov: Number(d.balance_rov),
           joinDate: d.created_at,
           password: d.password,
           purchaseCount: pCounts[d.username] || 0,
@@ -75,7 +77,7 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
 
     const user = users.find(u => u.username === username);
     if (user) {
-      const balanceField = 'balance';
+      const balanceField = editingBalanceType;
       const oldBalance = user[balanceField] || 0;
       const difference = amount - oldBalance;
       
@@ -230,10 +232,18 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
                              </div>
                            ) : (
                              <>
-                               <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
-                                 <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                                 <span className="text-emerald-400 font-mono font-bold">{(user.balance || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                               
+                               <div className="flex flex-col gap-1">
+                                 <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
+                                   <DollarSign className="w-3 h-3 text-emerald-400" />
+                                   <span className="text-emerald-400 font-mono text-xs font-bold">{(user.balance || 0).toLocaleString()} (สินค้า)</span>
+                                 </div>
+                                 <div className="flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/20 px-2 py-1 rounded-lg">
+                                   <DollarSign className="w-3 h-3 text-cyan-400" />
+                                   <span className="text-cyan-400 font-mono text-xs font-bold">{(user.balance_rov || 0).toLocaleString()} (เกม)</span>
+                                 </div>
                                </div>
+  
                                {user.username !== 'Kuwashii_admin' && (
                                  confirmDeleteUser === user.username ? (
                                     <div className="flex items-center gap-2">
@@ -253,13 +263,24 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
                                     </div>
                                  ) : (
                                    <>
-                                     <motion.button whileTap={{ scale: 0.95 }} 
-                                       onClick={() => { setEditingBalanceUser(user.username); setNewBalance(String(user.balance || 0)); }}
-                                       className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer shrink-0"
-                                       title="แก้ไขยอดเงิน (เติมเครดิต)"
-                                     >
-                                       <Edit2 className="w-4 h-4" />
-                                     </motion.button>
+                                     
+                                     <div className="flex flex-col gap-1">
+                                       <motion.button whileTap={{ scale: 0.95 }}
+                                          onClick={() => { setEditingBalanceUser(user.username); setEditingBalanceType("balance"); setNewBalance(String(user.balance || 0)); }}
+                                         className="p-1.5 rounded-lg hover:bg-emerald-900/30 text-emerald-500/70 hover:text-emerald-400 transition-colors cursor-pointer shrink-0"
+                                         title="แก้ไขพ้อยสินค้า"
+                                       >
+                                         <Edit2 className="w-3 h-3" />
+                                       </motion.button>
+                                       <motion.button whileTap={{ scale: 0.95 }}
+                                          onClick={() => { setEditingBalanceUser(user.username); setEditingBalanceType("balance_rov"); setNewBalance(String(user.balance_rov || 0)); }}
+                                         className="p-1.5 rounded-lg hover:bg-cyan-900/30 text-cyan-500/70 hover:text-cyan-400 transition-colors cursor-pointer shrink-0"
+                                         title="แก้ไขพ้อยเติมเกม"
+                                       >
+                                         <Edit2 className="w-3 h-3" />
+                                       </motion.button>
+                                     </div>
+  
                                      <motion.button whileTap={{ scale: 0.95 }}
                                        onClick={() => setConfirmDeleteUser(user.username)}
                                        className="p-1.5 rounded-lg hover:bg-red-900/50 text-red-500/70 hover:text-red-400 transition-colors cursor-pointer shrink-0"

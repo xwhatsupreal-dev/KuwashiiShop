@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, AlertTriangle, ChevronRight, HelpCircle, X, ChevronLeft, ArrowRight, Wallet, QrCode, ScanLine, FileBoxIcon as FileBox, Plus, Send, Gift, Copy, Download } from 'lucide-react';
 
 export const TopupPage = ({ 
+  topupTarget,
+  setTopupTarget,
+  
   tosAccepted, 
   setTosAccepted, 
   topupModalStep, 

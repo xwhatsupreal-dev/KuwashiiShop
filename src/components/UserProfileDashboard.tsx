@@ -171,14 +171,24 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
             <h3 className="font-bold text-zinc-100">{currentUser?.username}</h3>
             <div className="w-full h-px bg-white/5 my-3"></div>
             <div className="w-full space-y-2">
+              
               <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 flex justify-between items-center">
                 <span className="text-xs text-indigo-300 font-medium whitespace-nowrap">
-                  ยอดคงเหลือ
+                  พ้อยสินค้า
                 </span>
                 <span className="text-indigo-400 font-bold">
                   ฿{(currentUser?.balance || 0).toLocaleString()}
                 </span>
               </div>
+              <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-3 flex justify-between items-center">
+                <span className="text-xs text-cyan-300 font-medium whitespace-nowrap">
+                  พ้อยเติมเกม
+                </span>
+                <span className="text-cyan-400 font-bold">
+                  ฿{(currentUser?.balance_rov || 0).toLocaleString()}
+                </span>
+              </div>
+
             </div>
           </div>
 

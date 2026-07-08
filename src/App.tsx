@@ -501,6 +501,7 @@ export default function App() {
 
   // --- Top Up State ---
   const [showTopupModal, setShowTopupModal] = useState(false);
+  const [topupTarget, setTopupTarget] = useState<"balance" | "balance_rov">("balance");
   const [currentView, setCurrentView] = useState<"store" | "topup">("store");
 
   const [topupModalStep, setTopupModalStep] = useState<
@@ -855,7 +856,7 @@ export default function App() {
           })
           .eq("id", "main");
 
-        const balanceField = "balance";
+        const balanceField = topupTarget;
         const userBalance = Number(liveUser[balanceField] || 0);
         const newBalance = userBalance + coupon.amount;
         await supabase
@@ -928,7 +929,7 @@ export default function App() {
               .update({ global_rev_astd: currentRev + amount })
               .eq("id", "main");
 
-            const balanceField = "balance";
+            const balanceField = topupTarget;
             const userBalance = Number(liveUser[balanceField] || 0);
             const newBalance = userBalance + amount;
             await supabase
@@ -1142,7 +1143,7 @@ export default function App() {
               .update({ global_rev_astd: currentRev + amount })
               .eq("id", "main");
 
-            const balanceField = "balance";
+            const balanceField = topupTarget;
             const userBalance = Number(liveUser[balanceField] || 0);
             const newBalance = userBalance + amount;
             await supabase
@@ -1832,7 +1833,7 @@ export default function App() {
     }
 
     const totalPrice = item.price * purchaseQty;
-    const balanceField = "balance";
+    const balanceField = topupTarget;
     const userBalance = Number(user[balanceField] || 0);
     if (userBalance < totalPrice) {
       showToast(
@@ -2961,6 +2962,8 @@ export default function App() {
               />
             ) : appScreen === "TOPUP" ? (
               <TopupPage
+                topupTarget={topupTarget}
+                setTopupTarget={setTopupTarget}
                 tosAccepted={tosAccepted}
                 setTosAccepted={setTosAccepted}
                 topupModalStep={topupModalStep}

@@ -91,7 +91,7 @@ export function GameTopupPage({ onBack, currentUser, showToast, fetchUser }: Gam
       }
 
       const retailPrice = Number(selectedPack.amount);
-      const userBalance = Number(user.balance || 0);
+      const userBalance = Number(user.balance_rov || 0);
 
       if (userBalance < retailPrice) {
         showToast(`ยอดเงินไม่เพียงพอ (ขาดอีก ${retailPrice - userBalance} บาท)`, "error");
@@ -119,7 +119,7 @@ export function GameTopupPage({ onBack, currentUser, showToast, fetchUser }: Gam
         const newBalance = userBalance - retailPrice;
         await supabase
           .from("profiles")
-          .update({ balance: newBalance })
+          .update({ balance_rov: newBalance })
           .eq("username", currentUser.username);
 
         // 4. Record purchase
@@ -203,7 +203,12 @@ export function GameTopupPage({ onBack, currentUser, showToast, fetchUser }: Gam
 
           <form onSubmit={handleTopup}>
             <div className="mb-6">
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Game ID / Player ID</label>
+              
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-zinc-300">Game ID / Player ID</label>
+                <span className="text-xs text-cyan-400 font-bold bg-cyan-500/10 px-2 py-1 rounded-lg">พ้อยเติมเกม: ฿{(currentUser?.balance_rov || 0).toLocaleString()}</span>
+              </div>
+
               <input
                 type="text"
                 required

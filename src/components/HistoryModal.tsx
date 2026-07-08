@@ -138,7 +138,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                     <button 
                       className="bg-white/5 border border-white/5 hover:bg-white/10 text-zinc-300 px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-medium transition-all shadow-sm"
                       onClick={() => {
-                        const texts = filteredPurchases.map(p => p.credentialData).filter(Boolean);
+                        const texts = filteredNormalPurchases.map(p => p.credentialData).filter(Boolean);
                         if (texts.length) navigator.clipboard.writeText(texts.join('\n'));
                       }}
                     >
@@ -146,7 +146,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                     </button>
                     <div className="relative">
                       <select className="appearance-none bg-[#121215] border border-white/10 text-zinc-300 px-4 py-2 pr-8 rounded-lg text-sm font-medium focus:outline-none focus:border-[#0ca5e9]">
-                        <option>{filteredPurchases.length} รายการ</option>
+                        <option>{filteredNormalPurchases.length} รายการ</option>
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                     </div>
