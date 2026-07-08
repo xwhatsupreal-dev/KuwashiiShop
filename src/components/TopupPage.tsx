@@ -111,8 +111,12 @@ export const TopupPage = ({
             className="space-y-4"
           >
             {/* Angpao Option */}
-            <motion.div 
-               whileHover={angpaoActive ? { scale: 1.02 } : {}}
+            
+            {topupTarget !== 'balance_rov' && (
+              <>
+                <motion.div
+                  whileHover={angpaoActive ? { scale: 1.02 } : {}}
+
                whileTap={angpaoActive ? { scale: 0.98 } : {}}
                className={`bg-[#151515] border border-zinc-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors ${angpaoActive ? 'cursor-pointer hover:border-[#0ea5e9]' : 'opacity-50 cursor-not-allowed'}`}
                onClick={() => angpaoActive && setTopupModalStep("angpao")}
@@ -169,8 +173,12 @@ export const TopupPage = ({
           </motion.div>
 
           {/* QRCode Option */}
-          <motion.div 
-             whileHover={qrActive ? { scale: 1.02 } : {}}
+          
+              </>
+            )}
+          <motion.div
+              whileHover={qrActive ? { scale: 1.02 } : {}}
+
              whileTap={qrActive ? { scale: 0.98 } : {}}
              className={`bg-[#151515] border border-zinc-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors ${qrActive ? 'cursor-pointer hover:border-[#0ea5e9]' : 'opacity-50 cursor-not-allowed'}`} 
              onClick={() => qrActive && setTopupModalStep("bank")}
@@ -275,10 +283,13 @@ export const TopupPage = ({
              {topupModalStep === "bank" && (
                 <div className="mb-5 bg-zinc-800/50 p-6 rounded-2xl border border-zinc-700/50 flex flex-col items-center text-center">
                   {(() => {
-                    const qrUrl = parsedSettings.topup_bank_qr_image;
-                    const bName = parsedSettings.topup_bank_name;
-                    const bAcc = parsedSettings.topup_bank_account_no;
-                    const bAccName = parsedSettings.topup_qrcode_name;
+                    
+                    const isRov = topupTarget === 'balance_rov';
+                    const qrUrl = isRov ? 'https://img1.pic.in.th/images/1000113791.jpg' : parsedSettings.topup_bank_qr_image;
+                    const bName = isRov ? 'Prompt Pay' : parsedSettings.topup_bank_name;
+                    const bAcc = isRov ? null : parsedSettings.topup_bank_account_no;
+                    const bAccName = isRov ? null : parsedSettings.topup_qrcode_name;
+
 
                     return (
                       <>

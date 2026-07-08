@@ -1087,7 +1087,20 @@ export default function App() {
             }
             configName = (settingsObj.topup_qrcode_name || "").trim();
 
-            if (configName && receiverName !== "ไม่ทราบชื่อ") {
+            if (receiverName !== "ไม่ทราบชื่อ") {
+              if (topupTarget === 'balance_rov') {
+                const requiredRovName = "บริษัท วันดีดี คอร์ปอเรชั่น จำกัด";
+                const cleanReceiver = receiverName.toLowerCase().replace(/\s/g, "");
+                const cleanRequired = requiredRovName.toLowerCase().replace(/\s/g, "");
+                
+                if (!cleanReceiver.includes(cleanRequired) && !cleanRequired.includes(cleanReceiver)) {
+                   setTopupError(`ชื่อบัญชีผู้รับไม่ถูกต้อง (ต้องเป็น: ${requiredRovName})`);
+                   showToast(`สลิปนี้ถูกโอนไปยัง: ${receiverName}`, "error");
+                   setIsProcessingTopup(false);
+                   return;
+                }
+              } else if (configName) {
+
               const cleanReceiver = receiverName
                 .toLowerCase()
                 .replace(/\s/g, "");
@@ -1109,6 +1122,7 @@ export default function App() {
                 showToast(`สลิปนี้ถูกโอนไปยัง: ${receiverName}`, "error");
                 setIsProcessingTopup(false);
                 return;
+              }
               }
             }
 
