@@ -430,8 +430,14 @@ app.post("/api/topup/true-wallet", async (req: express.Request, res: express.Res
       body: params
     });
     
-    const data = await response.json();
-    res.json(data);
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      res.json(data);
+    } catch(err) {
+      console.error("TrueWallet API returned non-JSON:", text.substring(0, 200));
+      res.status(502).json({ status: 'error', message: 'API เติมเงินขัดข้อง กรุณาติดต่อผู้ดูแลระบบ' });
+    }
   } catch (err: any) {
     console.error("TrueWallet Error:", err);
     res.status(500).json({ status: 'error', message: 'Internal Server Error' });
@@ -457,7 +463,14 @@ app.post("/api/topup/bank", async (req: express.Request, res: express.Response) 
       body: params
     });
     
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch(err) {
+      console.error("CheckSlip API returned non-JSON:", text.substring(0, 200));
+      return res.status(502).json({ status: 'error', message: 'API ตรวจสอบสลิปขัดข้อง กรุณาติดต่อผู้ดูแลระบบ' });
+    }
     
     // Server-side explicit time check (5 mins max)
     if (data.status === 'success') {

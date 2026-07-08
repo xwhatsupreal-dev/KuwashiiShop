@@ -351,6 +351,10 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [appScreen, selectedCategory]);
 
+  useEffect(() => {
+    setTopupModalStep("select");
+  }, [appScreen]);
+
   // Sync Engine Listener
   useEffect(() => {
     let activeSyncId = 0;
