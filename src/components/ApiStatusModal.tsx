@@ -81,6 +81,8 @@ export const ApiStatusModal: React.FC<Props> = ({ isOpen, onClose }) => {
                       ) : apiStatus ? (
                          apiStatus.angpao === 'online' ? (
                            <span className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full">Online</span>
+                         ) : apiStatus.angpao === 'blocked' ? (
+                           <span className="px-3 py-1.5 bg-amber-500/20 text-amber-500 text-xs font-bold rounded-full">ถูกบล็อก (Cloudflare)</span>
                          ) : (
                            <span className="px-3 py-1.5 bg-red-500/20 text-red-500 text-xs font-bold rounded-full">Offline</span>
                          )
@@ -104,6 +106,8 @@ export const ApiStatusModal: React.FC<Props> = ({ isOpen, onClose }) => {
                       ) : apiStatus ? (
                          apiStatus.checkslip === 'online' ? (
                            <span className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full">Online</span>
+                         ) : apiStatus.checkslip === 'blocked' ? (
+                           <span className="px-3 py-1.5 bg-amber-500/20 text-amber-500 text-xs font-bold rounded-full">ถูกบล็อก (Cloudflare)</span>
                          ) : (
                            <span className="px-3 py-1.5 bg-red-500/20 text-red-500 text-xs font-bold rounded-full">Offline</span>
                          )

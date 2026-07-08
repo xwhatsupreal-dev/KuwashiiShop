@@ -351,9 +351,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [appScreen, selectedCategory]);
 
-  useEffect(() => {
-    setTopupModalStep("select");
-  }, [appScreen]);
+  
 
   // Sync Engine Listener
   useEffect(() => {
@@ -512,6 +510,13 @@ export default function App() {
   const [topupModalStep, setTopupModalStep] = useState<
     "select" | "angpao" | "bank" | "coupon" | "success"
   >("select");
+  
+  useEffect(() => {
+    setTopupModalStep("select");
+    setTopupCode("");
+    setSlipFile(null);
+  }, [appScreen, topupTarget]);
+  
   const [topupSuccessMessage, setTopupSuccessMessage] = useState("");
   const [topupError, setTopupError] = useState("");
   const [topupCode, setTopupCode] = useState("");

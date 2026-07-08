@@ -386,21 +386,64 @@ app.get("/api/admin/check-api-status", async (req, res) => {
   try {
     const results = { angpao: 'offline', checkslip: 'offline' };
     
+    
     // Check Angpao API
     try {
-      const angpaoRes = await fetch('https://www.planariashop.com/api/truewallet.php', { method: 'GET' });
-      if (angpaoRes.status === 200 || angpaoRes.status === 403) {
+      const params = new URLSearchParams();
+      params.append('keyapi', 'dummy');
+      params.append('phone', 'dummy');
+      params.append('gift_link', 'dummy');
+
+      const angpaoRes = await fetch('https://www.planariashop.com/api/truewallet.php', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        },
+        body: params
+      });
+      const text = await angpaoRes.text();
+      try {
+        JSON.parse(text);
         results.angpao = 'online';
+      } catch(e) {
+        if (angpaoRes.status === 403 || text.includes('Cloudflare') || text.includes('Just a moment')) {
+          results.angpao = 'blocked';
+        } else {
+          results.angpao = 'offline';
+        }
       }
     } catch(e) {}
     
     // Check CheckSlip API
     try {
-      const slipRes = await fetch('https://www.planariashop.com/api/checkslip.php', { method: 'GET' });
-      if (slipRes.status === 200 || slipRes.status === 403) {
+      const params = new URLSearchParams();
+      params.append('keyapi', 'dummy');
+      params.append('qrcode_text', 'dummy');
+
+      const slipRes = await fetch('https://www.planariashop.com/api/checkslip.php', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        },
+        body: params
+      });
+      const text = await slipRes.text();
+      try {
+        JSON.parse(text);
         results.checkslip = 'online';
+      } catch(e) {
+        if (slipRes.status === 403 || text.includes('Cloudflare') || text.includes('Just a moment')) {
+          results.checkslip = 'blocked';
+        } else {
+          results.checkslip = 'offline';
+        }
       }
     } catch(e) {}
+
     
     res.json(results);
   } catch(e) {
@@ -426,6 +469,7 @@ app.post("/api/topup/true-wallet", async (req: express.Request, res: express.Res
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
       body: params
     });
@@ -459,6 +503,7 @@ app.post("/api/topup/bank", async (req: express.Request, res: express.Response) 
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
       body: params
     });
@@ -722,6 +767,7 @@ app.post("/api/topup/game/process", async (req: express.Request, res: express.Re
       method: "POST",
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
       body: params.toString()
     });
@@ -748,6 +794,7 @@ app.post("/api/topup/game/status", async (req: express.Request, res: express.Res
       method: "POST",
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
       body: params.toString()
     });
