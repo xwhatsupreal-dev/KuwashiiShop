@@ -2981,94 +2981,110 @@ export default function App() {
                 {/* Category Cards Section */}
                 {selectedCategory === "all" && !search ? (
                   <>
-                    <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {!currentUser && globalStats?.announcement_settings?.loginBannerUrl && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setAppScreen("LOGIN")}
-                          className="cursor-pointer rounded-2xl overflow-hidden border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)] group"
-                        >
-                          <img 
-                            src={globalStats.announcement_settings.loginBannerUrl} 
-                            alt="Login" 
-                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
-                          />
-                        </motion.div>
-                      )}
-                      
-                      {globalStats?.announcement_settings?.productsBannerUrl && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setSelectedCategory("all")}
-                          className="cursor-pointer rounded-2xl overflow-hidden border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)] group"
-                        >
-                          <img 
-                            src={globalStats.announcement_settings.productsBannerUrl} 
-                            alt="All Products" 
-                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
-                          />
-                        </motion.div>
-                      )}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2 whitespace-nowrap">
+                          <span className="bg-zinc-800/80 p-1.5 rounded-lg border border-zinc-700/50">⭐</span> เมนูทั่วไป
+                        </h2>
+                        <div className="h-px bg-gradient-to-r from-zinc-700/80 to-transparent flex-1"></div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {!currentUser && globalStats?.announcement_settings?.loginBannerUrl && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setAppScreen("LOGIN")}
+                            className="cursor-pointer rounded-2xl overflow-hidden border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)] group"
+                          >
+                            <img 
+                              src={globalStats.announcement_settings.loginBannerUrl} 
+                              alt="Login" 
+                              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
+                            />
+                          </motion.div>
+                        )}
+                        
+                        {globalStats?.announcement_settings?.productsBannerUrl && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setSelectedCategory("all")}
+                            className="cursor-pointer rounded-2xl overflow-hidden border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)] group"
+                          >
+                            <img 
+                              src={globalStats.announcement_settings.productsBannerUrl} 
+                              alt="All Products" 
+                              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
+                            />
+                          </motion.div>
+                        )}
 
-                      {globalStats?.announcement_settings?.topupBannerUrl && (
+                        {globalStats?.announcement_settings?.topupBannerUrl && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setAppScreen("TOPUP")}
+                            className="cursor-pointer rounded-2xl overflow-hidden border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] group"
+                          >
+                            <img 
+                              src={globalStats.announcement_settings.topupBannerUrl} 
+                              alt="Topup" 
+                              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
+                            />
+                          </motion.div>
+                        )}
+
+                        {globalStats?.announcement_settings?.contactBannerUrl && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => window.open("https://discord.gg/AQKtJpvyva", "_blank")}
+                            className="cursor-pointer rounded-2xl overflow-hidden border border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)] group"
+                          >
+                            <img 
+                              src={globalStats.announcement_settings.contactBannerUrl} 
+                              alt="Contact Admin" 
+                              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
+                            />
+                          </motion.div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-4 mb-4 mt-8">
+                        <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2 whitespace-nowrap">
+                          <span className="bg-zinc-800/80 p-1.5 rounded-lg border border-zinc-700/50">🎮</span> เมนูเติมเกม
+                        </h2>
+                        <div className="h-px bg-gradient-to-r from-zinc-700/80 to-transparent flex-1"></div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <motion.div 
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 }}
+                          transition={{ delay: 0.4 }}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => setAppScreen("TOPUP")}
-                          className="cursor-pointer rounded-2xl overflow-hidden border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] group"
+                          onClick={() => {
+                            setAppScreen("GAMETOPUP");
+                          }}
+                          className="cursor-pointer rounded-2xl overflow-hidden border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] group bg-gradient-to-br from-cyan-600 to-blue-800 flex items-center justify-center aspect-[2/1]"
                         >
-                          <img 
-                            src={globalStats.announcement_settings.topupBannerUrl} 
-                            alt="Topup" 
-                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
-                          />
+                          <div className="flex flex-col items-center justify-center gap-2 text-white p-4 text-center">
+                            <Gamepad2 className="w-8 h-8 sm:w-10 sm:h-10 opacity-90 group-hover:scale-110 transition-transform" />
+                            <span className="font-bold text-sm sm:text-base">บริการรับเติมเกม</span>
+                          </div>
                         </motion.div>
-                      )}
-
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          setAppScreen("GAMETOPUP");
-                        }}
-                        className="cursor-pointer rounded-2xl overflow-hidden border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] group bg-gradient-to-br from-cyan-600 to-blue-800 flex items-center justify-center aspect-[2/1]"
-                      >
-                        <div className="flex flex-col items-center justify-center gap-2 text-white p-4 text-center">
-                          <Gamepad2 className="w-8 h-8 sm:w-10 sm:h-10 opacity-90 group-hover:scale-110 transition-transform" />
-                          <span className="font-bold text-sm sm:text-base">บริการรับเติมเกม</span>
-                        </div>
-                      </motion.div>
-
-                      {globalStats?.announcement_settings?.contactBannerUrl && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => window.open("https://discord.gg/AQKtJpvyva", "_blank")}
-                          className="cursor-pointer rounded-2xl overflow-hidden border border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)] group"
-                        >
-                          <img 
-                            src={globalStats.announcement_settings.contactBannerUrl} 
-                            alt="Contact Admin" 
-                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity aspect-[2/1]"
-                          />
-                        </motion.div>
-                      )}
+                      </div>
                     </div>
                     <RecentPurchases appScreen={appScreen} items={items} />
                     <CategoryList
