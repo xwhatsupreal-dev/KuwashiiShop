@@ -943,6 +943,7 @@ export default function App() {
                   // Check if the slip's receiver matches the phone number
                   if (!receiverStr.includes("0928886584") && !receiverStr.includes("886584") && !receiverStr.includes("6584")) {
                      setTopupError("สลิปนี้ไม่ได้โอนเงินเข้าเบอร์ 092-888-6584 ของร้านครับ");
+                     showToast("สลิปนี้ไม่ได้โอนเงินเข้าเบอร์ 092-888-6584 ของร้านครับ", "error");
                      setIsProcessingTopup(false);
                      return;
                   }
@@ -967,6 +968,7 @@ export default function App() {
                   }]);
                   
                   setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
+                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success");
                   window.dispatchEvent(new Event("sync-update"));
                   fetchUser(activeUsername);
                   setTopupCode("");
@@ -978,9 +980,11 @@ export default function App() {
                   }, 2000);
                 } else {
                   setTopupError(data.message || data.error?.message || "สลิปไม่ถูกต้อง หรือเช็คไม่ได้");
+                  showToast(data.message || data.error?.message || "สลิปไม่ถูกต้อง หรือเช็คไม่ได้", "error");
                 }
             } catch(e) {
                 setTopupError("การเชื่อมต่อมีปัญหา กรุณาลองใหม่");
+                showToast("การเชื่อมต่อมีปัญหา กรุณาลองใหม่", "error");
             } finally {
                 setIsProcessingTopup(false);
             }
@@ -1028,6 +1032,7 @@ export default function App() {
                   // Bank account: 2133814461 (ธีรสิทธิ์ สุวรรณศรี)
                   if (!receiverStr.includes("2133814461") && !receiverStr.includes("14461") && !receiverStr.includes("ธีรสิทธิ์")) {
                      setTopupError("สลิปนี้ไม่ได้โอนเงินเข้าบัญชีของร้าน (ธีรสิทธิ์ สุวรรณศรี) ครับ");
+                     showToast("สลิปนี้ไม่ได้โอนเงินเข้าบัญชีของร้าน (ธีรสิทธิ์ สุวรรณศรี) ครับ", "error");
                      setIsProcessingTopup(false);
                      return;
                   }
@@ -1057,6 +1062,7 @@ export default function App() {
                   }]);
                   
                   setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
+                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success");
                   window.dispatchEvent(new Event("sync-update"));
                   fetchUser(activeUsername);
                   setTopupCode("");
@@ -1068,9 +1074,11 @@ export default function App() {
                   }, 2000);
                 } else {
                   setTopupError(data.message || data.error?.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้");
+                  showToast(data.message || data.error?.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้", "error");
                 }
             } catch(e) {
                 setTopupError("การเชื่อมต่อมีปัญหา กรุณาลองใหม่");
+                showToast("การเชื่อมต่อมีปัญหา กรุณาลองใหม่", "error");
             } finally {
                 setIsProcessingTopup(false);
             }
@@ -2842,8 +2850,8 @@ export default function App() {
                 handleTopup={handleTopupSubmit}
                 setAppScreen={setAppScreen}
                 globalStats={globalStats}
-                successMessage={topupSuccessMessage}
-                errorMessage={topupError}
+                
+                
               />
             ) : (
               <>

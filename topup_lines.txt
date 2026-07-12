@@ -1,0 +1,239 @@
+     1	import React from 'react';
+     2	import { motion, AnimatePresence } from 'motion/react';
+     3	import { 
+     4	  Send, AlertTriangle, QrCode, Landmark, Copy, Download, Plus, CheckCircle
+     5	} from 'lucide-react';
+     6	
+     7	export const TopupPage = ({
+     8	  topupModalStep,
+     9	  setTopupModalStep,
+    10	  handleTopup,
+    11	  isProcessingTopup,
+    12	  angpaoCode,
+    13	  setAngpaoCode,
+    14	  slipFile,
+    15	  setSlipFile,
+    16	  topupTarget,
+    17	  globalStats,
+    18	  setAppScreen,
+    19	  tosAccepted,
+    20	  setTosAccepted,
+    21	  setShowTopupTos,
+    22	  
+    23	}: any) => {
+    24	
+    25	  let parsedSettings: any = {};
+    26	  if (globalStats?.announcement_settings) {
+    27	    if (typeof globalStats.announcement_settings === 'string') {
+    28	      try { parsedSettings = JSON.parse(globalStats.announcement_settings); } catch(e) { parsedSettings = {}; }
+    29	    } else {
+    30	      parsedSettings = globalStats.announcement_settings;
+    31	    }
+    32	  }
+    33	
+    34	  const angpaoActive = parsedSettings.topup_angpao_status !== false;
+    35	  const qrActive = parsedSettings.topup_qrcode_status !== false;
+    36	
+    37	  return (
+    38	    <motion.div 
+    39	      initial={{ opacity: 0, y: 10 }}
+    40	      animate={{ opacity: 1, y: 0 }}
+    41	      exit={{ opacity: 0, y: -10 }}
+    42	      className="w-full max-w-xl mx-auto py-8 flex flex-col justify-start px-4 sm:px-0"
+    43	    >
+    44	      <motion.div 
+    45	        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
+    46	        className="mb-8 mt-2 text-center text-white relative flex flex-col items-center"
+    47	      >
+    48	        <button 
+    49	          onClick={() => {
+    50	            setAngpaoCode("");
+    51	            setTopupModalStep("select");
+    52	            setAppScreen("SHOP");
+    53	          }}
+    54	          className="absolute left-0 top-1 text-zinc-400 hover:text-white flex items-center justify-center p-2 rounded-full hover:bg-white/5 transition-colors"
+    55	        >
+    56	          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    57	        </button>
+    58	        <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center justify-center gap-3">
+    59	          <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-transparent bg-clip-text">
+    60	            {topupTarget === 'balance_rov' ? 'เติมเงิน ROV' : 'เติมเงินเข้าระบบ'}
+    61	          </span>
+    62	        </h2>
+    63	        <p className="text-zinc-400 mt-2 text-sm sm:text-base max-w-[280px] sm:max-w-md mx-auto">
+    64	          เลือกช่องทางการเติมเงินด้านล่าง
+    65	        </p>
+    66	      </motion.div>
+    67	
+    68	      
+    69	
+    70	             <form onSubmit={(e) => { e.preventDefault(); handleTopup(e); }}>
+    71	
+    72	             {topupModalStep === "bank" && (
+    73	                <div className="mb-5 bg-zinc-800/50 p-6 rounded-2xl border border-zinc-700/50 flex flex-col items-center text-center">
+    74	                  {(() => {
+    75	                    const isRov = topupTarget === 'balance_rov';
+    76	                    const qrUrl = isRov ? 'https://img1.pic.in.th/images/1000113791.jpg' : parsedSettings.topup_bank_qr_image;
+    77	                    const bName = isRov ? 'Prompt Pay' : parsedSettings.topup_bank_name;
+    78	                    const bAcc = isRov ? null : parsedSettings.topup_bank_account_no;
+    79	                    const bAccName = isRov ? null : parsedSettings.topup_qrcode_name;
+    80	
+    81	                    return (
+    82	                      <>
+    83	                        {qrUrl ? (
+    84	                          <div className="flex flex-col items-center gap-3 mb-4">
+    85	                            <div className="w-48 h-48 bg-white p-2 rounded-xl relative overflow-hidden border-2 border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+    86	                              <img src={qrUrl} alt="QR Code" className="w-full h-full object-contain rounded-lg" />
+    87	                            </div>
+    88	                            <button
+    89	                              type="button"
+    90	                              onClick={async (e) => {
+    91	                                e.preventDefault();
+    92	                                try {
+    93	                                  const response = await fetch(`/api/proxy-image?url=${encodeURIComponent(qrUrl)}`);
+    94	                                  if (!response.ok) throw new Error('Network response was not ok');
+    95	                                  const blob = await response.blob();
+    96	                                  const url = window.URL.createObjectURL(blob);
+    97	                                  const link = document.createElement('a');
+    98	                                  link.href = url;
+    99	                                  link.download = 'qrcode_bank.jpg';
+   100	                                  document.body.appendChild(link);
+   101	                                  link.click();
+   102	                                  document.body.removeChild(link);
+   103	                                  window.URL.revokeObjectURL(url);
+   104	                                } catch (error) {
+   105	                                  console.error('Download failed:', error);
+   106	                                }
+   107	                              }}
+   108	                              className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1.5 transition-colors"
+   109	                            >
+   110	                              <Download className="w-3.5 h-3.5" />
+   111	                              บันทึกคิวอาร์โค้ด
+   112	                            </button>
+   113	                          </div>
+   114	                        ) : (
+   115	                           <div className="w-48 h-48 bg-zinc-800/80 rounded-xl mb-4 flex items-center justify-center border-2 border-zinc-700/50">
+   116	                             <QrCode className="w-12 h-12 text-zinc-500 mb-2" />
+   117	                             <p className="text-zinc-500 text-xs">ไม่ได้ตั้งค่า QR Code</p>
+   118	                           </div>
+   119	                        )}
+   120	                        <div className="bg-black/40 rounded-xl p-4 w-full border border-emerald-500/10">
+   121	                          <p className="text-emerald-400 font-bold mb-3 flex items-center justify-center gap-2 text-sm">
+   122	                            <Landmark className="w-4 h-4" />
+   123	                            {bName}
+   124	                          </p>
+   125	                          {bAccName && (
+   126	                            <div className="flex justify-between items-center py-2 border-b border-white/5 mb-1">
+   127	                              <span className="text-zinc-400 text-xs">ชื่อบัญชี</span>
+   128	                              <span className="text-white font-medium text-xs sm:text-sm">{bAccName}</span>
+   129	                            </div>
+   130	                          )}
+   131	                          {bAcc && (
+   132	                            <div className="flex justify-between items-center py-2">
+   133	                              <span className="text-zinc-400 text-xs">เลขบัญชี</span>
+   134	                              <div className="flex items-center gap-2">
+   135	                                <span className="text-white font-mono text-sm tracking-wider">{bAcc}</span>
+   136	                                <button 
+   137	                                  type="button"
+   138	                                  onClick={(e) => {
+   139	                                    e.preventDefault();
+   140	                                    navigator.clipboard.writeText(bAcc);
+   141	                                  }}
+   142	                                  className="text-emerald-500 hover:text-emerald-400 p-1"
+   143	                                >
+   144	                                  <Copy className="w-3.5 h-3.5" />
+   145	                                </button>
+   146	                              </div>
+   147	                            </div>
+   148	                          )}
+   149	                        </div>
+   150	                      </>
+   151	                    )
+   152	                  })()}
+   153	                </div>
+   154	             )}
+   155	
+   156	             {topupModalStep === "coupon" && (
+   157	               <input 
+   158	                 type="text" 
+   159	                 value={angpaoCode}
+   160	                 onChange={(e) => setAngpaoCode(e.target.value)}
+   161	                 className="w-full bg-black/50 border border-zinc-800 rounded-xl px-4 sm:px-5 py-3 sm:py-4 focus:outline-none focus:border-[#0ea5e9] focus:ring-1 focus:ring-[#0ea5e9] transition-all text-center mb-5 text-sm sm:text-base placeholder-zinc-600 uppercase"
+   162	                 placeholder="ใส่รหัสคูปองที่นี่..."
+   163	                 style={{ textTransform: 'uppercase' }}
+   164	               />
+   165	             )}
+   166	
+   167	             {(topupModalStep === "bank" || topupModalStep === "angpao") && (
+   168	               <>
+   169	                 <div className="relative border-2 border-dashed border-zinc-700 bg-black/50 rounded-xl p-5 sm:p-6 text-center hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all mb-5 group cursor-pointer">
+   170	                   <input 
+   171	                     type="file" 
+   172	                     accept="image/*"
+   173	                     onChange={(e) => {
+   174	                       const file = e.target.files?.[0];
+   175	                       if (file) {
+   176	                         setSlipFile(file);
+   177	                       }
+   178	                     }}
+   179	                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+   180	                   />
+   181	                   <div className="flex flex-col items-center pointer-events-none relative z-10">
+   182	                      {slipFile ? (
+   183	                        <>
+   184	                          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500/20 rounded-full flex items-center justify-center mb-3">
+   185	                            <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400" />
+   186	                          </div>
+   187	                          <p className="text-emerald-400 font-bold mb-1 text-xs sm:text-sm truncate w-full max-w-[200px]">{slipFile.name}</p>
+   188	                          <p className="text-emerald-500/70 text-[11px] sm:text-xs">{(slipFile.size / 1024 / 1024).toFixed(2)} MB • แตะเพื่อเปลี่ยนรูป</p>
+   189	                        </>
+   190	                      ) : (
+   191	                        <>
+   192	                          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-zinc-800 group-hover:bg-emerald-500/20 rounded-full flex items-center justify-center mb-3 transition-colors">
+   193	                            <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-zinc-400 group-hover:text-emerald-400" />
+   194	                          </div>
+   195	                          <p className="text-zinc-300 font-bold mb-1 text-xs sm:text-sm">
+   196	                            {topupModalStep === "bank" ? "แตะเพื่อเลือกรูปภาพ หรือลากมาวาง" : "แตะเพื่อเลือกสลิป TrueMoney Wallet"}
+   197	                          </p>
+   198	                          <p className="text-zinc-500 text-[11px] sm:text-xs">PNG, JPG ขนาดไม่เกิน 5MB</p>
+   199	                        </>
+   200	                      )}
+   201	                   </div>
+   202	                 </div>
+   203	               </>
+   204	             )}
+   205	
+   206	             <div className="flex items-center justify-center gap-2 mb-4">
+   207	               <input
+   208	                 type="checkbox"
+   209	                 id="tos"
+   210	                 checked={tosAccepted}
+   211	                 onChange={(e) => setTosAccepted(e.target.checked)}
+   212	                 className="w-4 h-4 rounded border-zinc-700 bg-black/50 accent-[#0ea5e9] cursor-pointer"
+   213	               />
+   214	               <label htmlFor="tos" className="text-xs sm:text-sm text-zinc-300 cursor-pointer select-none">
+   215	                 ฉันยอมรับ <span className="text-[#0ea5e9] hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTopupTos(true); }}>ข้อกำหนดในการให้บริการ</span>
+   216	               </label>
+   217	             </div>
+   218	
+   219	             <button 
+   220	               type="submit"
+   221	               disabled={isProcessingTopup || ((topupModalStep === "bank" || topupModalStep === "angpao") && !slipFile) || (topupModalStep === "coupon" && !angpaoCode)}
+   222	               className={`w-full ${topupModalStep === "angpao" ? "bg-[#ff203a] hover:bg-[#ff4d63] shadow-[#ff203a]/20" : topupModalStep === "bank" ? "bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20" : "bg-[#0ea5e9] hover:bg-sky-500 shadow-[#0ea5e9]/20"} disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 sm:py-4 rounded-xl text-sm sm:text-base flex items-center justify-center gap-2 transition-colors shadow-lg`}
+   223	             >
+   224	               {isProcessingTopup ? (
+   225	                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+   226	               ) : (
+   227	                 <>
+   228	                   <Send className="w-5 h-5" /> {topupModalStep === "angpao" ? "ยืนยันสลิป TrueMoney" : topupModalStep === "bank" ? "ยืนยันสลิปธนาคาร" : "ยืนยันรหัสคูปอง"}
+   229	                 </>
+   230	               )}
+   231	             </button>
+   232	             </form>
+   233	          </div>
+   234	        </motion.div>
+   235	      )}
+   236	      </AnimatePresence>
+   237	    </motion.div>
+   238	  );
+   239	};
