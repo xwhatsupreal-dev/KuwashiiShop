@@ -18,7 +18,9 @@ export const TopupPage = ({
   setAppScreen,
   tosAccepted,
   setTosAccepted,
-  setShowTopupTos
+  setShowTopupTos,
+  errorMessage,
+  successMessage
 }: any) => {
 
   let parsedSettings: any = {};
@@ -182,6 +184,35 @@ export const TopupPage = ({
           )}
 
           <div>
+             <AnimatePresence mode="wait">
+               {errorMessage && (
+                 <motion.div
+                   initial={{ opacity: 0, y: -10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0, y: -10 }}
+                   className="mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center"
+                 >
+                   <p className="text-sm font-bold text-red-500 flex items-center justify-center gap-2">
+                     <AlertTriangle className="w-5 h-5" />
+                     {errorMessage}
+                   </p>
+                 </motion.div>
+               )}
+               {successMessage && (
+                 <motion.div
+                   initial={{ opacity: 0, y: -10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0, y: -10 }}
+                   className="mb-6 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-center"
+                 >
+                   <p className="text-sm font-bold text-emerald-400 flex items-center justify-center gap-2">
+                     <CheckCircle className="w-5 h-5" />
+                     {successMessage}
+                   </p>
+                 </motion.div>
+               )}
+             </AnimatePresence>
+
              <form onSubmit={(e) => { e.preventDefault(); handleTopup(e); }}>
 
              {topupModalStep === "bank" && (

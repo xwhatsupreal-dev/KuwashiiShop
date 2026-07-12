@@ -786,11 +786,11 @@ export default function App() {
       showToast("กรุณายอมรับข้อกำหนดในการให้บริการก่อนดำเนินการต่อ", "error");
       return;
     }
-    if (topupModalStep !== "bank" && !topupCode.trim()) {
+    if (topupModalStep === "coupon" && !topupCode.trim()) {
       showToast("กรุณากรอกข้อมูลเพื่อเติมเงิน", "error");
       return;
     }
-    if (topupModalStep === "bank" && !slipFile) {
+    if ((topupModalStep === "bank" || topupModalStep === "angpao") && !slipFile) {
       showToast("กรุณาอัปโหลดรูปภาพสลิปโอนเงิน", "error");
       return;
     }
@@ -956,9 +956,9 @@ export default function App() {
                   
                   const balanceField = topupTarget;
                   const userBalance = Number(liveUser[balanceField] || 0);
-                  await supabase.from("users").update({ [balanceField]: userBalance + amount }).eq("username", activeUsername);
+                  await supabase.from("profiles").update({ [balanceField]: userBalance + amount }).eq("username", activeUsername);
                   
-                  await supabase.from("topup_history").insert([{
+                  await supabase.from("topups").insert([{
                     username: activeUsername,
                     amount: amount,
                     method: 'truewallet_slip',
@@ -967,6 +967,7 @@ export default function App() {
                   }]);
                   
                   setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
+                  window.dispatchEvent(new Event("sync-update"));
                   fetchUser(activeUsername);
                   setTopupCode("");
                   setSlipFile(null);
@@ -1045,9 +1046,9 @@ export default function App() {
                   
                   const balanceField = topupTarget;
                   const userBalance = Number(liveUser[balanceField] || 0);
-                  await supabase.from("users").update({ [balanceField]: userBalance + amount }).eq("username", activeUsername);
+                  await supabase.from("profiles").update({ [balanceField]: userBalance + amount }).eq("username", activeUsername);
                   
-                  await supabase.from("topup_history").insert([{
+                  await supabase.from("topups").insert([{
                     username: activeUsername,
                     amount: amount,
                     method: 'bank_slip',
@@ -1056,6 +1057,7 @@ export default function App() {
                   }]);
                   
                   setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
+                  window.dispatchEvent(new Event("sync-update"));
                   fetchUser(activeUsername);
                   setTopupCode("");
                   setSlipFile(null);
@@ -2826,7 +2828,11 @@ export default function App() {
                 tosAccepted={tosAccepted}
                 setTosAccepted={setTosAccepted}
                 topupModalStep={topupModalStep}
-                setTopupModalStep={setTopupModalStep}
+                setTopupModalStep={(step) => {
+                  setTopupError("");
+                  setTopupSuccessMessage("");
+                  setTopupModalStep(step);
+                }}
                 angpaoCode={topupCode}
                 setAngpaoCode={setTopupCode}
                 slipFile={slipFile}
@@ -2837,6 +2843,7 @@ export default function App() {
                 setAppScreen={setAppScreen}
                 globalStats={globalStats}
                 successMessage={topupSuccessMessage}
+                errorMessage={topupError}
               />
             ) : (
               <>
