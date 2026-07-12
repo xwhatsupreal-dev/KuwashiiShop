@@ -1,4 +1,6 @@
-import React from 'react';
+const fs = require('fs');
+
+const code = `import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Send, AlertTriangle, QrCode, Landmark, Copy, Download, Plus, CheckCircle
@@ -146,7 +148,7 @@ export const TopupPage = ({
             <div className="mb-6 bg-[#ff203a]/10 border border-[#ff203a]/20 rounded-xl p-6 text-center font-sans">
                {(() => {
                     const isRov = topupTarget === 'balance_rov';
-                    const angpaoPhone = isRov ? parsedSettings.rov_topup_angpao_phone : (parsedSettings.topup_angpao_phone || "0928886584");
+                    const angpaoPhone = isRov ? parsedSettings.rov_topup_angpao_phone : parsedSettings.topup_angpao_phone;
                     return (
                         <>
                            <p className="text-sm sm:text-base text-[#ff6b7e] font-bold mb-1">โอนเงินเข้า TrueMoney Wallet</p>
@@ -202,7 +204,7 @@ export const TopupPage = ({
                               onClick={async (e) => {
                                 e.preventDefault();
                                 try {
-                                  const response = await fetch(`/api/proxy-image?url=${encodeURIComponent(qrUrl)}`);
+                                  const response = await fetch(\`/api/proxy-image?url=\${encodeURIComponent(qrUrl)}\`);
                                   if (!response.ok) throw new Error('Network response was not ok');
                                   const blob = await response.blob();
                                   const url = window.URL.createObjectURL(blob);
@@ -318,7 +320,7 @@ export const TopupPage = ({
              <button 
                type="submit"
                disabled={isProcessingTopup || ((topupModalStep === "bank" || topupModalStep === "angpao") && !slipFile) || (topupModalStep === "coupon" && !angpaoCode)}
-               className={`w-full ${topupModalStep === "angpao" ? "bg-[#ff203a] hover:bg-[#ff4d63] shadow-[#ff203a]/20" : topupModalStep === "bank" ? "bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20" : "bg-[#0ea5e9] hover:bg-sky-500 shadow-[#0ea5e9]/20"} disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 sm:py-4 rounded-xl text-sm sm:text-base flex items-center justify-center gap-2 transition-colors shadow-lg`}
+               className={\`w-full \${topupModalStep === "angpao" ? "bg-[#ff203a] hover:bg-[#ff4d63] shadow-[#ff203a]/20" : topupModalStep === "bank" ? "bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20" : "bg-[#0ea5e9] hover:bg-sky-500 shadow-[#0ea5e9]/20"} disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 sm:py-4 rounded-xl text-sm sm:text-base flex items-center justify-center gap-2 transition-colors shadow-lg\`}
              >
                {isProcessingTopup ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -336,3 +338,5 @@ export const TopupPage = ({
     </motion.div>
   );
 };
+`;
+fs.writeFileSync('src/components/TopupPage.tsx', code);

@@ -911,119 +911,89 @@ export default function App() {
     }
 
     // Angpao topup
+        // Angpao topup
     if (topupModalStep === "angpao") {
-      const receiveAngpao = async () => {
+      if (!slipFile) {
+        showToast("กรุณาอัปโหลดสลิป TrueMoney Wallet", "error");
+        setIsProcessingTopup(false);
+        return;
+      }
+      const processAngpaoSlip = async () => {
         try {
-          setTopupError(""); // Clear earlier errors
-          const res = await fetch("/api/topup/true-wallet", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              gift_link: topupCode.trim(),
-              game: appScreen,
-            }),
-          });
+          setTopupError("");
+          
+          const reader = new FileReader();
+          reader.readAsDataURL(slipFile);
+          reader.onload = async () => {
+            const base64 = reader.result;
+            try {
+                const checkRes = await fetch("/api/topup/true-wallet", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ base64 })
+                });
+                const data = await checkRes.json();
+                
+                if (data.status === "success" || data.success) {
+                  
+                  const slipData = data.data || data;
+                  
+                  // Receiver Validation for TrueMoney
+                  const receiverStr = JSON.stringify(slipData.receiver || slipData).replace(/[- ]/g, '');
+                  // Check if the slip's receiver matches the phone number
+                  if (!receiverStr.includes("0928886584") && !receiverStr.includes("886584") && !receiverStr.includes("6584")) {
+                     setTopupError("สลิปนี้ไม่ได้โอนเงินเข้าเบอร์ 092-888-6584 ของร้านครับ");
+                     setIsProcessingTopup(false);
+                     return;
+                  }
+                  
+                  const amount = parseFloat(slipData.amountInSlip || slipData.amount || data.amount) || 0;
 
-          const data = await res.json();
-          if (data.status === "success") {
-            const rawAmount = parseFloat(data.amount) || 0;
-            const fee = Number((rawAmount * 0.029).toFixed(2));
-            const amount = Number((rawAmount - fee).toFixed(2));
-            const ownerName = data.owner_profile || "ไม่ทราบชื่อ";
-
-            const configData = await getSystemConfig();
-            const currentRev = configData
-              ? Number(configData.global_rev_astd || 0)
-              : 0;
-            await supabase
-              .from("system_config")
-              .update({ global_rev_astd: currentRev + amount })
-              .eq("id", "main");
-
-            const balanceField = topupTarget;
-            const userBalance = Number(liveUser[balanceField] || 0);
-            const newBalance = userBalance + amount;
-            await supabase
-              .from("profiles")
-              .update({ [balanceField]: newBalance })
-              .eq("username", activeUsername);
-            const { error: topupError } = await supabase.from("topups").insert([
-              {
-                username: activeUsername,
-                amount: amount,
-                method: `TrueMoney (Angpao) - ${topupCode.trim()}`,
-              },
-            ]);
-            if (topupError) {
-              await supabase.from("topups").insert([
-                {
-                  username: activeUsername,
-                  amount: amount,
-                  method: `TrueMoney (Angpao) - ${topupCode.trim()}`,
-                },
-              ]);
+                  
+                  const configData = await getSystemConfig();
+                  const currentRev = configData ? Number(configData.global_rev_astd || 0) : 0;
+                  await supabase.from("system_config").update({ global_rev_astd: currentRev + amount }).eq("id", "main");
+                  
+                  const balanceField = topupTarget;
+                  const userBalance = Number(liveUser[balanceField] || 0);
+                  await supabase.from("users").update({ [balanceField]: userBalance + amount }).eq("username", activeUsername);
+                  
+                  await supabase.from("topup_history").insert([{
+                    username: activeUsername,
+                    amount: amount,
+                    method: 'truewallet_slip',
+                    ref_id: slipData.rawSlip?.transactionId || 'wallet-' + Date.now(),
+                    date: new Date().toISOString()
+                  }]);
+                  
+                  setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
+                  fetchUser(activeUsername);
+                  setTopupCode("");
+                  setSlipFile(null);
+                  setTimeout(() => {
+                    setTopupSuccessMessage("");
+                    setTopupModalStep("select");
+                    setAppScreen("SHOP");
+                  }, 2000);
+                } else {
+                  setTopupError(data.message || data.error?.message || "สลิปไม่ถูกต้อง หรือเช็คไม่ได้");
+                }
+            } catch(e) {
+                setTopupError("การเชื่อมต่อมีปัญหา กรุณาลองใหม่");
+            } finally {
+                setIsProcessingTopup(false);
             }
-
-            window.dispatchEvent(new Event("sync-update"));
-
-            const msg = `เติมเงินสำเร็จ! จำนวน ${amount.toLocaleString()} บาท\n(หักค่าธรรมเนียม ${fee} บาท)`;
-            showToast(`เติมเงินสำเร็จ ${amount} บาท`, "success");
-            setTopupSuccessMessage(msg);
-            setTopupModalStep("success");
-            setTopupCode("");
-            if (currentUser) setCurrentUser({ ...currentUser });
-            sendDiscordTopupEmbed(
-              activeUsername,
-              amount,
-              "angpao",
-              newBalance,
-              true,
-              appScreen,
-            );
-
-            // รอ 2 วินาทีแล้วโหลดกลับหน้าหลัก
-            setTimeout(() => {
-              setTopupModalStep("select");
-              setAppScreen("SHOP");
-            }, 2000);
-          } else {
-            let errorMsg = String(
-              data.message || "ซองของขวัญไม่ถูกต้องหรือถูกใช้งานไปแล้ว",
-            );
-            if (errorMsg.includes("ติดต่อผู้ดูแลระบบ")) {
-              errorMsg += " ";
-            }
-            if (errorMsg.includes("http")) {
-              errorMsg = errorMsg.replace(
-                /https:\/\/discord\.gg\/[a-zA-Z0-9]+/g,
-                "https://discord.gg/AQKtJpvyva",
-              );
-            }
-            setTopupError(`API แจ้งเตือน: ${errorMsg}`);
-            showToast(errorMsg, "error");
-            sendDiscordTopupEmbed(
-              activeUsername,
-              0,
-              "angpao",
-              liveUser.balance || 0,
-              false,
-              appScreen,
-            );
-          }
+          };
         } catch (error: any) {
-          console.error("Topup error:", error);
-          const catchErr = "ระบบเครือข่ายมีปัญหา หรือเรียกใช้ API ไม่ได้";
-          setTopupError(catchErr);
-          showToast(catchErr, "error");
-        } finally {
+          showToast("ระบบขัดข้อง กรุณาลองใหม่", "error");
           setIsProcessingTopup(false);
         }
       };
-      receiveAngpao();
+      processAngpaoSlip();
       return;
     }
 
-    if (topupModalStep === "bank") {
+        if (topupModalStep === "bank") {
       if (!slipFile) {
         showToast("กรุณาแนบสลิปการโอนเงิน", "error");
         setIsProcessingTopup(false);
@@ -1033,218 +1003,65 @@ export default function App() {
       const processBankSlip = async () => {
         try {
           setTopupError("");
-
-          const qrcode_text = await readQRFromImage(slipFile);
-          if (!qrcode_text) {
-            showToast(
-              "สลิปการโอนเงินไม่ถูกต้อง คิวอาร์โค้ดไม่สมบูรณ์ หรือไม่มีข้อมูล",
-              "error",
-            );
-            setIsProcessingTopup(false);
-            return;
-          }
-
-          const checkRes = await fetch("/api/topup/bank", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              qrcode_text,
-            }),
-          });
-          const data = await checkRes.json();
-          if (
-            data.status === "success" ||
-            data.code === 200 ||
-            data.message === "เช็คสลิปสำเร็จ"
-          ) {
-            const slipData = data.data || data;
-            const amount =
-              parseFloat(
-                slipData.amount?.amount || slipData.amount || data.amount,
-              ) || 0;
-            const receiverName =
-              slipData.receiver?.name ||
-              slipData.receiver?.account_name ||
-              slipData.receiver_name ||
-              data.receiver_name ||
-              "ไม่ทราบชื่อ";
-            const senderName =
-              slipData.sender?.name ||
-              slipData.sender?.account_name ||
-              slipData.sender_name ||
-              data.sender_name ||
-              "ไม่ทราบชื่อ";
-            const transRef =
-              slipData.transRef ||
-              slipData.ref1 ||
-              data.transRef ||
-              data.ref1 ||
-              `UNKNOWN-${Date.now()}`;
-
-            if (amount <= 0) {
-              setTopupError("ไม่พบยอดเงินในสลิป หรือสลิปไม่สมบูรณ์");
-              showToast("ไม่พบยอดเงินในสลิป หรือสลิปไม่สมบูรณ์", "error");
-              setIsProcessingTopup(false);
-              return;
-            }
-
-            // Check receiver name if configured
-            let configName = "";
-            let settingsObj = globalStats?.announcement_settings || {};
-            if (typeof settingsObj === "string") {
-              try {
-                settingsObj = JSON.parse(settingsObj);
-              } catch (e) {}
-            }
-            configName = (settingsObj.topup_qrcode_name || "").trim();
-
-            if (receiverName !== "ไม่ทราบชื่อ") {
-              if (topupTarget === 'balance_rov') {
-                const requiredRovName = "บริษัท วันดีดี คอร์ปอเรชั่น จำกัด";
-                const cleanReceiver = receiverName.toLowerCase().replace(/\s/g, "");
-                const cleanRequired = requiredRovName.toLowerCase().replace(/\s/g, "");
+          
+          const reader = new FileReader();
+          reader.readAsDataURL(slipFile);
+          reader.onload = async () => {
+            const base64 = reader.result;
+            try {
+                const checkRes = await fetch("/api/topup/bank", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ base64 })
+                });
                 
-                if (!cleanReceiver.includes(cleanRequired) && !cleanRequired.includes(cleanReceiver)) {
-                   setTopupError(`ชื่อบัญชีผู้รับไม่ถูกต้อง (ต้องเป็น: ${requiredRovName})`);
-                   showToast(`สลิปนี้ถูกโอนไปยัง: ${receiverName}`, "error");
-                   setIsProcessingTopup(false);
-                   return;
+                const data = await checkRes.json();
+                
+                if (data.status === "success" || data.success) {
+                  const slipData = data.data || data;
+                  let amount = parseFloat(slipData.amount?.amount || slipData.amount || data.amount) || 0;
+                  
+                  // Handle Thunder Solution specific response format
+                  if (slipData.rawSlip && slipData.rawSlip.amount) {
+                      amount = parseFloat(slipData.rawSlip.amount.amount || slipData.rawSlip.amount) || amount;
+                  }
+                  
+                  const configData = await getSystemConfig();
+                  const currentRev = configData ? Number(configData.global_rev_astd || 0) : 0;
+                  await supabase.from("system_config").update({ global_rev_astd: currentRev + amount }).eq("id", "main");
+                  
+                  const balanceField = topupTarget;
+                  const userBalance = Number(liveUser[balanceField] || 0);
+                  await supabase.from("users").update({ [balanceField]: userBalance + amount }).eq("username", activeUsername);
+                  
+                  await supabase.from("topup_history").insert([{
+                    username: activeUsername,
+                    amount: amount,
+                    method: 'bank_slip',
+                    ref_id: slipData.rawSlip?.transRef || 'bank-' + Date.now(),
+                    date: new Date().toISOString()
+                  }]);
+                  
+                  setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
+                  fetchUser(activeUsername);
+                  setTopupCode("");
+                  setSlipFile(null);
+                  setTimeout(() => {
+                    setTopupSuccessMessage("");
+                    setTopupModalStep("select");
+                    setAppScreen("SHOP");
+                  }, 2000);
+                } else {
+                  setTopupError(data.message || data.error?.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้");
                 }
-              } else if (configName) {
-
-              const cleanReceiver = receiverName
-                .toLowerCase()
-                .replace(/\s/g, "");
-              const cleanConfig = configName.toLowerCase().replace(/\s/g, "");
-              // Allow fallback for the specific name requested
-              const hardcodeName1 = "ด.ช.ธีรสิทธิ์สุวรรณศรี";
-              const hardcodeName2 = "ด.ช.ธีรสิทธิ์ส";
-
-              if (
-                !cleanReceiver.includes(cleanConfig) &&
-                !cleanConfig.includes(cleanReceiver) &&
-                !cleanReceiver.includes(hardcodeName1) &&
-                !cleanReceiver.includes(hardcodeName2) &&
-                !hardcodeName1.includes(cleanReceiver)
-              ) {
-                setTopupError(
-                  `ชื่อบัญชีผู้รับไม่ถูกต้อง (ต้องเป็น: ${configName})`,
-                );
-                showToast(`สลิปนี้ถูกโอนไปยัง: ${receiverName}`, "error");
+            } catch(e) {
+                setTopupError("การเชื่อมต่อมีปัญหา กรุณาลองใหม่");
+            } finally {
                 setIsProcessingTopup(false);
-                return;
-              }
-              }
             }
-
-            const { data: existingTopup } = await supabase
-              .from("topups")
-              .select("id")
-              .eq("method", `Slip: ${transRef}`)
-              .single();
-
-            if (existingTopup) {
-              const errMsg = "สลิปนี้ถูกใช้งานไปแล้ว";
-              setTopupError(errMsg);
-              showToast(errMsg, "error");
-              setIsProcessingTopup(false);
-              sendDiscordTopupEmbed(
-                activeUsername,
-                0,
-                "bank",
-                liveUser.balance || 0,
-                false,
-                appScreen,
-              );
-              return;
-            }
-
-            const configData = await getSystemConfig();
-            const currentRev = configData
-              ? Number(configData.global_rev_astd || 0)
-              : 0;
-            await supabase
-              .from("system_config")
-              .update({ global_rev_astd: currentRev + amount })
-              .eq("id", "main");
-
-            const balanceField = topupTarget;
-            const userBalance = Number(liveUser[balanceField] || 0);
-            const newBalance = userBalance + amount;
-            await supabase
-              .from("profiles")
-              .update({ [balanceField]: newBalance })
-              .eq("username", activeUsername);
-
-            const { error: topupError } = await supabase.from("topups").insert([
-              {
-                username: activeUsername,
-                amount: amount,
-                method: `Slip: ${transRef}`,
-              },
-            ]);
-            if (topupError) {
-              await supabase.from("topups").insert([
-                {
-                  username: activeUsername,
-                  amount: amount,
-                  method: `Slip: ${transRef}`,
-                },
-              ]);
-            }
-
-            window.dispatchEvent(new Event("sync-update"));
-
-            const bankMsg = `เติมเงินด้วยสลิปสำเร็จ! จำนวน ${amount.toLocaleString()} บาท`;
-            showToast(bankMsg, "success");
-            setTopupSuccessMessage(bankMsg);
-            setTopupModalStep("success");
-            setSlipFile(null);
-            if (currentUser) setCurrentUser({ ...currentUser });
-            sendDiscordTopupEmbed(
-              activeUsername,
-              amount,
-              "bank",
-              newBalance,
-              true,
-              appScreen,
-            );
-
-            // รอ 2 วินาทีแล้วโหลดกลับหน้าหลัก
-            setTimeout(() => {
-              setTopupModalStep("select");
-              setAppScreen("SHOP");
-            }, 2000);
-          } else {
-            let finalErr = String(
-              data.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้",
-            );
-            if (finalErr.includes("ติดต่อผู้ดูแลระบบ")) {
-              finalErr += " ";
-            }
-            if (finalErr.includes("http")) {
-              finalErr = finalErr.replace(
-                /https:\/\/discord\.gg\/[a-zA-Z0-9]+/g,
-                "https://discord.gg/AQKtJpvyva",
-              );
-            }
-            setTopupError(`API แจ้งเตือน: ${finalErr}`);
-            showToast(finalErr, "error");
-            sendDiscordTopupEmbed(
-              activeUsername,
-              0,
-              "bank",
-              liveUser.balance || 0,
-              false,
-              appScreen,
-            );
-          }
+          };
         } catch (error: any) {
-          console.error("Bank check error:", error);
-          const catchErr = "ระบบเครือข่ายมีปัญหา หรือเรียกใช้ API ไม่ได้";
-          setTopupError(catchErr);
-          showToast(catchErr, "error");
-        } finally {
+          showToast("ระบบขัดข้อง กรุณาลองใหม่", "error");
           setIsProcessingTopup(false);
         }
       };

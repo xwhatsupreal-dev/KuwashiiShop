@@ -71,8 +71,8 @@ export const ApiStatusModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     <div className="flex items-center gap-3">
                       <Wallet className="w-5 h-5 text-rose-500 shrink-0" />
                       <div>
-                        <p className="text-white font-medium text-sm">API รับซองอั่งเปา</p>
-                        <p className="text-zinc-500 text-xs break-all">www.planariashop.com/api/truewallet.php</p>
+                        <p className="text-white font-medium text-sm">API ตรวจสอบสลิป TrueMoney</p>
+                        <p className="text-zinc-500 text-xs break-all">api.thunder.in.th/v2/verify/truewallet</p>
                       </div>
                     </div>
                     <div className="shrink-0 w-full sm:w-auto text-right">
@@ -97,7 +97,7 @@ export const ApiStatusModal: React.FC<Props> = ({ isOpen, onClose }) => {
                       <QrCode className="w-5 h-5 text-emerald-500 shrink-0" />
                       <div>
                         <p className="text-white font-medium text-sm">API ตรวจสอบสลิปธนาคาร</p>
-                        <p className="text-zinc-500 text-xs break-all">www.planariashop.com/api/checkslip.php</p>
+                        <p className="text-zinc-500 text-xs break-all">api.thunder.in.th/v2/verify/bank</p>
                       </div>
                     </div>
                     <div className="shrink-0 w-full sm:w-auto text-right">

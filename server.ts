@@ -387,62 +387,25 @@ app.get("/api/admin/check-api-status", async (req, res) => {
     const results = { angpao: 'offline', checkslip: 'offline' };
     
     
-    // Check Angpao API
+        // Check Thunder API
     try {
-      const params = new URLSearchParams();
-      params.append('keyapi', 'dummy');
-      params.append('phone', 'dummy');
-      params.append('gift_link', 'dummy');
-
-      const angpaoRes = await fetch('https://www.planariashop.com/api/truewallet.php', { 
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        },
-        body: params
-      });
-      const text = await angpaoRes.text();
-      try {
-        JSON.parse(text);
-        results.angpao = 'online';
-      } catch(e) {
-        if (angpaoRes.status === 403 || text.includes('Cloudflare') || text.includes('Just a moment')) {
-          results.angpao = 'blocked';
+        const response = await fetch('https://api.thunder.in.th/v2/info', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${process.env.THUNDER_API_KEY}`
+            }
+        });
+        if (response.ok) {
+            results.angpao = 'online';
+            results.checkslip = 'online';
         } else {
-          results.angpao = 'offline';
+            results.angpao = 'offline';
+            results.checkslip = 'offline';
         }
-      }
-    } catch(e) {}
-    
-    // Check CheckSlip API
-    try {
-      const params = new URLSearchParams();
-      params.append('keyapi', 'dummy');
-      params.append('qrcode_text', 'dummy');
-
-      const slipRes = await fetch('https://www.planariashop.com/api/checkslip.php', { 
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        },
-        body: params
-      });
-      const text = await slipRes.text();
-      try {
-        JSON.parse(text);
-        results.checkslip = 'online';
-      } catch(e) {
-        if (slipRes.status === 403 || text.includes('Cloudflare') || text.includes('Just a moment')) {
-          results.checkslip = 'blocked';
-        } else {
-          results.checkslip = 'offline';
-        }
-      }
-    } catch(e) {}
+    } catch(e) {
+        results.angpao = 'offline';
+        results.checkslip = 'offline';
+    }
 
     
     res.json(results);
@@ -454,153 +417,53 @@ app.get("/api/admin/check-api-status", async (req, res) => {
 // True Wallet Topup Proxy
 app.post("/api/topup/true-wallet", async (req: express.Request, res: express.Response) => {
   try {
-    const { gift_link, game } = req.body;
-    let targetPhone = '0928886584';
-
-
-    // We send form data
-    const params = new URLSearchParams();
-    params.append('keyapi', '86eb4596fbb506a43b1b63b5911a5c78');
-    params.append('phone', targetPhone);
-    params.append('gift_link', gift_link);
+    const { base64 } = req.body;
     
-    // Attempt fetch
-    const response = await fetch('https://www.planariashop.com/api/truewallet.php', {
+    const response = await fetch('https://api.thunder.in.th/v2/verify/truewallet', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.THUNDER_API_KEY}`
       },
-      body: params
+      body: JSON.stringify({ base64 })
     });
     
-    const text = await response.text();
-    try {
-      const data = JSON.parse(text);
-      res.json(data);
-    } catch(err) {
-      console.error("TrueWallet API returned non-JSON:", text.substring(0, 200));
-      res.status(502).json({ status: 'error', message: 'API เติมเงินขัดข้อง กรุณาติดต่อผู้ดูแลระบบ' });
-    }
-  } catch (err: any) {
-    console.error("TrueWallet Error:", err);
-    res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Wallet Check API Error:', error);
+    res.status(500).json({ status: "error", message: "API Error" });
   }
 });
 
 // Bank Slip Proxy
 app.post("/api/topup/bank", async (req: express.Request, res: express.Response) => {
   try {
-    const { qrcode_text } = req.body;
+    const { base64, qrcode_text } = req.body;
     
-    // We send form data
-    const params = new URLSearchParams();
-    params.append('keyapi', '86eb4596fbb506a43b1b63b5911a5c78');
-    params.append('qrcode_text', qrcode_text);
+    let payload = {};
+    if (base64) {
+        payload = { base64 };
+    } else if (qrcode_text) {
+        payload = { payload: qrcode_text };
+    }
     
-    // Attempt fetch
-    const response = await fetch('https://www.planariashop.com/api/checkslip.php', {
+    const response = await fetch('https://api.thunder.in.th/v2/verify/bank', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.THUNDER_API_KEY}`
       },
-      body: params
+      body: JSON.stringify(payload)
     });
     
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch(err) {
-      console.error("CheckSlip API returned non-JSON:", text.substring(0, 200));
-      return res.status(502).json({ status: 'error', message: 'API ตรวจสอบสลิปขัดข้อง กรุณาติดต่อผู้ดูแลระบบ' });
-    }
-    
-    // Server-side explicit time check (5 mins max)
-    if (data.status === 'success') {
-       try {
-           let dVal = data.date || data.transDate || data.data?.transDate || data.data?.date;
-           let tVal = data.time || data.transTime || data.data?.transTime || data.data?.time;
-           let slipTimeStr = data.slip_time || data.data?.slip_time;
-           
-           const stringData = JSON.stringify(data);
-           let slipTime: number | null = null;
-           
-           if (!dVal && !tVal && !slipTimeStr) {
-              const dMatch = stringData.match(/"(?:transDate|date)"\s*:\s*"([^"]+)"/i);
-              const tMatch = stringData.match(/"(?:transTime|time)"\s*:\s*"([^"]+)"/i);
-              if (dMatch) dVal = dMatch[1];
-              if (tMatch) tVal = tMatch[1];
-              
-              const stMatch = stringData.match(/"slip_time"\s*:\s*"([^"]+)"/i);
-              if (stMatch) slipTimeStr = stMatch[1];
-           }
-           
-           if (slipTimeStr) {
-              // slip_time might be like "2024-05-30 18:20:00"
-              const cleanSlipTimeStr = String(slipTimeStr).replace(' ', 'T');
-              let dtStr = cleanSlipTimeStr;
-              if (!dtStr.includes('+') && !dtStr.endsWith('Z')) {
-                 dtStr += '+07:00';
-              }
-              slipTime = new Date(dtStr).getTime();
-           } else if (dVal && String(dVal).includes('T')) {
-              slipTime = new Date(dVal).getTime();
-           } else if (dVal && tVal) {
-              let cleanD = String(dVal).replace(/[-/]/g, '');
-              if (cleanD.length >= 8) {
-                  // Usually 20260530 -> 2026-05-30
-                  cleanD = `${cleanD.substring(0,4)}-${cleanD.substring(4,6)}-${cleanD.substring(6,8)}`;
-              } else {
-                  cleanD = String(dVal);
-              }
-              
-              let cleanT = String(tVal).trim().replace(/[-/:\s]/g, '');
-              if (cleanT.length >= 6) {
-                  cleanT = `${cleanT.substring(0,2)}:${cleanT.substring(2,4)}:${cleanT.substring(4,6)}`;
-              } else if (cleanT.length >= 4) {
-                  cleanT = `${cleanT.substring(0,2)}:${cleanT.substring(2,4)}:00`;
-              }
-              
-              slipTime = new Date(`${cleanD}T${cleanT}+07:00`).getTime();
-           } else {
-              const tsMatch = stringData.match(/"(?:timestamp|created_at)"\s*:\s*"([^"]+)"/i);
-              if (tsMatch) {
-                 slipTime = new Date(tsMatch[1]).getTime();
-              }
-           }
-           
-           if (!slipTime || isNaN(slipTime)) {
-               let reason = dVal || tVal ? `D:${dVal} T:${tVal}` : `No Date/Time from API: ${stringData.substring(0, 100)}`;
-               return res.json({ status: 'error', message: `ไม่สามารถตรวจสอบเวลาบนสลิปได้ (${reason}) プロดติดต่อแอดมิน` });
-           }
-
-           if (slipTime && !isNaN(slipTime)) {
-               const now = Date.now();
-               const diffMinutes = Math.floor((now - slipTime) / (1000 * 60));
-               
-               if (diffMinutes > 5) {
-                   return res.json({ status: 'error', message: `สลิปหมดอายุการใช้งาน (โอนผ่านมาแล้ว ${diffMinutes} นาที)` });
-               } else if (diffMinutes < -5) {
-                   return res.json({ status: 'error', message: `เวลาในสลิปไม่ถูกต้อง (เวลาในอนาคต)` });
-               }
-           }
-       } catch(e) {
-           console.error("Server-side time check error:", e);
-       }
-    }
-    
+    const data = await response.json();
     res.json(data);
-  } catch (err: any) {
-    console.error("Bank Slip Error:", err);
-    res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+  } catch (error) {
+    console.error('Bank Check API Error:', error);
+    res.status(500).json({ status: "error", message: "API Error" });
   }
 });
-
-// Simple in-memory IP lock for registration spam prevention
-const ipLocks = new Map<string, number>();
-
 app.get("/api/check-register-lock", (req, res) => {
   const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown') as string;
   const clientIp = ip.split(',')[0].trim();
