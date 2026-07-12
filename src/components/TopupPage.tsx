@@ -15,7 +15,10 @@ export const TopupPage = ({
   setSlipFile,
   topupTarget,
   globalStats,
-  setAppScreen
+  setAppScreen,
+  tosAccepted,
+  setTosAccepted,
+  setShowTopupTos
 }: any) => {
 
   let parsedSettings: any = {};
@@ -314,6 +317,19 @@ export const TopupPage = ({
                  </div>
                </>
              )}
+
+             <div className="flex items-center justify-center gap-2 mb-4">
+               <input
+                 type="checkbox"
+                 id="tos"
+                 checked={tosAccepted}
+                 onChange={(e) => setTosAccepted(e.target.checked)}
+                 className="w-4 h-4 rounded border-zinc-700 bg-black/50 accent-[#0ea5e9] cursor-pointer"
+               />
+               <label htmlFor="tos" className="text-xs sm:text-sm text-zinc-300 cursor-pointer select-none">
+                 ฉันยอมรับ <span className="text-[#0ea5e9] hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTopupTos(true); }}>ข้อกำหนดในการให้บริการ</span>
+               </label>
+             </div>
 
              <button 
                type="submit"
