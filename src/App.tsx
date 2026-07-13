@@ -831,6 +831,17 @@ export default function App() {
                   const slipData = data.data || data;
                   
                   // Receiver Validation for TrueMoney
+                  const transactionId = slipData.transRef || slipData.transactionId || slipData.rawSlip?.transactionId || slipData.rawSlip?.transRef || null;
+                  
+                  if (!transactionId) {
+                      handleTopupError("ไม่พบเลขอ้างอิงในสลิป ไม่สามารถดำเนินการได้", "angpao"); return;
+                  }
+
+                  const { data: existingSlip } = await supabase.from("topups").select("id").eq("ref_id", transactionId).maybeSingle();
+                  if (existingSlip) {
+                      handleTopupError("สลิปนี้ถูกใช้งานไปแล้ว!", "angpao"); return;
+                  }
+                  
                   const receiverStr = JSON.stringify(slipData.receiver || slipData).replace(/[- ]/g, '');
                   // Check if the slip's receiver matches the phone number
                   if (!receiverStr.includes("0928886584") && !receiverStr.includes("886584") && !receiverStr.includes("6584")) {
@@ -853,7 +864,7 @@ export default function App() {
                     username: activeUsername,
                     amount: amount,
                     method: 'truewallet_slip',
-                    ref_id: slipData.rawSlip?.transactionId || 'wallet-' + Date.now(),
+                    ref_id: transactionId,
                     date: new Date().toISOString()
                   }]);
                   
@@ -917,6 +928,17 @@ export default function App() {
                   const slipData = data.data || data;
                   
                   // Receiver Validation for Bank
+                  const transactionId = slipData.transRef || slipData.transactionId || slipData.rawSlip?.transactionId || slipData.rawSlip?.transRef || null;
+                  
+                  if (!transactionId) {
+                      handleTopupError("ไม่พบเลขอ้างอิงในสลิป ไม่สามารถดำเนินการได้", "bank"); return;
+                  }
+
+                  const { data: existingSlip } = await supabase.from("topups").select("id").eq("ref_id", transactionId).maybeSingle();
+                  if (existingSlip) {
+                      handleTopupError("สลิปนี้ถูกใช้งานไปแล้ว!", "bank"); return;
+                  }
+                  
                   const receiverStr = JSON.stringify(slipData.receiver || slipData.rawSlip?.receiver || slipData).replace(/[- ]/g, '');
                   // Check if the slip's receiver matches the shop's bank account or name
                   // Bank account: 2133814461 (ธีรสิทธิ์ สุวรรณศรี)
@@ -945,7 +967,7 @@ export default function App() {
                     username: activeUsername,
                     amount: amount,
                     method: 'bank_slip',
-                    ref_id: slipData.rawSlip?.transRef || 'bank-' + Date.now(),
+                    ref_id: transactionId,
                     date: new Date().toISOString()
                   }]);
                   
@@ -1509,6 +1531,28 @@ export default function App() {
     setEditingItem(null);
   };
 
+  const playChime = (type: "success" | "warning" | "info") => {
+    try {
+      const audio = new Audio(`/sounds/${type}.mp3`);
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    } catch(e) {}
+  };
+
+  const saveItemsToStorage = async (newItems: StockItem[]) => {
+    setItems(newItems);
+    try {
+      await fetch('/api/items/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItems)
+      });
+      window.dispatchEvent(new Event("sync-update"));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleDeleteItem = async (id: string) => {
     // Fetch latest to prevent race condition
     let currentItems = (await fetchItems()) || items;
@@ -1849,11 +1893,7 @@ export default function App() {
         updatePayload.global_sales_aotr = currentSales + purchaseQty;
       }
 
-      await supabase
-        .from("system_config")
-        .update(updatePayload)
-        .eq("id", "main")
-        .catch(err => console.warn("Failed to update global sales", err));
+      try { await supabase.from("system_config").update(updatePayload).eq("id", "main"); } catch (err) { console.warn("Failed to update global sales", err); }
 
       // Reduce Stock natively handled earlier for creds or via fallback
 
