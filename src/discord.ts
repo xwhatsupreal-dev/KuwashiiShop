@@ -1,11 +1,11 @@
 export const DISCORD_WEBHOOK_URL_TOPUP = 'https://discord.com/api/webhooks/1510998209936228493/r0qW4fwsKMJoTq4mWlwqY_6yNMKHVOcnG-gtrkURlCA6s2dZFr2it-Vx3I-b_IjeWY92';
 export const DISCORD_WEBHOOK_URL_PURCHASE = 'https://discord.com/api/webhooks/1511063935888134284/LoW99CKLEDuscJWdSCTpIOvP30EIdwYo1j8JUdp1RvWORA9392tHhygHwnBP-UC3VsHj';
 
-export const sendDiscordTopupEmbed = async (username: string, amount: number, channel: string, totalBalance: number, isSuccess: boolean = true, mapName?: string) => {
+export const sendDiscordTopupEmbed = async (username: string, amount: number, channel: string, totalBalance: number, isSuccess: boolean = true, errorMessage?: string, mapName?: string) => {
   try {
     const embed = {
       title: isSuccess ? `💰 แจ้งเตือนการเติมเงิน! > 🆕 ${username}` : `❌ การเติมเงินล้มเหลว > ${username}`,
-      description: `จำนวนเงิน **฿${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}** ผ่านช่องทาง **${channel.toUpperCase()}**`,
+      description: isSuccess ? `จำนวนเงิน **฿${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}** ผ่านช่องทาง **${channel.toUpperCase()}**` : `สาเหตุ: **${errorMessage || 'ไม่ทราบสาเหตุ'}**\nช่องทาง: **${channel.toUpperCase()}**`,
       color: isSuccess ? 0x22c55e : 0xef4444, // green-500 : red-500
       thumbnail: {
         url: "https://img2.pic.in.th/1000111145.png"

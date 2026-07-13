@@ -518,7 +518,7 @@ export default function App() {
   }, [appScreen, topupTarget]);
   
   const [topupSuccessMessage, setTopupSuccessMessage] = useState("");
-  const [topupError, setTopupError] = useState("");
+  
   const [topupCode, setTopupCode] = useState("");
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [tosAccepted, setTosAccepted] = useState(false);
@@ -679,94 +679,8 @@ export default function App() {
         })
         .eq("id", "main");
       window.dispatchEvent(new Event("sync-update"));
-      showToast(
-        isMaintenanceMode
-          ? "เปิดเว็บไซต์เรียบร้อยแล้ว"
-          : "ปิดเว็บไซต์เรียบร้อยแล้ว",
-        "info",
-      );
+      showToast(isMaintenanceMode ? "เปิดร้านแล้ว!" : "ปิดร้าน (โหมดซ่อมบำรุง) แล้ว!", "success");
     }
-  };
-
-  // Floating notifications/toast
-  const [toasts, setToasts] = useState<{
-    id: string;
-    text: string;
-    type: "success" | "info" | "error";
-  }[]>([]);
-
-  // Sound chime utility generator
-  const playChime = (type: "success" | "warning" | "info") => {
-    try {
-      const ctx = new (
-        window.AudioContext || (window as any).webkitAudioContext
-      )();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      const freqs = { success: 523.25, warning: 329.63, info: 440.0 };
-      osc.frequency.setValueAtTime(freqs[type] || 440, ctx.currentTime);
-      gain.gain.setValueAtTime(0.02, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.18);
-    } catch (e) {
-      console.warn("Audio Context beep error:", e);
-    }
-  };
-
-  // --- AI Chat Assistant States & Handlers ---
-  // Chat feature removed
-
-  // Cleanup logic removed to prevent total purchases/topups from decreasing
-  useEffect(() => {
-    // Intentionally left blank to preserve hook order if necessary, 
-    // though React doesn't mind if a top-level hook is removed, 
-    // but safer to just leave an empty effect or remove entirely if it doesn't break rules of hooks order conditionally.
-    // Wait, it's not conditional, so we can just remove it. Let's just remove the logic inside.
-  }, []);
-
-  const saveItemsToStorage = async (newItems: StockItem[]) => {
-    setItems(newItems);
-
-    // Save to Supabase (chunked to avoid D1 100 param limit)
-    try {
-      const updates = newItems.map((item) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.imageUrls ? JSON.stringify(item.imageUrls) : item.imageUrl,
-        game: item.game,
-        category: item.category,
-        rarity: item.saleFormat,
-        popular: item.isPopular,
-        gacha_pool: {
-          pool: item.gachaPool || null,
-          saleFormat: item.saleFormat, // securely save format here
-          initialQuantity: item.initialQuantity,
-          piecesPerUnit: item.piecesPerUnit,
-          accountCredentials: item.accountCredentials || null,
-          isPinned: item.isPinned || false,
-          originalPrice: item.originalPrice,
-        },
-        created_at: item.updatedAt || new Date().toISOString(),
-      }));
-
-      // Cloudflare D1 / SQLite parameter limit per query is often 100 max. Each item has 12 fields = max 8 items per chunk
-      const chunkSize = 8;
-      for (let i = 0; i < updates.length; i += chunkSize) {
-        const chunk = updates.slice(i, i + chunkSize);
-        await supabase.from("items").upsert(chunk);
-      }
-    } catch (e) {
-      console.error("Error saving items", e);
-    }
-
-    window.dispatchEvent(new Event("sync-update"));
   };
 
   const showToast = (
@@ -803,6 +717,12 @@ export default function App() {
     setIsProcessingTopup(true);
 
     const activeUsername = currentUser.username.trim();
+    const handleTopupError = (errMessage: string, channel: string) => {
+      showToast(errMessage, "error");
+      sendDiscordTopupEmbed(activeUsername, 0, channel, 0, false, errMessage);
+      setIsProcessingTopup(false);
+    };
+
     const liveUser = await fetchUser(activeUsername);
     if (!liveUser) {
       showToast("เกิดข้อผิดพลาดในการโหลดข้อมูลลูกค้า โปรดลองอีกครั้ง", "error");
@@ -818,9 +738,7 @@ export default function App() {
         .maybeSingle();
 
       if (!couponData) {
-        showToast("โค้ดไม่ถูกต้องหรือไม่มีในระบบ", "error");
-        setIsProcessingTopup(false);
-        return;
+        handleTopupError("โค้ดไม่ถูกต้องหรือไม่มีในระบบ", "coupon"); return;
       }
 
       let coupon = {
@@ -830,50 +748,17 @@ export default function App() {
 
       if (coupon) {
         if (coupon.usedBy && coupon.usedBy.includes(activeUsername)) {
-          showToast("คุณได้ใช้งานโค้ดนี้ไปแล้ว", "error");
-          setIsProcessingTopup(false);
-          return;
+          handleTopupError("คุณได้ใช้งานโค้ดนี้ไปแล้ว", "coupon"); return;
         }
-        if (coupon.usedBy && coupon.usedBy.length >= coupon.maxUses) {
-          showToast("โค้ดอ้างอิงนี้ถูกใช้งานจนครบกำหนดแล้ว", "error");
-          setIsProcessingTopup(false);
-          return;
-        }
-        if (
-          coupon.expiresAt &&
-          new Date(coupon.expiresAt).getTime() < Date.now()
-        ) {
-          showToast("โค้ดนี้หมดอายุการใช้งานแล้ว", "error");
-          setIsProcessingTopup(false);
-          return;
-        }
-
-        if (!coupon.usedBy) coupon.usedBy = [];
-        coupon.usedBy.push(activeUsername);
-        
-        await supabase
-          .from("coupons")
-          .update({ usedBy: coupon.usedBy })
-          .eq("code", coupon.code);
-
-        const configData = await getSystemConfig();
-        const currentFree = configData
-          ? Number(configData.global_free_astd || 0)
-          : 0;
-        await supabase
-          .from("system_config")
-          .update({
-            global_free_astd: currentFree + coupon.amount,
-          })
-          .eq("id", "main");
 
         const balanceField = topupTarget;
-        const userBalance = Number(liveUser[balanceField] || 0);
-        const newBalance = userBalance + coupon.amount;
+        const newBalance = Number(liveUser[balanceField] || 0) + coupon.amount;
+        
         await supabase
           .from("profiles")
           .update({ [balanceField]: newBalance })
           .eq("username", activeUsername);
+
         const { error: topupError } = await supabase.from("topups").insert([
           {
             username: activeUsername,
@@ -881,6 +766,7 @@ export default function App() {
             method: `Coupon: ${coupon.code}`,
           },
         ]);
+
         if (topupError) {
           await supabase.from("topups").insert([
             {
@@ -890,13 +776,17 @@ export default function App() {
             },
           ]);
         }
-
+        
+        await supabase
+          .from("coupons")
+          .update({
+             usedBy: JSON.stringify([...coupon.usedBy, activeUsername])
+          })
+          .eq("id", coupon.id);
+          
         window.dispatchEvent(new Event("sync-update"));
-
-        showToast(
-          `ใช้คูปองสำเร็จ! ได้รับ ${coupon.amount.toLocaleString()} เครดิต`,
-          "success",
-        );
+        showToast(`ใช้คูปองสำเร็จ! ได้รับ ${coupon.amount.toLocaleString()} เครดิต`, "success"); 
+        sendDiscordTopupEmbed(activeUsername, coupon.amount, "coupon", newBalance, true);
         setTopupSuccessMessage(
           `ใช้คูปองสำเร็จ! ได้รับ ${coupon.amount.toLocaleString()} เครดิต`,
         );
@@ -920,7 +810,7 @@ export default function App() {
       }
       const processAngpaoSlip = async () => {
         try {
-          setTopupError("");
+          
           
           const reader = new FileReader();
           reader.readAsDataURL(slipFile);
@@ -942,10 +832,8 @@ export default function App() {
                   const receiverStr = JSON.stringify(slipData.receiver || slipData).replace(/[- ]/g, '');
                   // Check if the slip's receiver matches the phone number
                   if (!receiverStr.includes("0928886584") && !receiverStr.includes("886584") && !receiverStr.includes("6584")) {
-                     setTopupError("สลิปนี้ไม่ได้โอนเงินเข้าเบอร์ 092-888-6584 ของร้านครับ");
-                     showToast("สลิปนี้ไม่ได้โอนเงินเข้าเบอร์ 092-888-6584 ของร้านครับ", "error");
-                     setIsProcessingTopup(false);
-                     return;
+                     
+                     handleTopupError("สลิปนี้ไม่ได้โอนเงินเข้าเบอร์ 092-888-6584 ของร้านครับ", "angpao"); return;
                   }
                   
                   const amount = parseFloat(slipData.amountInSlip || slipData.amount || data.amount) || 0;
@@ -968,7 +856,7 @@ export default function App() {
                   }]);
                   
                   setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
-                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success");
+                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success"); sendDiscordTopupEmbed(activeUsername, amount, topupModalStep, userBalance + amount, true);
                   window.dispatchEvent(new Event("sync-update"));
                   fetchUser(activeUsername);
                   setTopupCode("");
@@ -979,12 +867,12 @@ export default function App() {
                     setAppScreen("SHOP");
                   }, 2000);
                 } else {
-                  setTopupError(data.message || data.error?.message || "สลิปไม่ถูกต้อง หรือเช็คไม่ได้");
-                  showToast(data.message || data.error?.message || "สลิปไม่ถูกต้อง หรือเช็คไม่ได้", "error");
+                  
+                  handleTopupError(data.message || data.error?.message || "สลิปไม่ถูกต้อง หรือเช็คไม่ได้", "angpao");
                 }
             } catch(e) {
-                setTopupError("การเชื่อมต่อมีปัญหา กรุณาลองใหม่");
-                showToast("การเชื่อมต่อมีปัญหา กรุณาลองใหม่", "error");
+                
+                handleTopupError("การเชื่อมต่อมีปัญหา กรุณาลองใหม่", "angpao");
             } finally {
                 setIsProcessingTopup(false);
             }
@@ -1007,7 +895,7 @@ export default function App() {
 
       const processBankSlip = async () => {
         try {
-          setTopupError("");
+          
           
           const reader = new FileReader();
           reader.readAsDataURL(slipFile);
@@ -1031,10 +919,8 @@ export default function App() {
                   // Check if the slip's receiver matches the shop's bank account or name
                   // Bank account: 2133814461 (ธีรสิทธิ์ สุวรรณศรี)
                   if (!receiverStr.includes("2133814461") && !receiverStr.includes("14461") && !receiverStr.includes("ธีรสิทธิ์")) {
-                     setTopupError("สลิปนี้ไม่ได้โอนเงินเข้าบัญชีของร้าน (ธีรสิทธิ์ สุวรรณศรี) ครับ");
-                     showToast("สลิปนี้ไม่ได้โอนเงินเข้าบัญชีของร้าน (ธีรสิทธิ์ สุวรรณศรี) ครับ", "error");
-                     setIsProcessingTopup(false);
-                     return;
+                     
+                     handleTopupError("สลิปนี้ไม่ได้โอนเงินเข้าบัญชีของร้าน (ธีรสิทธิ์ สุวรรณศรี) ครับ", "bank"); return;
                   }
                   
                   let amount = parseFloat(slipData.amount?.amount || slipData.amount || data.amount) || 0;
@@ -1062,7 +948,7 @@ export default function App() {
                   }]);
                   
                   setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
-                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success");
+                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success"); sendDiscordTopupEmbed(activeUsername, amount, topupModalStep, userBalance + amount, true);
                   window.dispatchEvent(new Event("sync-update"));
                   fetchUser(activeUsername);
                   setTopupCode("");
@@ -1073,12 +959,12 @@ export default function App() {
                     setAppScreen("SHOP");
                   }, 2000);
                 } else {
-                  setTopupError(data.message || data.error?.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้");
-                  showToast(data.message || data.error?.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้", "error");
+                  
+                  handleTopupError(data.message || data.error?.message || "ข้อมูลสลิปไม่ถูกต้อง หรือเช็คไม่ได้", "bank");
                 }
             } catch(e) {
-                setTopupError("การเชื่อมต่อมีปัญหา กรุณาลองใหม่");
-                showToast("การเชื่อมต่อมีปัญหา กรุณาลองใหม่", "error");
+                
+                handleTopupError("การเชื่อมต่อมีปัญหา กรุณาลองใหม่", "bank");
             } finally {
                 setIsProcessingTopup(false);
             }
@@ -2837,7 +2723,7 @@ export default function App() {
                 setTosAccepted={setTosAccepted}
                 topupModalStep={topupModalStep}
                 setTopupModalStep={(step) => {
-                  setTopupError("");
+                  
                   setTopupSuccessMessage("");
                   setTopupModalStep(step);
                 }}
