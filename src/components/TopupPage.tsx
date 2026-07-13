@@ -205,7 +205,8 @@ export const TopupPage = ({
                               onClick={async (e) => {
                                 e.preventDefault();
                                 try {
-                                  const response = await fetch(qrUrl);
+                                  // Proxy image to bypass CORS
+                                  const response = await fetch(`/api/proxy-image?url=${encodeURIComponent(qrUrl)}`);
                                   const blob = await response.blob();
                                   const url = window.URL.createObjectURL(blob);
                                   const downloadAnchor = document.createElement('a');
@@ -215,8 +216,17 @@ export const TopupPage = ({
                                   document.body.appendChild(downloadAnchor);
                                   downloadAnchor.click();
                                   window.URL.revokeObjectURL(url);
+                                  document.body.removeChild(downloadAnchor);
                                 } catch (error) {
                                   console.error('Download failed:', error);
+                                  // Fallback
+                                  const downloadAnchor = document.createElement('a');
+                                  downloadAnchor.href = qrUrl;
+                                  downloadAnchor.download = 'qr-code.jpg';
+                                  downloadAnchor.target = '_blank';
+                                  document.body.appendChild(downloadAnchor);
+                                  downloadAnchor.click();
+                                  document.body.removeChild(downloadAnchor);
                                 }
                               }}
                               className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1.5 transition-colors"
