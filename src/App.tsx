@@ -843,6 +843,7 @@ export default function App() {
                   // Receiver Validation for TrueMoney
                                     // Time Limit Check
                   
+                  
                   let slipTime = NaN;
                   
                   // Attempt 1: Direct full ISO string
@@ -893,7 +894,7 @@ export default function App() {
                       }
                   }
                   
-                  // Attempt 4: rawSlip fields
+                  // Attempt 4: rawSlip transDate
                   if (isNaN(slipTime) && slipData.rawSlip?.transDate) {
                       const ds = slipData.rawSlip.transDate.toString();
                       const ts = slipData.rawSlip.transTime ? slipData.rawSlip.transTime.toString() : "00:00:00";
@@ -902,6 +903,22 @@ export default function App() {
                       } else if (ds.includes('-')) {
                           let fullStr = `${ds}T${ts}`;
                           if (!fullStr.includes('+') && !fullStr.includes('Z')) fullStr += "+07:00";
+                          slipTime = new Date(fullStr).getTime();
+                      }
+                  }
+                  
+                  // Attempt 5: rawSlip date (Full ISO string as seen in TrueMoney payload)
+                  if (isNaN(slipTime) && slipData.rawSlip?.date) {
+                      let ds = slipData.rawSlip.date.toString();
+                      if (ds.includes('T')) {
+                          if (!ds.includes('+') && !ds.includes('Z')) ds += "+07:00";
+                          slipTime = new Date(ds).getTime();
+                      } else if (ds.includes(' ')) {
+                          ds = ds.replace(' ', 'T');
+                          if (!ds.includes('+') && !ds.includes('Z')) ds += "+07:00";
+                          slipTime = new Date(ds).getTime();
+                      } else {
+                          let fullStr = `${ds}T00:00:00+07:00`;
                           slipTime = new Date(fullStr).getTime();
                       }
                   }
@@ -1013,6 +1030,7 @@ export default function App() {
                   // Receiver Validation for Bank
                                     // Time Limit Check
                   
+                  
                   let slipTime = NaN;
                   
                   // Attempt 1: Direct full ISO string
@@ -1063,7 +1081,7 @@ export default function App() {
                       }
                   }
                   
-                  // Attempt 4: rawSlip fields
+                  // Attempt 4: rawSlip transDate
                   if (isNaN(slipTime) && slipData.rawSlip?.transDate) {
                       const ds = slipData.rawSlip.transDate.toString();
                       const ts = slipData.rawSlip.transTime ? slipData.rawSlip.transTime.toString() : "00:00:00";
@@ -1072,6 +1090,22 @@ export default function App() {
                       } else if (ds.includes('-')) {
                           let fullStr = `${ds}T${ts}`;
                           if (!fullStr.includes('+') && !fullStr.includes('Z')) fullStr += "+07:00";
+                          slipTime = new Date(fullStr).getTime();
+                      }
+                  }
+                  
+                  // Attempt 5: rawSlip date (Full ISO string as seen in TrueMoney payload)
+                  if (isNaN(slipTime) && slipData.rawSlip?.date) {
+                      let ds = slipData.rawSlip.date.toString();
+                      if (ds.includes('T')) {
+                          if (!ds.includes('+') && !ds.includes('Z')) ds += "+07:00";
+                          slipTime = new Date(ds).getTime();
+                      } else if (ds.includes(' ')) {
+                          ds = ds.replace(' ', 'T');
+                          if (!ds.includes('+') && !ds.includes('Z')) ds += "+07:00";
+                          slipTime = new Date(ds).getTime();
+                      } else {
+                          let fullStr = `${ds}T00:00:00+07:00`;
                           slipTime = new Date(fullStr).getTime();
                       }
                   }

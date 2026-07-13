@@ -52,7 +52,7 @@ const parseLogic = `
                       }
                   }
                   
-                  // Attempt 4: rawSlip fields
+                  // Attempt 4: rawSlip transDate
                   if (isNaN(slipTime) && slipData.rawSlip?.transDate) {
                       const ds = slipData.rawSlip.transDate.toString();
                       const ts = slipData.rawSlip.transTime ? slipData.rawSlip.transTime.toString() : "00:00:00";
@@ -61,6 +61,22 @@ const parseLogic = `
                       } else if (ds.includes('-')) {
                           let fullStr = \`\${ds}T\${ts}\`;
                           if (!fullStr.includes('+') && !fullStr.includes('Z')) fullStr += "+07:00";
+                          slipTime = new Date(fullStr).getTime();
+                      }
+                  }
+                  
+                  // Attempt 5: rawSlip date (Full ISO string as seen in TrueMoney payload)
+                  if (isNaN(slipTime) && slipData.rawSlip?.date) {
+                      let ds = slipData.rawSlip.date.toString();
+                      if (ds.includes('T')) {
+                          if (!ds.includes('+') && !ds.includes('Z')) ds += "+07:00";
+                          slipTime = new Date(ds).getTime();
+                      } else if (ds.includes(' ')) {
+                          ds = ds.replace(' ', 'T');
+                          if (!ds.includes('+') && !ds.includes('Z')) ds += "+07:00";
+                          slipTime = new Date(ds).getTime();
+                      } else {
+                          let fullStr = \`\${ds}T00:00:00+07:00\`;
                           slipTime = new Date(fullStr).getTime();
                       }
                   }
@@ -76,10 +92,15 @@ const parseLogic = `
                   const transactionId = slipData.transRef || slipData.transactionId || slipData.rawSlip?.transactionId || slipData.rawSlip?.transRef || null;`;
 
 // Replace angpao block
-const angpaoRegex = /let slipDateStr = null;[\s\S]*?const transactionId = slipData\.transRef[^]*?\|\| null;/;
-content = content.replace(angpaoRegex, parseLogic.replace('CHANNEL_PLACEHOLDER', 'angpao'));
+const regex = /let slipTime = NaN;[\s\S]*?const transactionId = slipData\.transRef[^]*?\|\| null;/g;
 
-// Replace bank block
-content = content.replace(angpaoRegex, parseLogic.replace('CHANNEL_PLACEHOLDER', 'bank'));
+let matches = content.match(regex);
+if (matches && matches.length === 2) {
+    content = content.replace(matches[0], parseLogic.replace('CHANNEL_PLACEHOLDER', 'angpao'));
+    content = content.replace(matches[1], parseLogic.replace('CHANNEL_PLACEHOLDER', 'bank'));
+    fs.writeFileSync('src/App.tsx', content);
+    console.log("Successfully replaced both blocks");
+} else {
+    console.log("Failed to find exactly 2 matches. Found:", matches ? matches.length : 0);
+}
 
-fs.writeFileSync('src/App.tsx', content);

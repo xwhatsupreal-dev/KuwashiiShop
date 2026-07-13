@@ -426,7 +426,7 @@ app.post("/api/topup/true-wallet", async (req: express.Request, res: express.Res
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.THUNDER_API_KEY}`
       },
-      body: JSON.stringify({ base64 })
+      body: JSON.stringify({ base64, matchAccount: true, checkDuplicate: true })
     });
     
     const data = await response.json();
@@ -442,11 +442,11 @@ app.post("/api/topup/bank", async (req: express.Request, res: express.Response) 
   try {
     const { base64, qrcode_text } = req.body;
     
-    let payload = {};
+    let payload: any = { matchAccount: true, checkDuplicate: true };
     if (base64) {
-        payload = { base64 };
+        payload.base64 = base64;
     } else if (qrcode_text) {
-        payload = { payload: qrcode_text };
+        payload.payload = qrcode_text;
     }
     
     const response = await fetch('https://api.thunder.in.th/v2/verify/bank', {
