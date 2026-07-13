@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Send, AlertTriangle, QrCode, Landmark, Copy, Download, Plus, CheckCircle
@@ -32,6 +32,34 @@ export const TopupPage = ({
 
   const angpaoActive = parsedSettings.topup_angpao_status !== false;
   const qrActive = parsedSettings.topup_qrcode_status !== false;
+
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  
+  useEffect(() => {
+    if (topupModalStep === "bank" || topupModalStep === "angpao") {
+      setTimeLeft(300);
+      const timer = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setTopupModalStep("select");
+            setSlipFile(null);
+            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: "หมดเวลาทำรายการ กรุณาทำรายการใหม่", type: "error" } }));
+            return 300;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [topupModalStep, setTopupModalStep, setSlipFile]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m + ":" + (s < 10 ? '0' : '') + s;
+  };
+
 
   return (
     <motion.div 
@@ -168,6 +196,12 @@ export const TopupPage = ({
                               </button>
                            </div>
                            <p className="text-zinc-500 text-[10px] sm:text-xs mt-3">แตะที่เบอร์เพื่อคัดลอก</p>
+   <div className="mt-3 inline-block bg-black/40 px-3 py-1.5 rounded-full border border-red-500/20">
+     <p className="text-red-400 text-xs sm:text-sm font-bold flex items-center gap-1.5">
+       <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+       หมดเวลาใน {formatTime(timeLeft)} นาที
+     </p>
+   </div>
                         </>
                     )
                })()}
