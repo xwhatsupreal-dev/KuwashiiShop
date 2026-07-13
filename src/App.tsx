@@ -508,7 +508,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<"store" | "topup">("store");
 
   const [topupModalStep, setTopupModalStep] = useState<
-    "select" | "angpao" | "bank" | "bank_generate" | "coupon" | "success"
+    "select" | "angpao" | "bank" | "coupon" | "success"
   >("select");
   
   useEffect(() => {
@@ -716,7 +716,7 @@ export default function App() {
       showToast("กรุณากรอกข้อมูลเพื่อเติมเงิน", "error");
       return;
     }
-    if ((topupModalStep === "bank" || topupModalStep === "bank_generate" || topupModalStep === "angpao") && !slipFile) {
+    if ((topupModalStep === "bank" || topupModalStep === "angpao") && !slipFile) {
       showToast("กรุณาอัปโหลดรูปภาพสลิปโอนเงิน", "error");
       return;
     }
@@ -909,7 +909,7 @@ export default function App() {
       return;
     }
 
-        if (topupModalStep === "bank" || topupModalStep === "bank_generate") {
+        if (topupModalStep === "bank") {
       if (!slipFile) {
         showToast("กรุณาแนบสลิปการโอนเงิน", "error");
         setIsProcessingTopup(false);
