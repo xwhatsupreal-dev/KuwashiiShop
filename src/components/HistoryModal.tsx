@@ -99,12 +99,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
             >
               การเติมเงิน
             </button>
-            <button 
-              onClick={() => setActiveTab('gametopups')}
-              className={`pb-3 text-sm font-bold transition-all relative border-b-2 whitespace-nowrap ${activeTab === 'gametopups' ? 'text-[#0ca5e9] border-[#0ca5e9]' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
-            >
-              ประวัติเติมเกม
-            </button>
+            
           </div>
 
           <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 space-y-4 min-h-0">

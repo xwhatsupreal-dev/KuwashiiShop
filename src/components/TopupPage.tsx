@@ -56,7 +56,7 @@ export const TopupPage = ({
         </button>
         <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center justify-center gap-3">
           <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-transparent bg-clip-text">
-            {topupTarget === 'balance_rov' ? 'เติมเงิน ROV' : 'เติมเงินเข้าระบบ'}
+            'เติมเงินเข้าระบบ'
           </span>
         </h2>
         <p className="text-zinc-400 mt-2 text-sm sm:text-base max-w-[280px] sm:max-w-md mx-auto">
@@ -148,7 +148,7 @@ export const TopupPage = ({
           {topupModalStep === "angpao" && (
             <div className="mb-6 bg-[#ff203a]/10 border border-[#ff203a]/20 rounded-xl p-6 text-center font-sans">
                {(() => {
-                    const isRov = topupTarget === 'balance_rov';
+                    const isRov = false;
                     const angpaoPhone = isRov ? parsedSettings.rov_topup_angpao_phone : (parsedSettings.topup_angpao_phone || "0928886584");
                     return (
                         <>
@@ -186,7 +186,7 @@ export const TopupPage = ({
              {topupModalStep === "bank" && (
                 <div className="mb-5 bg-zinc-800/50 p-6 rounded-2xl border border-zinc-700/50 flex flex-col items-center text-center">
                   {(() => {
-                    const isRov = topupTarget === 'balance_rov';
+                    const isRov = false;
                     const qrUrl = isRov ? 'https://img1.pic.in.th/images/1000113791.jpg' : parsedSettings.topup_bank_qr_image;
                     const bName = isRov ? 'Prompt Pay' : parsedSettings.topup_bank_name;
                     const bAcc = isRov ? null : parsedSettings.topup_bank_account_no;

@@ -61,7 +61,7 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
             </button>
             <button 
               onClick={() => {
-                setAppScreen?.("GAMETOPUP");
+                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: "เปิดให้บริการให้เร็วๆนี้", type: "info" } }));
               }}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${currentScreen === "GAMETOPUP" ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"}`}
             >
@@ -88,8 +88,8 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
                   <span className="text-xs font-bold text-zinc-200">{currentUser.username}</span>
                   
                   <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-[#0ea5e9] font-semibold">สินค้า: ฿{(currentUser.balance || 0).toLocaleString()}</span>
-                    <span className="text-[10px] text-cyan-500 font-semibold">เติมเกม: ฿{(currentUser.balance_rov || 0).toLocaleString()}</span>
+                    <span className="text-[10px] text-[#0ea5e9] font-semibold">ยอดเงิน: ฿{(currentUser.balance || 0).toLocaleString()}</span>
+                    
                   </div>
 
                 </div>

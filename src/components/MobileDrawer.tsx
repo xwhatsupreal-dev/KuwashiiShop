@@ -76,9 +76,7 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
                             <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-[11px] font-semibold inline-flex items-center gap-1">
                               <Wallet className="w-3 h-3" /> ฿{(currentUser.balance || 0).toLocaleString()}
                             </span>
-                            <span className="px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 text-[11px] font-semibold inline-flex items-center gap-1">
-                              <Wallet className="w-3 h-3" /> ฿{(currentUser.balance_rov || 0).toLocaleString()} (เกม)
-                            </span>
+                            
 
                             <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 text-[11px] font-semibold inline-flex items-center gap-1">
                               <Target className="w-3 h-3" /> {(currentUser.topupCount || 0).toLocaleString()} แต้ม

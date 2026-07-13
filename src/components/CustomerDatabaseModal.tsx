@@ -236,12 +236,9 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
                                <div className="flex flex-col gap-1">
                                  <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
                                    <DollarSign className="w-3 h-3 text-emerald-400" />
-                                   <span className="text-emerald-400 font-mono text-xs font-bold">{(user.balance || 0).toLocaleString()} (สินค้า)</span>
+                                   <span className="text-emerald-400 font-mono text-xs font-bold">{(user.balance || 0).toLocaleString()}</span>
                                  </div>
-                                 <div className="flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/20 px-2 py-1 rounded-lg">
-                                   <DollarSign className="w-3 h-3 text-cyan-400" />
-                                   <span className="text-cyan-400 font-mono text-xs font-bold">{(user.balance_rov || 0).toLocaleString()} (เกม)</span>
-                                 </div>
+                                 
                                </div>
   
                                {user.username !== 'Kuwashii_admin' && (
@@ -268,17 +265,11 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
                                        <motion.button whileTap={{ scale: 0.95 }}
                                           onClick={() => { setEditingBalanceUser(user.username); setEditingBalanceType("balance"); setNewBalance(String(user.balance || 0)); }}
                                          className="p-1.5 rounded-lg hover:bg-emerald-900/30 text-emerald-500/70 hover:text-emerald-400 transition-colors cursor-pointer shrink-0"
-                                         title="แก้ไขพ้อยสินค้า"
+                                         title="แก้ไขยอดเงิน"
                                        >
                                          <Edit2 className="w-3 h-3" />
                                        </motion.button>
-                                       <motion.button whileTap={{ scale: 0.95 }}
-                                          onClick={() => { setEditingBalanceUser(user.username); setEditingBalanceType("balance_rov"); setNewBalance(String(user.balance_rov || 0)); }}
-                                         className="p-1.5 rounded-lg hover:bg-cyan-900/30 text-cyan-500/70 hover:text-cyan-400 transition-colors cursor-pointer shrink-0"
-                                         title="แก้ไขพ้อยเติมเกม"
-                                       >
-                                         <Edit2 className="w-3 h-3" />
-                                       </motion.button>
+                                       
                                      </div>
   
                                      <motion.button whileTap={{ scale: 0.95 }}

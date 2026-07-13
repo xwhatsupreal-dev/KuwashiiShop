@@ -533,6 +533,16 @@ export default function App() {
 
   const [toasts, setToasts] = useState<{ id: string; text: string; type: "success" | "info" | "error" }[]>([]);
 
+  useEffect(() => {
+    const handleShowToast = (e: any) => {
+      if (e.detail) {
+        showToast(e.detail.message, e.detail.type);
+      }
+    };
+    window.addEventListener('show-toast', handleShowToast);
+    return () => window.removeEventListener('show-toast', handleShowToast);
+  }, []);
+
   // Modals controller
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -2880,7 +2890,7 @@ export default function App() {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => {
-                            setAppScreen("GAMETOPUP");
+                            showToast("เปิดให้บริการให้เร็วๆนี้", "info");
                           }}
                           className="cursor-pointer rounded-2xl overflow-hidden border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] group bg-gradient-to-br from-cyan-600 to-blue-800 flex items-center justify-center aspect-[2/1]"
                         >

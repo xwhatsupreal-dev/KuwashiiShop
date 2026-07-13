@@ -262,7 +262,7 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
                )}
 
                {activeTab === 'allstar' && ConfigForm({ title: "สำหรับเติมเครดิต", prefix: "", isRov: false })}
-               {activeTab === 'rov' && ConfigForm({ title: "สำหรับรับเติมเกม", prefix: "rov_", isRov: true })}
+               
             </div>
   
             <div className="p-4 border-t border-zinc-800 bg-zinc-900/50 flex justify-end gap-3 shrink-0">
