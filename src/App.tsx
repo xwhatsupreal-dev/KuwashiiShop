@@ -531,6 +531,8 @@ export default function App() {
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
   const isProcessingPurchaseRef = useRef(false);
 
+  const [toasts, setToasts] = useState<{ id: string; text: string; type: "success" | "info" | "error" }[]>([]);
+
   // Modals controller
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
