@@ -840,6 +840,10 @@ export default function App() {
                   
                   const slipData = data.data || data;
                   
+                  if (slipData.isDuplicate) {
+                      handleTopupError("สลิปนี้ถูกใช้งานไปแล้ว!", "angpao"); return;
+                  }
+
                   // Receiver Validation for TrueMoney
                                     // Time Limit Check
                   
@@ -1027,6 +1031,10 @@ export default function App() {
                   
                   const slipData = data.data || data;
                   
+                  if (slipData.isDuplicate) {
+                      handleTopupError("สลิปนี้ถูกใช้งานไปแล้ว!", "bank"); return;
+                  }
+
                   // Receiver Validation for Bank
                                     // Time Limit Check
                   
