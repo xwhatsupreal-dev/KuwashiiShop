@@ -3386,6 +3386,10 @@ export default function App() {
               setAppScreen("LOGIN");
               setAuthMode("login");
             }}
+            onRegisterClick={() => {
+              setAppScreen("LOGIN");
+              setAuthMode("register");
+            }}
             onLogoutClick={handleLogout}
             setPage={setAppScreen}
             setShowTopupModal={setShowTopupModal}
