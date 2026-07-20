@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'motion/react';
 interface GlobalLoadingScreenProps {
   isLoading: boolean;
   progress?: number;
+  shopLogoUrl?: string;
 }
 
-export const GlobalLoadingScreen: React.FC<GlobalLoadingScreenProps> = ({ isLoading, progress }) => {
+export const GlobalLoadingScreen: React.FC<GlobalLoadingScreenProps> = ({ isLoading, progress, shopLogoUrl }) => {
   return (
     <AnimatePresence>
       {isLoading && (
@@ -24,7 +25,7 @@ export const GlobalLoadingScreen: React.FC<GlobalLoadingScreenProps> = ({ isLoad
           >
             <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full" />
             <img 
-              src="https://img2.pic.in.th/1000111145.png" 
+              src={shopLogoUrl || "https://img2.pic.in.th/1000111145.png"} 
               alt="Loading..." 
               className="w-full h-full object-contain relative z-10 drop-shadow-2xl"
             />

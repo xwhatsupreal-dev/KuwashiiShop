@@ -731,7 +731,7 @@ export default function App() {
     const activeUsername = currentUser.username.trim();
     const handleTopupError = (errMessage: string, channel: string) => {
       showToast(errMessage, "error");
-      sendDiscordTopupEmbed(activeUsername, 0, channel, 0, false, errMessage);
+      sendDiscordTopupEmbed(activeUsername, 0, channel, 0, false, errMessage, undefined, globalStats?.announcement_settings?.shopLogoUrl);
       setIsProcessingTopup(false);
     };
 
@@ -798,7 +798,7 @@ export default function App() {
           
         window.dispatchEvent(new Event("sync-update"));
         showToast(`ใช้คูปองสำเร็จ! ได้รับ ${coupon.amount.toLocaleString()} เครดิต`, "success"); 
-        sendDiscordTopupEmbed(activeUsername, coupon.amount, "coupon", newBalance, true);
+        sendDiscordTopupEmbed(activeUsername, coupon.amount, "coupon", newBalance, true, undefined, undefined, globalStats?.announcement_settings?.shopLogoUrl);
         setTopupSuccessMessage(
           `ใช้คูปองสำเร็จ! ได้รับ ${coupon.amount.toLocaleString()} เครดิต`,
         );
@@ -973,7 +973,7 @@ export default function App() {
                   }]);
                   
                   setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
-                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success"); sendDiscordTopupEmbed(activeUsername, amount, topupModalStep, userBalance + amount, true);
+                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success"); sendDiscordTopupEmbed(activeUsername, amount, topupModalStep, userBalance + amount, true, undefined, undefined, globalStats?.announcement_settings?.shopLogoUrl);
                   window.dispatchEvent(new Event("sync-update"));
                   fetchUser(activeUsername);
                   setTopupCode("");
@@ -1170,7 +1170,7 @@ export default function App() {
                   }]);
                   
                   setTopupSuccessMessage(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`);
-                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success"); sendDiscordTopupEmbed(activeUsername, amount, topupModalStep, userBalance + amount, true);
+                  showToast(`เติมเงินสำเร็จ ${amount.toFixed(2)} บาท`, "success"); sendDiscordTopupEmbed(activeUsername, amount, topupModalStep, userBalance + amount, true, undefined, undefined, globalStats?.announcement_settings?.shopLogoUrl);
                   window.dispatchEvent(new Event("sync-update"));
                   fetchUser(activeUsername);
                   setTopupCode("");
@@ -2921,6 +2921,7 @@ export default function App() {
               )
             ) : appScreen === "LOGIN" ? (
               <AuthPage
+                shopLogoUrl={globalStats?.announcement_settings?.shopLogoUrl}
                 authMode={authMode}
                 setAuthMode={setAuthMode}
                 authUsername={authUsername}
@@ -3418,7 +3419,7 @@ export default function App() {
   return (
     <>
       <ShootingStars />
-      <GlobalLoadingScreen isLoading={isLoadingStock} />
+      <GlobalLoadingScreen isLoading={isLoadingStock} shopLogoUrl={globalStats?.announcement_settings?.shopLogoUrl} />
       <AnimatePresence mode="wait">{renderAppScreen()}</AnimatePresence>
       {!isLoadingStock && <AIChatWidget items={items} shopLogoUrl={globalStats?.announcement_settings?.shopLogoUrl} currentUser={currentUser} onLoginClick={() => setAppScreen("LOGIN")} aiStatus={globalStats?.ai_status} />}
     </>

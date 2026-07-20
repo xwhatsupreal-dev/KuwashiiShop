@@ -27,7 +27,8 @@ export const AuthPage = ({
   handleAuthSubmit,
   isProcessing,
   isCaptchaVerified,
-  setIsCaptchaVerified
+  setIsCaptchaVerified,
+  shopLogoUrl
 }: any) => {
 
   return (
@@ -38,7 +39,7 @@ export const AuthPage = ({
       className="w-full max-w-[280px] sm:max-w-md mx-auto py-4 sm:py-6 flex flex-col justify-start px-2 sm:px-0"
     >
               <div className="mb-4 sm:mb-6 text-center flex flex-col items-center">
-                <img src="https://img2.pic.in.th/1000111145.png" alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20 mb-3 sm:mb-4 object-contain rounded-xl shadow-lg" />
+                <img src={shopLogoUrl || "https://img2.pic.in.th/1000111145.png"} alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20 mb-3 sm:mb-4 object-contain rounded-xl shadow-lg" />
                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-1.5 sm:mb-2">
                   {authMode === "login" ? "เข้าสู่ระบบ" : authMode === "forgot" ? "ส่วนลืมรหัสผ่าน" : authMode === "forgot_verify_otp" ? "เปลี่ยนรหัสผ่าน" : "สมัครสมาชิก"}
                 </h2>
