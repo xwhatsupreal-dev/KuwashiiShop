@@ -22,10 +22,10 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
     productsBannerUrl: '',
     topupBannerUrl: '',
     contactBannerUrl: '',
-    announcementImageUrl: '',
-    announcementLinkUrl: '',
-    announcementImageUrl2: '',
-    announcementLinkUrl2: ''
+    imageUrl: '',
+    linkUrl: '',
+    imageUrl2: '',
+    linkUrl2: ''
   });
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
         
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        const dataUrl = canvas.toDataURL('image/webp', 0.8);
         setSettings(prev => ({ ...prev, [fieldName]: dataUrl }));
       };
       img.src = event.target?.result as string;
@@ -247,13 +247,13 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
             {renderImageInput('รูปหน้าติดต่อแอดมิน (Contact Admin Banner)', 'contactBannerUrl')}
             
             <div className="pt-4 border-t border-white/5">
-              {renderImageInput('รูปภาพแจ้งเตือน 1 (Popup Image 1)', 'announcementImageUrl')}
+              {renderImageInput('รูปภาพแจ้งเตือน 1 (Popup Image 1)', 'imageUrl')}
               <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2 mt-4">
                  ลิงก์โปรโมท 1 (Popup Link 1)
               </label>
               <input
                 type="text"
-                value={settings.announcementLinkUrl || ''}
+                value={settings.linkUrl || ''}
                 onChange={(e) => setSettings({ ...settings, announcementLinkUrl: e.target.value })}
                 placeholder="https://... (เว้นว่างได้)"
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
@@ -261,13 +261,13 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
             </div>
             
             <div className="pt-4 border-t border-white/5">
-              {renderImageInput('รูปภาพแจ้งเตือน 2 (Popup Image 2)', 'announcementImageUrl2')}
+              {renderImageInput('รูปภาพแจ้งเตือน 2 (Popup Image 2)', 'imageUrl2')}
               <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2 mt-4">
                  ลิงก์โปรโมท 2 (Popup Link 2)
               </label>
               <input
                 type="text"
-                value={settings.announcementLinkUrl2 || ''}
+                value={settings.linkUrl2 || ''}
                 onChange={(e) => setSettings({ ...settings, announcementLinkUrl2: e.target.value })}
                 placeholder="https://... (เว้นว่างได้)"
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"

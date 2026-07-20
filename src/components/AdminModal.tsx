@@ -201,7 +201,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Compress to 60% quality jpeg
+            const dataUrl = canvas.toDataURL('image/webp', 0.8); 
             setUploadedImages(prev => [...prev, dataUrl]);
             setImageType('upload');
           } else {

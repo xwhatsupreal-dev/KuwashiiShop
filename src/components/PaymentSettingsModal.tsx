@@ -88,7 +88,7 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
         
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        const dataUrl = canvas.toDataURL('image/webp', 0.8);
         setter(dataUrl);
       };
       img.src = event.target?.result as string;
