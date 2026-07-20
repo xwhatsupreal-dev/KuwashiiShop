@@ -239,165 +239,36 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
 
           {/* Content */}
           <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6 bg-zinc-950/50">
-            <div>
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                ลิงก์โลโก้ร้าน (Shop Logo & AI Avatar)
-              </label>
-              <input
-                type="text"
-                value={settings.shopLogoUrl || ''}
-                onChange={(e) => setSettings({ ...settings, shopLogoUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
-              />
-              {settings.shopLogoUrl && (
-                <div className="mt-3 p-3 bg-zinc-900 rounded-xl border border-white/5 flex items-center justify-center">
-                  <img src={settings.shopLogoUrl} alt="Logo Preview" className="h-16 w-16 rounded-full object-cover border-2 border-fuchsia-500/30" />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                ลิงก์แบนเนอร์ร้าน (Shop Banner URL)
-              </label>
-              <input
-                type="text"
-                value={settings.shopBannerUrl || ''}
-                onChange={(e) => setSettings({ ...settings, shopBannerUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
-              />
-              {settings.shopBannerUrl && (
-                <div className="mt-3 p-3 bg-zinc-900 rounded-xl border border-white/5 overflow-hidden">
-                  <img src={settings.shopBannerUrl} alt="Banner Preview" className="w-full h-24 object-cover rounded-lg border border-white/10" />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                ลิงก์รูปชวนเข้าระบบ (Login Banner URL)
-              </label>
-              <input
-                type="text"
-                value={settings.loginBannerUrl || ''}
-                onChange={(e) => setSettings({ ...settings, loginBannerUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
-              />
-              {settings.loginBannerUrl && (
-                <div className="mt-3 p-3 bg-zinc-900 rounded-xl border border-white/5 overflow-hidden bg-black/50">
-                  <img src={settings.loginBannerUrl} alt="Login Banner Preview" className="w-full h-24 object-contain rounded-lg border border-white/10" />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                ลิงก์รูปดูสินค้าทั้งหมด (All Products Banner URL)
-              </label>
-              <input
-                type="text"
-                value={settings.productsBannerUrl || ''}
-                onChange={(e) => setSettings({ ...settings, productsBannerUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
-              />
-              {settings.productsBannerUrl && (
-                <div className="mt-3 p-3 bg-zinc-900 rounded-xl border border-white/5 overflow-hidden bg-black/50">
-                  <img src={settings.productsBannerUrl} alt="Products Banner Preview" className="w-full h-24 object-contain rounded-lg border border-white/10" />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                ลิงก์รูปเติมเงิน (Topup Banner URL)
-              </label>
-              <input
-                type="text"
-                value={settings.topupBannerUrl || ''}
-                onChange={(e) => setSettings({ ...settings, topupBannerUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
-              />
-              {settings.topupBannerUrl && (
-                <div className="mt-3 p-3 bg-zinc-900 rounded-xl border border-white/5 overflow-hidden bg-black/50">
-                  <img src={settings.topupBannerUrl} alt="Topup Banner Preview" className="w-full h-24 object-contain rounded-lg border border-white/10" />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                ลิงก์รูปติดต่อแอดมิน (Contact Admin Banner URL)
-              </label>
-              <input
-                type="text"
-                value={settings.contactBannerUrl || ''}
-                onChange={(e) => setSettings({ ...settings, contactBannerUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
-              />
-              {settings.contactBannerUrl && (
-                <div className="mt-3 p-3 bg-zinc-900 rounded-xl border border-white/5 overflow-hidden bg-black/50">
-                  <img src={settings.contactBannerUrl} alt="Contact Admin Banner Preview" className="w-full h-24 object-contain rounded-lg border border-white/10" />
-                </div>
-              )}
-            </div>
-
-            <div className="pt-4 border-t border-white/5/50">
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2 flex items-center gap-2">
-                <ImageIcon className="w-3 h-3" /> ลิงก์รูปภาพแจ้งเตือน 1 (Popup Image 1)
-              </label>
-              <input
-                type="text"
-                value={settings.imageUrl || ''}
-                onChange={(e) => setSettings({ ...settings, imageUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans mb-3"
-              />
-              {settings.imageUrl && (
-                <div className="mb-3 p-3 bg-zinc-900 rounded-xl border border-white/5 overflow-hidden">
-                  <img src={settings.imageUrl} alt="Popup 1 Preview" className="w-full h-24 object-cover rounded-lg border border-white/10" />
-                </div>
-              )}
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2 flex items-center gap-2">
+            {renderImageInput('โลโก้ร้าน (Shop Logo & AI Avatar)', 'shopLogoUrl')}
+            {renderImageInput('แบนเนอร์ร้าน (Shop Banner URL)', 'shopBannerUrl')}
+            {renderImageInput('รูปชวนเข้าระบบ (Login Banner URL)', 'loginBannerUrl')}
+            {renderImageInput('รูปดูสินค้าทั้งหมด (All Products Banner)', 'productsBannerUrl')}
+            {renderImageInput('รูปหน้าเติมเงิน (Topup Banner URL)', 'topupBannerUrl')}
+            {renderImageInput('รูปหน้าติดต่อแอดมิน (Contact Admin Banner)', 'contactBannerUrl')}
+            
+            <div className="pt-4 border-t border-white/5">
+              {renderImageInput('รูปภาพแจ้งเตือน 1 (Popup Image 1)', 'announcementImageUrl')}
+              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2 mt-4">
                  ลิงก์โปรโมท 1 (Popup Link 1)
               </label>
               <input
                 type="text"
-                value={settings.linkUrl || ''}
-                onChange={(e) => setSettings({ ...settings, linkUrl: e.target.value })}
+                value={settings.announcementLinkUrl || ''}
+                onChange={(e) => setSettings({ ...settings, announcementLinkUrl: e.target.value })}
                 placeholder="https://... (เว้นว่างได้)"
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
               />
             </div>
-
-            <div className="pt-4 border-t border-white/5/50">
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2 flex items-center gap-2">
-                <ImageIcon className="w-3 h-3" /> ลิงก์รูปภาพแจ้งเตือน 2 (Popup Image 2)
-              </label>
-              <input
-                type="text"
-                value={settings.imageUrl2 || ''}
-                onChange={(e) => setSettings({ ...settings, imageUrl2: e.target.value })}
-                placeholder="https://... (เว้นว่างได้)"
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans mb-3"
-              />
-              {settings.imageUrl2 && (
-                <div className="mb-3 p-3 bg-zinc-900 rounded-xl border border-white/5 overflow-hidden">
-                  <img src={settings.imageUrl2} alt="Popup 2 Preview" className="w-full h-24 object-cover rounded-lg border border-white/10" />
-                </div>
-              )}
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2 flex items-center gap-2">
+            
+            <div className="pt-4 border-t border-white/5">
+              {renderImageInput('รูปภาพแจ้งเตือน 2 (Popup Image 2)', 'announcementImageUrl2')}
+              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2 mt-4">
                  ลิงก์โปรโมท 2 (Popup Link 2)
               </label>
               <input
                 type="text"
-                value={settings.linkUrl2 || ''}
-                onChange={(e) => setSettings({ ...settings, linkUrl2: e.target.value })}
+                value={settings.announcementLinkUrl2 || ''}
+                onChange={(e) => setSettings({ ...settings, announcementLinkUrl2: e.target.value })}
                 placeholder="https://... (เว้นว่างได้)"
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
               />

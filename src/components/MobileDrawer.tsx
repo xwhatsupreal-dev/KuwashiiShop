@@ -58,14 +58,14 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onReg
             </div>
 
             <div className="flex-1 overflow-y-auto scrollbar-hide pb-8">
-              <div className="p-5 h-full flex flex-col">
+              <div className="p-5 min-h-full flex flex-col">
                 {currentUser ? (
                   <>
                     {/* User Profile Card - Clean & Fast */}
-                    <div className="mb-8 p-4 rounded-2xl bg-white/[0.02] border border-white/5 shadow-sm relative overflow-hidden">
+                    <div className="mb-8 p-4 rounded-2xl bg-white/[0.02] border border-white/5 shadow-sm relative overflow-hidden shrink-0">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
                       <div className="flex items-center gap-3.5 relative z-10">
-                        <div className="relative">
+                        <div className="relative shrink-0">
                           <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-[2px]">
                             <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center border-2 border-[#0a0a0a]">
                               <span className="text-lg font-bold text-white uppercase">
@@ -76,9 +76,9 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onReg
                           <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-zinc-900" />
                         </div>
                         
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-white text-[15px] leading-tight mb-0.5 truncate">{currentUser.username}</h4>
-                          <p className="text-[11px] text-zinc-400 mb-2 truncate">{currentUser.email || 'No email provided'}</p>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-white text-[15px] leading-tight mb-0.5 break-words">{currentUser.username}</h4>
+                          <p className="text-[11px] text-zinc-400 mb-2 break-all">{currentUser.email || 'ไม่มีอีเมล'}</p>
                           
                           <div className="flex items-center gap-2 flex-wrap">
                             
