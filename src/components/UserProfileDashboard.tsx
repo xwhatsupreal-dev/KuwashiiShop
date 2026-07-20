@@ -169,6 +169,9 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
               )}
             </div>
             <h3 className="font-bold text-zinc-100">{currentUser?.username}</h3>
+            {currentUser?.member_id && (
+                <p className="text-xs text-zinc-500 mt-1">ID: {currentUser.member_id}</p>
+            )}
             <div className="w-full h-px bg-white/5 my-3"></div>
             <div className="w-full space-y-2">
               

@@ -44,6 +44,7 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
           balance_rov: Number(d.balance_rov),
           joinDate: d.created_at,
           password: d.password,
+          member_id: d.member_id,
           purchaseCount: pCounts[d.username] || 0,
           topupCount: tCounts[d.username] || 0,
         }));
@@ -110,7 +111,7 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
   };
 
   const filteredUsers = users
-    .filter(u => u && (u.username || '').toLowerCase().includes((search || '').toLowerCase()))
+    .filter(u => u && ((u.username || '').toLowerCase().includes((search || '').toLowerCase()) || (u.member_id || '').includes(search)))
     .sort((a, b) => (a.username || '').localeCompare(b.username || ''));
 
   return (
@@ -162,7 +163,7 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="ค้นหาชื่อผู้ใช้..."
+                    placeholder="ค้นหาชื่อผู้ใช้ หรือ ID..."
                     className="w-full bg-zinc-900 border border-white/5 py-2 pl-10 pr-4 rounded-xl text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -190,6 +191,7 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
                             <h3 className="font-bold text-white text-base flex items-center gap-2">
                                {user.username || 'Unknown'}
                                {user.username === 'Kuwashii_admin' && <span className="bg-amber-500/20 text-amber-400 text-[10px] px-1.5 py-0.5 rounded-md border border-amber-500/30">Admin</span>}
+                               {user.member_id && <span className="bg-indigo-500/20 text-indigo-400 text-[10px] px-1.5 py-0.5 rounded-md border border-indigo-500/30">ID: {user.member_id}</span>}
                             </h3>
                             {user.email && (
                               <div className="text-[10px] text-zinc-400 font-sans mt-0.5">{user.email}</div>

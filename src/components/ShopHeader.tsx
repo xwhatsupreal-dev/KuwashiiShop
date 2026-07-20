@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet, LogOut, Gamepad2 } from 'lucide-react';
+import { Search, Menu, LogIn, User, CircleDollarSign, Home, ShoppingBag, Wallet, LogOut, Gamepad2, Settings, Box, History, Phone, Smile } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
+import { useRef, useEffect } from 'react';
 import { MarqueeAnnouncement } from './MarqueeAnnouncement';
 
 export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, onLogout, setAppScreen, currentScreen, globalStats, onLogoClick }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, onLogout?: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any, onLogoClick?: () => void }) => {
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <motion.header 
@@ -80,35 +94,79 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
 
           {currentUser ? (
             <div className="flex items-center gap-2">
-              <div 
-                onClick={() => setAppScreen?.("PROFILE")}
-                className="flex items-center gap-3 bg-blue-900/20 border border-blue-900/40 px-3 py-1.5 rounded-full cursor-pointer hover:bg-blue-900/20 transition-colors"
-              >
-                <div className="flex flex-col items-end hidden sm:flex">
-                  <span className="text-xs font-bold text-zinc-200">{currentUser.username}</span>
-                  
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-[#0ea5e9] font-semibold">ยอดเงิน: ฿{(currentUser.balance || 0).toLocaleString()}</span>
-                    
+              <div className="relative" ref={dropdownRef}>
+                <div 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center gap-3 bg-zinc-900 border border-white/10 px-2 py-1.5 rounded-full cursor-pointer hover:bg-zinc-800 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 overflow-hidden border border-white/5">
+                    {currentUser.avatar_url || currentUser.avatar ? (
+                      <img src={currentUser.avatar_url || currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
                   </div>
+                </div>
 
-                </div>
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
-                  {currentUser.avatar_url || currentUser.avatar ? (
-                    <img src={currentUser.avatar_url || currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-4 h-4" />
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-3 w-52 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col font-sans"
+                    >
+                      <div className="p-3 border-b border-white/5 bg-zinc-900/30">
+                        <h4 className="font-bold text-white text-[13px] truncate">{currentUser.username}</h4>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Smile className="w-3 h-3 text-zinc-400" />
+                          <span className="text-[9px] font-bold text-zinc-400 tracking-wider">MEMBER</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-300 mt-1.5 font-medium">ยอดเงิน: <span className="text-white">฿{(currentUser.balance || 0).toLocaleString()}</span></p>
+                      </div>
+                      <div className="p-1.5 flex flex-col gap-0.5">
+                        <button 
+                          onClick={() => { setAppScreen?.("PROFILE"); setIsDropdownOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors text-[12px] font-medium group"
+                        >
+                          <Settings className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" /> จัดการโปรไฟล์
+                        </button>
+                        <button 
+                          onClick={() => { setAppScreen?.("PROFILE"); setIsDropdownOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors text-[12px] font-medium group"
+                        >
+                          <Box className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" /> สถานะคำสั่งซื้อ
+                        </button>
+                        <button 
+                          onClick={() => { setAppScreen?.("TOPUP"); setIsDropdownOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors text-[12px] font-medium group"
+                        >
+                          <Wallet className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" /> เติมเงิน
+                        </button>
+                        <button 
+                          onClick={() => { setAppScreen?.("PROFILE"); setIsDropdownOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors text-[12px] font-medium group"
+                        >
+                          <History className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" /> ประวัติการเติมเงิน
+                        </button>
+                        <button 
+                          onClick={() => { window.open('https://discord.gg/AQKtJpvyva', '_blank'); setIsDropdownOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors text-[12px] font-medium group"
+                        >
+                          <Phone className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" /> ติดต่อเรา
+                        </button>
+                        <button 
+                          onClick={() => { if (onLogout) onLogout(); setIsDropdownOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-red-500/10 text-red-400 hover:text-red-500 transition-colors text-[12px] font-medium group mt-1 border-t border-white/5 pt-2"
+                        >
+                          <LogOut className="w-3.5 h-3.5 text-red-500 group-hover:text-red-500 transition-colors" /> ออกจากระบบ
+                        </button>
+                      </div>
+                    </motion.div>
                   )}
-                </div>
+                </AnimatePresence>
               </div>
-              
-              <button 
-                onClick={onLogout}
-                className="hidden md:flex p-2 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
-                title="ออกจากระบบ"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
             </div>
           ) : (
             <button 

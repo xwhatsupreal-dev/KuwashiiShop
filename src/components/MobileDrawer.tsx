@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, ShoppingBag, Wallet, Phone, HelpCircle, LogOut, Facebook, MessageSquare, ChevronRight, Lock, History, Settings, ArrowUpRight, Target, Zap, Gamepad2 } from 'lucide-react';
+import { Home, ShoppingBag, Wallet, Phone, HelpCircle, LogOut, Facebook, MessageSquare, ChevronRight, Lock, History, Settings, ArrowUpRight, Target, Zap, Gamepad2, X, LayoutGrid, LogIn, UserPlus } from 'lucide-react';
 
 interface MobileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: any;
   onLoginClick: () => void;
+  onRegisterClick?: () => void;
   onLogoutClick: () => void;
   setPage?: (page: string) => void;
   setShowTopupModal?: (show: boolean) => void;
@@ -25,7 +26,7 @@ const MenuListItem = ({ icon, title, onClick, rightElement, className = "", icon
   </button>
 );
 
-export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLogoutClick, setPage, setShowTopupModal, openHistoryModal }: MobileDrawerProps) => {
+export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onRegisterClick, onLogoutClick, setPage, setShowTopupModal, openHistoryModal }: MobileDrawerProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -48,6 +49,14 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
             className="fixed top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-[#0a0a0a] border-r border-white/10 shadow-2xl z-[151] flex flex-col font-sans overflow-hidden"
           >
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
+              <h2 className="text-xl font-black text-white tracking-wider">KUWASHII SHOP</h2>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors shrink-0">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
             <div className="flex-1 overflow-y-auto scrollbar-hide pb-8">
               <div className="p-5 h-full flex flex-col">
                 {currentUser ? (
@@ -185,18 +194,73 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onLog
                     </div>
                   </>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <div className="w-20 h-20 bg-zinc-900 border border-white/10 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
-                      <Lock className="w-8 h-8 text-zinc-500" />
+                  <div className="flex-1 flex flex-col pt-4 space-y-4">
+                    <div className="space-y-1">
+                      <MenuListItem
+                         icon={<Home className="w-[18px] h-[18px] text-zinc-400 group-hover:text-white transition-colors" />}
+                         iconClassName="bg-transparent"
+                         title="หน้าแรก"
+                         rightElement={<span />}
+                         onClick={() => {
+                           setPage?.('SHOP');
+                           onClose();
+                         }}
+                       />
+                       <MenuListItem
+                         icon={<LayoutGrid className="w-[18px] h-[18px] text-zinc-400 group-hover:text-white transition-colors" />}
+                         iconClassName="bg-transparent"
+                         title="หมวดหมู่สินค้า"
+                         rightElement={<span />}
+                         onClick={() => {
+                           setPage?.('SHOP');
+                           onClose();
+                         }}
+                       />
+                       <MenuListItem
+                         icon={<ShoppingBag className="w-[18px] h-[18px] text-zinc-400 group-hover:text-white transition-colors" />}
+                         iconClassName="bg-transparent"
+                         title="สินค้าทั้งหมด"
+                         rightElement={<span />}
+                         onClick={() => {
+                           setPage?.('SHOP');
+                           onClose();
+                         }}
+                       />
+                       <div onClick={() => window.open('https://discord.gg/AQKtJpvyva', '_blank')}>
+                         <MenuListItem
+                           icon={<Phone className="w-[18px] h-[18px] text-zinc-400 group-hover:text-white transition-colors" />}
+                           iconClassName="bg-transparent"
+                           title="ติดต่อเรา"
+                           rightElement={<span />}
+                         />
+                       </div>
                     </div>
-                    <h3 className="text-[18px] font-bold text-white mb-2">ยังไม่ได้เข้าสู่ระบบ</h3>
-                    <p className="text-[13px] text-zinc-400 mb-8 max-w-[240px] leading-relaxed">กรุณาเข้าสู่ระบบเพื่อดูข้อมูลบัญชี ประวัติการทำรายการ และจัดการโปรไฟล์ของคุณ</p>
-                    <button 
-                      onClick={() => { onClose(); onLoginClick(); }}
-                      className="w-full py-3.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-[14px] transition-colors flex justify-center items-center gap-2 group"
-                    >
-                      เข้าสู่ระบบ หรือ สมัครสมาชิก
-                    </button>
+
+                    <div className="relative py-4 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center px-4">
+                        <div className="w-full border-t border-white/10"></div>
+                      </div>
+                      <div className="relative bg-[#0a0a0a] px-3">
+                        <span className="text-xs font-semibold text-zinc-500 uppercase">ระบบสมาชิก</span>
+                      </div>
+                    </div>
+
+                    <div className="px-4 flex flex-col gap-3">
+                      <button 
+                        onClick={() => { onClose(); onLoginClick(); }}
+                        className="w-full py-3.5 rounded-xl bg-zinc-200 hover:bg-white text-black font-bold text-[14px] transition-colors flex justify-center items-center gap-2 group"
+                      >
+                        <LogIn className="w-5 h-5" />
+                        เข้าสู่ระบบ
+                      </button>
+                      <button 
+                        onClick={() => { onClose(); if (onRegisterClick) onRegisterClick(); else onLoginClick(); }}
+                        className="w-full py-3.5 rounded-xl bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-white font-bold text-[14px] transition-colors flex justify-center items-center gap-2 group"
+                      >
+                        <UserPlus className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
+                        สมัครสมาชิก
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

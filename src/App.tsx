@@ -1434,12 +1434,14 @@ export default function App() {
           // Table might not have email column yet or other error, ignore and let insert fail if it's unique
         }
 
+        const newMemberId = Math.floor(100000 + Math.random() * 900000).toString();
         let insertRes = await supabase.from("profiles").insert([
           {
             username: targetUsername,
             email: authEmail.trim(),
             password: authPassword,
             balance: 0,
+            member_id: newMemberId,
           },
         ]);
 
@@ -1450,6 +1452,7 @@ export default function App() {
               username: targetUsername,
               password: authPassword,
               balance: 0,
+              member_id: newMemberId,
             },
           ]);
         }
@@ -2796,6 +2799,10 @@ export default function App() {
             onLoginClick={() => {
               setAppScreen("LOGIN");
               setAuthMode("login");
+            }}
+            onRegisterClick={() => {
+              setAppScreen("LOGIN");
+              setAuthMode("register");
             }}
             onLogout={handleLogout}
             setAppScreen={setAppScreen}

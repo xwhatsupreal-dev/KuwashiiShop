@@ -820,6 +820,26 @@ app.post("/api/d1/init", async (req: express.Request, res: express.Response) => 
       body: JSON.stringify({ sql: "ALTER TABLE system_config ADD COLUMN all_time_sales_count INTEGER DEFAULT 0;" })
     }).catch(() => {});
 
+    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: "ALTER TABLE profiles ADD COLUMN member_id TEXT;" })
+    }).catch(() => {});
+    
+    // Assign random 6 digit ID to existing users
+    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sql: "UPDATE profiles SET member_id = CAST(ABS(RANDOM()) % 900000 + 100000 AS TEXT) WHERE member_id IS NULL;" })
+    }).catch(() => {});
+
+
     const data = await response.json();
     if (!data.success) {
        console.error("Init Error:", data.errors, { accountId, dbId, tokenLen: token?.length });
