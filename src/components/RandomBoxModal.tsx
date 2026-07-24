@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useScrollLock } from '../useScrollLock';
+
 import { motion } from "motion/react";
 import {
   Copy,
@@ -26,6 +28,7 @@ export const RandomBoxModal: React.FC<RandomBoxModalProps> = ({
   onBuy,
   isProcessing = false,
 }) => {
+  useScrollLock(!!item);
   const [quantity, setQuantity] = useState<number | string>(1);
   const [copied, setCopied] = useState(false);
   const pressTimeout = React.useRef<NodeJS.Timeout | null>(null);

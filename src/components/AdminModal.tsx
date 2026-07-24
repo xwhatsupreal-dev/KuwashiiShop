@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Save, Upload, Link, AlertCircle, Sparkles, Image as ImageIcon, Package, Coins, Clock, Plus, Trash2 } from 'lucide-react';
 import { StockItem } from '../types';
@@ -61,6 +63,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useScrollLock(isOpen);
   useEffect(() => {
     let annUrl = '';
     const stored = localStorage.getItem("KUWASHII_ANNOUNCEMENT_SETTINGS");

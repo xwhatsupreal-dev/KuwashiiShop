@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Trash2, Gift, Save } from 'lucide-react';
 import { formatThaiDate } from '../utils/date';
@@ -35,6 +37,7 @@ export const CouponManagerModal: React.FC<CouponManagerModalProps> = ({ isOpen, 
     }
   };
 
+  useScrollLock(isOpen);
   useEffect(() => {
     if (isOpen) {
       fetchCoupons();

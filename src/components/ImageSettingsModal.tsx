@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Image as ImageIcon, Save, Check, Upload } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -28,6 +30,7 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
     linkUrl2: ''
   });
 
+  useScrollLock(isOpen);
   useEffect(() => {
     if (isOpen) {
       loadSettings();

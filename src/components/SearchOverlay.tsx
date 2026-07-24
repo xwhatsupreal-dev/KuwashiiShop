@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from "motion/react";
 import { Search, X, ChevronRight } from "lucide-react";
 import { StockItem } from "../types";
@@ -23,6 +25,7 @@ export function SearchOverlay({
   const inputRef = useRef<HTMLInputElement>(null);
   const [localSearch, setLocalSearch] = useState(initialSearch);
 
+  useScrollLock(isOpen);
   useEffect(() => {
     if (isOpen) {
       setLocalSearch(initialSearch);

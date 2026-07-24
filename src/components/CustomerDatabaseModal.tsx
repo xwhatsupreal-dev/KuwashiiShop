@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Users, Search, DollarSign, Clock, Package, Edit2, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -23,6 +25,7 @@ export const CustomerDatabaseModal: React.FC<CustomerModalProps> = ({ isOpen, on
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<string | null>(null);
 
       // Load from multiple sources optionally, but focus on KUWASHII_V2_USERS
+  useScrollLock(isOpen);
   useEffect(() => {
     const loadData = async () => {
       const [{ data: profiles, error }, { data: purchases }, { data: topups }] = await Promise.all([

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Wallet, QrCode, CreditCard, Image as ImageIcon, Upload } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -32,6 +34,7 @@ export const PaymentSettingsModal: React.FC<Props> = ({ isOpen, onClose, globalS
   const [isSaving, setIsSaving] = useState(false);
   
 
+  useScrollLock(isOpen);
   useEffect(() => {
     if (globalStats) {
       let ann = globalStats.announcement_settings || {};

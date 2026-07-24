@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Search, Edit2, Trash2, Plus, Package } from 'lucide-react';
 import { StockItem } from '../types';

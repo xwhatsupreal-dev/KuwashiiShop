@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface GlobalLoadingScreenProps {
@@ -8,6 +8,17 @@ interface GlobalLoadingScreenProps {
 }
 
 export const GlobalLoadingScreen: React.FC<GlobalLoadingScreenProps> = ({ isLoading, progress, shopLogoUrl }) => {
+  useEffect(() => {
+    if (isLoading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isLoading]);
+
   return (
     <AnimatePresence>
       {isLoading && (

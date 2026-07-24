@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Clock, ChevronDown } from 'lucide-react';
 import { AnnouncementSettings } from './AnnouncementManagerModal';
@@ -10,6 +12,7 @@ interface AnnouncementPopupProps {
 
 export const AnnouncementPopup: React.FC<AnnouncementPopupProps> = ({ appScreen, isLoadingData = false }) => {
   const [isVisible, setIsVisible] = useState(false);
+  useScrollLock(isVisible);
   const [settings, setSettings] = useState<AnnouncementSettings | null>(null);
   const [activeAnnouncements, setActiveAnnouncements] = useState<{ image: string, link: string, originalIndex: number }[]>([]);
   const [currentActiveIndex, setCurrentActiveIndex] = useState(0);

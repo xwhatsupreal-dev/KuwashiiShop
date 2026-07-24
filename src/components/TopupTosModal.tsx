@@ -1,4 +1,6 @@
 import React from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Search } from 'lucide-react';
 

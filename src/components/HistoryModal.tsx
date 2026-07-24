@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, History, ShoppingCart, PackageOpen, Calendar, Clock, Sparkles, DollarSign, ChevronDown, ChevronUp, MessageCircle, Copy, Search, ShoppingBag, ChevronLeft } from 'lucide-react';
 import { PurchaseRecord, TopupRecord } from '../types';
@@ -16,6 +18,7 @@ interface HistoryModalProps {
 export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchases', items = [] }: HistoryModalProps) {
   const [activeTab, setActiveTab] = useState<'purchases' | 'topups' | 'gametopups'>(initialTab);
 
+  useScrollLock(isOpen);
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Settings, KeySquare, Eye, EyeOff, Save, CheckCircle } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -29,6 +31,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
   const [editEmail, setEditEmail] = useState('');
   const [userEmail, setUserEmail] = useState('-');
 
+  useScrollLock(isOpen);
   useEffect(() => {
     if (isOpen && currentUser) {
       setEditUsername(currentUser.username || '');

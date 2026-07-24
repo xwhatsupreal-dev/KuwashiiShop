@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useScrollLock } from '../useScrollLock';
+
 import { motion } from "motion/react";
 import {
   ArrowLeft,
@@ -26,6 +28,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
   onBuy,
   isProcessing = false,
 }) => {
+  useScrollLock(!!item);
   const [quantity, setQuantity] = useState<number | string>(1);
   const [copied, setCopied] = useState(false);
 

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, FolderPlus, Edit3, Trash2, Plus, Save } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -20,6 +22,7 @@ export const CategoryManagerModal: React.FC<Props> = ({ isOpen, onClose, globalS
   const [subtitle, setSubtitle] = useState('');
   const [image, setImage] = useState('');
 
+  useScrollLock(isOpen);
   useEffect(() => {
     if (globalStats && globalStats.announcement_settings?.categories) {
       setCategories(globalStats.announcement_settings.categories);

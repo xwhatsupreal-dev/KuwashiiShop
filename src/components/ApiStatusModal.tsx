@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Wallet, QrCode, RefreshCw } from 'lucide-react';
 
@@ -29,6 +31,7 @@ export const ApiStatusModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   };
 
+  useScrollLock(isOpen);
   useEffect(() => {
     if (isOpen) {
       checkApiStatus();

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../useScrollLock';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Bell, Image as ImageIcon, Save, Check, Type } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -61,6 +63,7 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
   const [settings, setSettings] = useState<AnnouncementSettings>(DEFAULT_SETTINGS);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  useScrollLock(isOpen);
   useEffect(() => {
     if (isOpen) {
       const saved = localStorage.getItem('KUWASHII_ANNOUNCEMENT_SETTINGS');
