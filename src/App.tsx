@@ -63,6 +63,7 @@ import {
   Image as ImageIcon,
   RefreshCw,
   Gamepad2,
+  Globe,
 } from "lucide-react";
 
 import {
@@ -99,6 +100,8 @@ import { AuthPage } from "./components/AuthPage";
 import { GameTopupPage } from "./components/GameTopupPage";
 import { GlobalLoadingScreen } from "./components/GlobalLoadingScreen";
 import { UserProfileDashboard } from "./components/UserProfileDashboard";
+import { SupplierManagerModal } from "./components/SupplierManagerModal";
+import { buySupplierProduct, getStoredSupplierConfig } from "./services/supplierApi";
 import jsQR from "jsqr";
 
 const readQRFromImage = (file: File): Promise<string | null> => {
@@ -547,6 +550,7 @@ export default function App() {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isStockManagerOpen, setIsStockManagerOpen] = useState(false);
+  const [isSupplierManagerOpen, setIsSupplierManagerOpen] = useState(false);
   const [isCustomerDbOpen, setIsCustomerDbOpen] = useState(false);
   const [isCouponManagerOpen, setIsCouponManagerOpen] = useState(false);
   const [isPaymentConfigOpen, setIsPaymentConfigOpen] = useState(false);
@@ -2002,7 +2006,37 @@ export default function App() {
       let extractCreds: string[] | undefined = undefined;
       let nextAccCreds = item.accountCredentials;
 
-      if (item.saleFormat === "ไฟล์ตัวรัน") {
+      // Check if this item is imported from a supplier API
+      const supplierMatch = item.description?.match(/<!--supplierProductId:(.*?)-->/);
+      const supplierUrlMatch = item.description?.match(/<!--supplierUrl:(.*?)-->/);
+
+      if (supplierMatch) {
+        const supplierProductId = supplierMatch[1].trim();
+        const supplierUrl = supplierUrlMatch ? supplierUrlMatch[1].trim() : undefined;
+
+        const supplierRes = await buySupplierProduct(
+          supplierProductId,
+          currentUser.username,
+          undefined,
+          supplierUrl ? { apiKey: getStoredSupplierConfig().apiKey, supplierUrl } : undefined
+        );
+
+        if (supplierRes.status !== 200 || !supplierRes.reward) {
+          // Revert balance update
+          await supabase
+            .from("profiles")
+            .update({ [balanceField]: liveUserBalance })
+            .eq("username", currentUser.username);
+
+          showToast(`ไม่สามารถสั่งซื้อจากร้านค้าต้นทางได้: ${supplierRes.error || supplierRes.message || 'เกิดข้อผิดพลาดในการซื้อจากร้านค้าภายนอก'}`, "error");
+          setIsProcessingPurchase(false);
+          isProcessingPurchaseRef.current = false;
+          return;
+        }
+
+        extractCreds = Array(purchaseQty).fill(supplierRes.reward);
+        handleQuickQuantityChange(item.id, -purchaseQty, true);
+      } else if (item.saleFormat === "ไฟล์ตัวรัน") {
         const productInfo = `ลิ้งค์ดาวน์โหลด: ${item.fileLink || "-"} | รหัสผ่านเข้าถึงลิ้งค์: ${item.filePassword || "-"}`;
         extractCreds = Array(purchaseQty).fill(productInfo);
         handleQuickQuantityChange(item.id, -purchaseQty, true);
@@ -2587,6 +2621,16 @@ export default function App() {
         onAddNew={() => {
           setEditingItem(null);
           setIsFormOpen(true);
+        }}
+        onOpenSupplierModal={() => setIsSupplierManagerOpen(true)}
+      />
+
+      <SupplierManagerModal
+        isOpen={isSupplierManagerOpen}
+        onClose={() => setIsSupplierManagerOpen(false)}
+        currentGame={appScreen as any}
+        onItemImported={() => {
+          fetchItems().then(setItems).catch(console.error);
         }}
       />
 
@@ -3274,6 +3318,13 @@ export default function App() {
                             className="py-2 px-4 rounded-2xl bg-indigo-500/20 text-indigo-400 hover:text-zinc-100 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
                           >
                             <Package className="w-4 h-4" /> ระบบผู้ดูแลสต๊อก
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsSupplierManagerOpen(true)}
+                            className="py-2 px-4 rounded-2xl bg-amber-500/20 text-amber-400 hover:text-zinc-100 border border-amber-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/10"
+                          >
+                            <Globe className="w-4 h-4" /> ดึงสินค้าจากร้านอื่น
                           </motion.button>
                           <motion.button
                             whileTap={{ scale: 0.95 }}

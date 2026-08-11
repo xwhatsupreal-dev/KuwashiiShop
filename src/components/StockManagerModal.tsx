@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useScrollLock } from '../useScrollLock';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Search, Edit2, Trash2, Plus, Package } from 'lucide-react';
+import { X, Search, Edit2, Trash2, Plus, Package, Globe } from 'lucide-react';
 import { StockItem } from '../types';
 
 interface StockManagerModalProps {
@@ -12,6 +12,7 @@ interface StockManagerModalProps {
   onEdit: (item: StockItem) => void;
   onDelete: (id: string) => void;
   onAddNew: () => void;
+  onOpenSupplierModal?: () => void;
 }
 
 export const StockManagerModal: React.FC<StockManagerModalProps> = ({
@@ -21,6 +22,7 @@ export const StockManagerModal: React.FC<StockManagerModalProps> = ({
   onEdit,
   onDelete,
   onAddNew,
+  onOpenSupplierModal,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -64,9 +66,20 @@ export const StockManagerModal: React.FC<StockManagerModalProps> = ({
             </div>
             
             <div className="flex items-center gap-3">
+              {onOpenSupplierModal && (
+                <motion.button whileTap={{ scale: 0.95 }} 
+                  onClick={() => {
+                    onClose();
+                    onOpenSupplierModal();
+                  }}
+                  className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer shadow-lg shadow-amber-500/10"
+                >
+                  <Globe className="w-4 h-4" /> ดึงสินค้าจากร้านอื่น
+                </motion.button>
+              )}
               <motion.button whileTap={{ scale: 0.95 }} 
                 onClick={onAddNew}
-                className="bg-zinc-900 text-black hover:bg-zinc-200 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
+                className="bg-zinc-900 text-white hover:bg-zinc-800 border border-white/10 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> เพิ่มสินค้าใหม่
               </motion.button>
