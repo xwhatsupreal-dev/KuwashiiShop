@@ -116,7 +116,12 @@ export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
       setBalance(res.balance);
     } else {
       setBalance(null);
-      setBalanceError(res.error || 'ไม่สามารถดึงยอดเงินได้ กรุณาตรวจสอบ API Key');
+      const errMsg = res.error || (res as any).message;
+      if (errMsg === 'Invalid or disabled API Key') {
+        setBalanceError('API Key ไม่ถูกต้อง หรือถูกปิดใช้งานในระบบร้านค้าปลายทาง (Invalid or disabled API Key)');
+      } else {
+        setBalanceError(errMsg || 'ไม่สามารถดึงยอดเงินได้ กรุณาตรวจสอบ API Key');
+      }
     }
   };
 
@@ -129,7 +134,12 @@ export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
       setProducts(res.products);
     } else {
       setProducts([]);
-      setProductError(res.error || 'ไม่สามารถดึงรายการสินค้าได้');
+      const errMsg = res.error || (res as any).message;
+      if (errMsg === 'Invalid or disabled API Key') {
+        setProductError('API Key ไม่ถูกต้อง หรือถูกปิดใช้งานในระบบร้านค้าปลายทาง (Invalid or disabled API Key)');
+      } else {
+        setProductError(errMsg || 'ไม่สามารถดึงรายการสินค้าได้');
+      }
     }
   };
 
@@ -142,7 +152,12 @@ export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
       setHistory(res.history);
     } else {
       setHistory([]);
-      setHistoryError(res.error || 'ไม่สามารถดึงประวัติการสั่งซื้อได้');
+      const errMsg = res.error || (res as any).message;
+      if (errMsg === 'Invalid or disabled API Key') {
+        setHistoryError('API Key ไม่ถูกต้อง หรือถูกปิดใช้งานในระบบร้านค้าปลายทาง (Invalid or disabled API Key)');
+      } else {
+        setHistoryError(errMsg || 'ไม่สามารถดึงประวัติการสั่งซื้อได้');
+      }
     }
   };
 
