@@ -30,7 +30,8 @@ import {
   Award,
   X,
   Send,
-  KeyRound
+  KeyRound,
+  AlertTriangle
 } from "lucide-react";
 import { supabase } from "../supabase";
 import { PurchaseRecord, TopupRecord } from "../types";
@@ -81,6 +82,7 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [otpError, setOtpError] = useState("");
+  const [simulatedOtpCode, setSimulatedOtpCode] = useState<string | null>(null);
 
   // UI Toast & Action state
   const [copiedId, setCopiedId] = useState(false);
@@ -263,7 +265,14 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
       setOtpInput("");
       setOtpError("");
       setShowVerifyModal(true);
-      showToast('success', 'ส่งรหัส OTP ยืนยันอีเมลแล้ว กรุณาตรวจสอบกล่องจดหมาย');
+
+      if (resData.simulated) {
+        setSimulatedOtpCode(otp);
+        showToast('success', `ส่งรหัส OTP แล้ว (โหมดจำลอง: ${otp})`);
+      } else {
+        setSimulatedOtpCode(null);
+        showToast('success', 'ส่งรหัส OTP ยืนยันอีเมลแล้ว กรุณาตรวจสอบกล่องจดหมาย');
+      }
     } catch (err: any) {
       console.error("OTP send error:", err);
       showToast('error', err.message || 'เกิดข้อผิดพลาดในการส่ง OTP');
@@ -1203,9 +1212,36 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
               </div>
 
               <div className="space-y-4">
-                <p className="text-xs text-zinc-300">
-                  รหัส OTP 6 หลักถูกส่งไปยังอีเมล <strong className="text-indigo-400">{editEmail}</strong> แล้ว (รหัสมีอายุ 15 นาที)
-                </p>
+                {simulatedOtpCode ? (
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 text-xs text-amber-300 space-y-2">
+                    <p className="font-bold flex items-center gap-1.5 text-amber-400">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      โหมดทดสอบระบบ (ยังไม่ได้ตั้งค่า SMTP เซิร์ฟเวอร์):
+                    </p>
+                    <p className="text-zinc-300 text-[11px] leading-relaxed">
+                      เนื่องจากระบบยังไม่ได้ระบุรหัสผ่าน SMTP สำหรับส่งอีเมลจริง รหัส OTP ยืนยันสำหรับ <strong className="text-white">{editEmail}</strong> คือ:
+                    </p>
+                    <div className="flex items-center justify-center gap-2 pt-1">
+                      <span className="bg-amber-500/20 border border-amber-500/40 text-amber-200 px-4 py-1.5 rounded-xl text-xl font-mono font-bold tracking-widest">
+                        {simulatedOtpCode}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setOtpInput(simulatedOtpCode)}
+                        className="px-3 py-1.5 bg-amber-500/30 hover:bg-amber-500/40 text-amber-200 text-xs font-bold rounded-xl transition-all"
+                      >
+                        กรอกรหัสนี้
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    รหัส OTP 6 หลักถูกส่งไปยังอีเมล <strong className="text-indigo-400">{editEmail}</strong> แล้ว (รหัสมีอายุ 15 นาที)
+                    <span className="block text-[11px] text-zinc-400 mt-1">
+                      * หากไม่พบบนกล่องจดหมาย กรุณาตรวจสอบในโฟลเดอร์ จดหมายขยะ (Spam / Junk)
+                    </span>
+                  </p>
+                )}
 
                 <div>
                   <label className="text-xs font-bold text-zinc-400 block mb-1.5">
