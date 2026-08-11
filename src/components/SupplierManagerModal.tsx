@@ -94,10 +94,9 @@ export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
       setSupplierUrl(cfg.supplierUrl || DEFAULT_SUPPLIER_URL);
       setImportGame(currentGame === 'SHOP' ? 'ROV' : currentGame);
 
-      if (cfg.apiKey) {
-        handleCheckBalance(cfg);
-        handleFetchProducts(cfg);
-      }
+      // Always check balance and fetch products automatically (backend falls back to process.env.SUPPLIER_API_KEY)
+      handleCheckBalance(cfg);
+      handleFetchProducts(cfg);
     }
   }, [isOpen, currentGame]);
 
@@ -623,9 +622,19 @@ export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
                     <div>
                       <h4 className="font-bold text-white text-base">ตั้งค่าการเชื่อมต่อ API ร้านค้าภายนอก</h4>
                       <p className="text-xs text-zinc-400 mt-0.5">
-                        กรอกข้อมูล API Key ที่ได้รับจากระบบร้านค้าเพื่อเริ่มดึงสินค้า
+                        ระบบจะใช้ API Key จากไฟล์ <code className="text-amber-400 font-mono">.env</code> (<code className="text-amber-400 font-mono">SUPPLIER_API_KEY</code>) เป็นค่าเริ่มต้นโดยอัตโนมัติ
                       </p>
                     </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 space-y-1">
+                    <p className="font-bold flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      คำแนะนำ: ไม่จำเป็นต้องใส่ API Key ในหน้านี้หากตั้งค่าใน .env แล้ว
+                    </p>
+                    <p className="text-amber-200/80 leading-relaxed pl-5">
+                      หากคุณใส่ <code className="font-mono bg-black/40 px-1 rounded">SUPPLIER_API_KEY</code> ในระบบหลังบ้านหรือไฟล์ <code className="font-mono bg-black/40 px-1 rounded">.env</code> เรียบร้อยแล้ว สามารถกดปุ่มดึงสินค้าได้ทันทีโดยไม่ต้องกรอกในช่องด้านล่าง (เว้นแต่ต้องการระบุ API Key เฉพาะกิจ)
+                    </p>
                   </div>
 
                   <div className="space-y-4">
@@ -644,13 +653,13 @@ export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
 
                     <div>
                       <label className="block text-xs font-bold text-zinc-300 mb-1.5">
-                        Apikey (YOUR_API_KEY)
+                        Apikey (กำหนดเองเพื่อเขียนทับค่าใน .env)
                       </label>
                       <input
                         type="password"
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
-                        placeholder="วาง Apikey ของคุณที่นี่..."
+                        placeholder="เว้นว่างไว้เพื่อใช้ SUPPLIER_API_KEY จาก .env หรือวาง Apikey ใหม่ที่นี่..."
                         className="w-full bg-zinc-950 border border-white/10 text-white px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-500 font-mono"
                       />
                     </div>
