@@ -63,7 +63,6 @@ import {
   Image as ImageIcon,
   RefreshCw,
   Gamepad2,
-  Globe,
 } from "lucide-react";
 
 import {
@@ -100,8 +99,6 @@ import { AuthPage } from "./components/AuthPage";
 import { GameTopupPage } from "./components/GameTopupPage";
 import { GlobalLoadingScreen } from "./components/GlobalLoadingScreen";
 import { UserProfileDashboard } from "./components/UserProfileDashboard";
-import { SupplierManagerModal } from "./components/SupplierManagerModal";
-import { buySupplierProduct, getStoredSupplierConfig } from "./services/supplierApi";
 import jsQR from "jsqr";
 
 const readQRFromImage = (file: File): Promise<string | null> => {
@@ -550,7 +547,6 @@ export default function App() {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isStockManagerOpen, setIsStockManagerOpen] = useState(false);
-  const [isSupplierManagerOpen, setIsSupplierManagerOpen] = useState(false);
   const [isCustomerDbOpen, setIsCustomerDbOpen] = useState(false);
   const [isCouponManagerOpen, setIsCouponManagerOpen] = useState(false);
   const [isPaymentConfigOpen, setIsPaymentConfigOpen] = useState(false);
@@ -2006,37 +2002,7 @@ export default function App() {
       let extractCreds: string[] | undefined = undefined;
       let nextAccCreds = item.accountCredentials;
 
-      // Check if this item is imported from a supplier API
-      const supplierMatch = item.description?.match(/<!--supplierProductId:(.*?)-->/);
-      const supplierUrlMatch = item.description?.match(/<!--supplierUrl:(.*?)-->/);
-
-      if (supplierMatch) {
-        const supplierProductId = supplierMatch[1].trim();
-        const supplierUrl = supplierUrlMatch ? supplierUrlMatch[1].trim() : undefined;
-
-        const supplierRes = await buySupplierProduct(
-          supplierProductId,
-          currentUser.username,
-          undefined,
-          supplierUrl ? { apiKey: getStoredSupplierConfig().apiKey, supplierUrl } : undefined
-        );
-
-        if (supplierRes.status !== 200 || !supplierRes.reward) {
-          // Revert balance update
-          await supabase
-            .from("profiles")
-            .update({ [balanceField]: liveUserBalance })
-            .eq("username", currentUser.username);
-
-          showToast(`ไม่สามารถสั่งซื้อจากร้านค้าต้นทางได้: ${supplierRes.error || supplierRes.message || 'เกิดข้อผิดพลาดในการซื้อจากร้านค้าภายนอก'}`, "error");
-          setIsProcessingPurchase(false);
-          isProcessingPurchaseRef.current = false;
-          return;
-        }
-
-        extractCreds = Array(purchaseQty).fill(supplierRes.reward);
-        handleQuickQuantityChange(item.id, -purchaseQty, true);
-      } else if (item.saleFormat === "ไฟล์ตัวรัน") {
+      if (item.saleFormat === "ไฟล์ตัวรัน") {
         const productInfo = `ลิ้งค์ดาวน์โหลด: ${item.fileLink || "-"} | รหัสผ่านเข้าถึงลิ้งค์: ${item.filePassword || "-"}`;
         extractCreds = Array(purchaseQty).fill(productInfo);
         handleQuickQuantityChange(item.id, -purchaseQty, true);
@@ -2620,22 +2586,6 @@ export default function App() {
         onDelete={handleDeleteItem}
         onAddNew={() => {
           setEditingItem(null);
-          setIsFormOpen(true);
-        }}
-        onOpenSupplierModal={() => setIsSupplierManagerOpen(true)}
-      />
-
-      <SupplierManagerModal
-        isOpen={isSupplierManagerOpen}
-        onClose={() => setIsSupplierManagerOpen(false)}
-        currentGame={appScreen as any}
-        globalStats={globalStats}
-        onItemImported={() => {
-          fetchItems().then(setItems).catch(console.error);
-        }}
-        onOpenAdminWithPrefill={(itemDraft) => {
-          setIsSupplierManagerOpen(false);
-          setEditingItem(itemDraft as any);
           setIsFormOpen(true);
         }}
       />
@@ -3327,13 +3277,6 @@ export default function App() {
                           </motion.button>
                           <motion.button
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => setIsSupplierManagerOpen(true)}
-                            className="py-2 px-4 rounded-2xl bg-amber-500/20 text-amber-400 hover:text-zinc-100 border border-amber-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/10"
-                          >
-                            <Globe className="w-4 h-4" /> ดึงสินค้าจากร้านอื่น
-                          </motion.button>
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
                             onClick={() => setIsFormOpen(true)}
                             className="py-2 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-zinc-100 text-xs font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2"
                           >
@@ -3452,6 +3395,7 @@ export default function App() {
             setPage={setAppScreen}
             setShowTopupModal={setShowTopupModal}
             openHistoryModal={openHistoryModal}
+            globalStats={globalStats}
           />
           <SearchOverlay
             isOpen={isSearchOpen}

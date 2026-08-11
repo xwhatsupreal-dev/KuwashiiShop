@@ -1,6 +1,33 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, ShoppingBag, Wallet, Phone, HelpCircle, LogOut, Facebook, MessageSquare, ChevronRight, Lock, History, Settings, ArrowUpRight, Target, Zap, Gamepad2, X, LayoutGrid, LogIn, UserPlus } from 'lucide-react';
+import { 
+  Home, 
+  ShoppingBag, 
+  Wallet, 
+  Phone, 
+  HelpCircle, 
+  LogOut, 
+  Facebook, 
+  MessageSquare, 
+  ChevronRight, 
+  History, 
+  Settings, 
+  ArrowUpRight, 
+  Target, 
+  Zap, 
+  Gamepad2, 
+  X, 
+  LayoutGrid, 
+  LogIn, 
+  UserPlus, 
+  Sparkles, 
+  ShieldCheck, 
+  Store, 
+  ChevronDown,
+  CreditCard,
+  User,
+  ExternalLink
+} from 'lucide-react';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -12,258 +39,487 @@ interface MobileDrawerProps {
   setPage?: (page: string) => void;
   setShowTopupModal?: (show: boolean) => void;
   openHistoryModal?: (tab: 'purchases' | 'topups') => void;
+  globalStats?: any;
 }
 
-const MenuListItem = ({ icon, title, onClick, rightElement, className = "", iconClassName = "" }: any) => (
-  <button onClick={onClick} className={`w-full flex items-center justify-between p-3.5 flex-shrink-0 hover:bg-white/[0.04] transition-colors group rounded-xl ${className}`}>
-    <div className="flex items-center gap-3">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${iconClassName}`}>
-        {icon}
-      </div>
-      <span className="text-sm font-semibold text-zinc-300 group-hover:text-white transition-colors">{title}</span>
-    </div>
-    {rightElement || <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-white group-hover:translate-x-1 transition-all" />}
-  </button>
-);
+export const MobileDrawer = ({
+  isOpen,
+  onClose,
+  currentUser,
+  onLoginClick,
+  onRegisterClick,
+  onLogoutClick,
+  setPage,
+  setShowTopupModal,
+  openHistoryModal,
+  globalStats
+}: MobileDrawerProps) => {
+  const shopLogoUrl = globalStats?.announcement_settings?.shopLogoUrl;
 
-export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onRegisterClick, onLogoutClick, setPage, setShowTopupModal, openHistoryModal }: MobileDrawerProps) => {
+  const navigateTo = (page: string) => {
+    if (setPage) {
+      setPage(page);
+    }
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Overlay */}
+          {/* Backdrop Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.25 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]"
+            className="fixed inset-0 bg-black/75 backdrop-blur-md z-[150]"
           />
-          
-          {/* Drawer */}
+
+          {/* Side Drawer Panel */}
           <motion.div
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
-            transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-[#0a0a0a] border-r border-white/10 shadow-2xl z-[151] flex flex-col font-sans overflow-hidden"
+            transition={{ type: "spring", damping: 30, stiffness: 320 }}
+            className="fixed top-0 left-0 bottom-0 w-[88%] max-w-[340px] bg-[#0b0c10] border-r border-white/10 shadow-[0_0_50px_rgba(99,102,241,0.2)] rounded-r-3xl z-[151] flex flex-col font-sans overflow-hidden"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
-              <h2 className="text-xl font-black text-white tracking-wider">KUWASHII SHOP</h2>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors shrink-0">
+            {/* Background Ambient Glows */}
+            <div className="absolute top-0 left-0 w-48 h-48 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 right-0 w-48 h-48 bg-purple-600/10 rounded-full blur-3xl pointer-events-none translate-x-1/3 translate-y-1/3" />
+
+            {/* Header Section */}
+            <div className="relative z-10 flex items-center justify-between p-5 border-b border-white/10 bg-black/20 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                  {shopLogoUrl ? (
+                    <img src={shopLogoUrl} alt="Shop Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Store className="w-5 h-5 text-indigo-400" />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-white tracking-wide flex items-center gap-1.5 leading-none">
+                    KUWASHII SHOP
+                  </h2>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[11px] font-semibold text-emerald-400">ออนไลน์พร้อมบริการ</span>
+                  </div>
+                </div>
+              </div>
+
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shrink-0"
+              >
                 <X className="w-4 h-4" />
-              </button>
+              </motion.button>
             </div>
 
-            <div className="flex-1 overflow-y-auto scrollbar-hide pb-8">
-              <div className="p-5 min-h-full flex flex-col">
-                {currentUser ? (
-                  <>
-                    {/* User Profile Card - Clean & Fast */}
-                    <div className="mb-8 p-4 rounded-2xl bg-white/[0.02] border border-white/5 shadow-sm relative overflow-hidden shrink-0">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                      <div className="flex items-center gap-3.5 relative z-10">
-                        <div className="relative shrink-0">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-[2px]">
-                            <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center border-2 border-[#0a0a0a]">
+            {/* Main Scrollable Content */}
+            <div className="relative z-10 flex-1 overflow-y-auto scrollbar-hide p-4 space-y-5">
+              {currentUser ? (
+                /* Authenticated User View */
+                <div className="space-y-5">
+                  {/* User Profile Card */}
+                  <div className="relative p-4 rounded-2xl bg-gradient-to-br from-zinc-900/90 via-zinc-900/50 to-indigo-950/30 border border-white/10 shadow-lg overflow-hidden">
+                    <div className="flex items-center gap-3.5">
+                      <div className="relative shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-[2px] shadow-md shadow-indigo-500/20">
+                          <div className="w-full h-full rounded-full bg-zinc-950 flex items-center justify-center border-2 border-[#0b0c10]">
+                            {currentUser.avatar_url || currentUser.avatar ? (
+                              <img src={currentUser.avatar_url || currentUser.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                            ) : (
                               <span className="text-lg font-bold text-white uppercase">
                                 {currentUser.username?.[0] || 'U'}
                               </span>
-                            </div>
-                          </div>
-                          <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-zinc-900" />
-                        </div>
-                        
-                        <div className="flex-1">
-                          <h4 className="font-bold text-white text-[15px] leading-tight mb-0.5 break-words">{currentUser.username}</h4>
-                          <p className="text-[11px] text-zinc-400 mb-2 break-all">{currentUser.email || 'ไม่มีอีเมล'}</p>
-                          
-                          <div className="flex items-center gap-2 flex-wrap">
-                            
-                            <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-[11px] font-semibold inline-flex items-center gap-1">
-                              <Wallet className="w-3 h-3" /> ฿{(currentUser.balance || 0).toLocaleString()}
-                            </span>
-                            
-
-                            <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 text-[11px] font-semibold inline-flex items-center gap-1">
-                              <Target className="w-3 h-3" /> {(currentUser.topupCount || 0).toLocaleString()} แต้ม
-                            </span>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Navigation Grid */}
-                    <div className="grid grid-cols-4 gap-2 mb-8">
-                      <button onClick={() => { setPage?.('SHOP'); onClose(); }} className="flex flex-col items-center gap-2 group">
-                        <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:bg-indigo-500/10 group-hover:border-indigo-500/30 transition-all duration-200">
-                          <Home className="w-5 h-5 text-zinc-400 group-hover:text-indigo-400 transition-colors" />
-                        </div>
-                        <span className="text-[11px] font-medium text-zinc-500 group-hover:text-zinc-300">หน้าหลัก</span>
-                      </button>
-                      <button onClick={() => { setPage?.('SHOP'); onClose(); }} className="flex flex-col items-center gap-2 group">
-                        <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:bg-purple-500/10 group-hover:border-purple-500/30 transition-all duration-200">
-                          <ShoppingBag className="w-5 h-5 text-zinc-400 group-hover:text-purple-400 transition-colors" />
-                        </div>
-                        <span className="text-[11px] font-medium text-zinc-500 group-hover:text-zinc-300">ร้านค้า</span>
-                      </button>
-                      <button onClick={() => { setPage?.('TOPUP'); onClose(); }} className="flex flex-col items-center gap-2 group">
-                        <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:bg-emerald-500/10 group-hover:border-emerald-500/30 transition-all duration-200">
-                          <Zap className="w-5 h-5 text-zinc-400 group-hover:text-emerald-400 transition-colors" />
-                        </div>
-                        <span className="text-[11px] font-medium text-zinc-500 group-hover:text-zinc-300">เติมเงิน</span>
-                      </button>
-                      <button onClick={() => { setPage?.('GAMETOPUP'); onClose(); }} className="flex flex-col items-center gap-2 group">
-                        <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:bg-cyan-500/10 group-hover:border-cyan-500/30 transition-all duration-200">
-                          <Gamepad2 className="w-5 h-5 text-zinc-400 group-hover:text-cyan-400 transition-colors" />
-                        </div>
-                        <span className="text-[11px] font-medium text-zinc-500 group-hover:text-zinc-300">เติมเกม</span>
-                      </button>
-                      <button onClick={() => { openHistoryModal?.('purchases'); onClose(); }} className="flex flex-col items-center gap-2 group">
-                        <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:bg-pink-500/10 group-hover:border-pink-500/30 transition-all duration-200">
-                          <History className="w-5 h-5 text-zinc-400 group-hover:text-pink-400 transition-colors" />
-                        </div>
-                        <span className="text-[11px] font-medium text-zinc-500 group-hover:text-zinc-300">ประวัติ</span>
-                      </button>
-                    </div>
-
-                    <div className="flex-1 space-y-6">
-                      {/* Section: Settings */}
-                      <div>
-                        <h5 className="text-[12px] font-semibold text-zinc-500 tracking-wide mb-2 px-2 uppercase">การตั้งค่า</h5>
-                        <div className="space-y-1">
-                          <MenuListItem 
-                             icon={<Settings className="w-[18px] h-[18px] text-zinc-400" />} 
-                             iconClassName="bg-white/5 text-zinc-400 group-hover:bg-white/10 group-hover:text-white"
-                             title="ข้อมูลส่วนตัวและการตั้งค่า" 
-                             onClick={() => {
-                               setPage?.('PROFILE');
-                               onClose();
-                             }} 
-                          />
-                        </div>
+                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-zinc-950" />
                       </div>
 
-                      {/* Section: Support */}
-                      <div>
-                        <h5 className="text-[12px] font-semibold text-zinc-500 tracking-wide mb-2 px-2 uppercase">ช่วยเหลือ & ชุมชน</h5>
-                        
-                        <div className="grid grid-cols-2 gap-2 mb-3 px-1">
-                          <a href="https://discord.gg/AQKtJpvyva" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl bg-[#1877F2]/10 hover:bg-[#1877F2]/20 border border-[#1877F2]/20 transition-colors group">
-                            <Facebook className="w-5 h-5 text-[#1877F2]" />
-                            <span className="text-[13px] font-semibold text-[#1877F2]">Facebook</span>
-                          </a>
-                          <a href="https://discord.gg/AQKtJpvyva" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/20 transition-colors group">
-                            <MessageSquare className="w-5 h-5 text-[#5865F2]" />
-                            <span className="text-[13px] font-semibold text-[#5865F2]">Discord</span>
-                          </a>
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <MenuListItem 
-                            icon={<HelpCircle className="w-[18px] h-[18px] text-amber-400" />} 
-                            iconClassName="bg-amber-500/10 text-amber-400"
-                            title="คำถามที่พบบ่อย" 
-                          />
-                          <div onClick={() => window.open('https://discord.gg/AQKtJpvyva', '_blank')}>
-                            <MenuListItem 
-                              icon={<Phone className="w-[18px] h-[18px] text-pink-400" />} 
-                              iconClassName="bg-pink-500/10 text-pink-400"
-                              title="ติดต่อแอดมิน" 
-                              rightElement={<ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-white" />} 
-                            />
-                          </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-white text-sm truncate">{currentUser.username}</h4>
+                        <p className="text-[11px] text-zinc-400 truncate mb-2">{currentUser.email || 'สมาชิก KUWASHII'}</p>
+
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] font-bold flex items-center gap-1">
+                            <Wallet className="w-3 h-3 text-indigo-400" /> ฿{(currentUser.balance || 0).toLocaleString()}
+                          </span>
+                          <span className="px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold flex items-center gap-1">
+                            <Target className="w-3 h-3 text-amber-400" /> {(currentUser.topupCount || 0).toLocaleString()} แต้ม
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Logout Button */}
-                    <div className="mt-8">
-                      <button 
-                        onClick={() => {
-                            onLogoutClick();
-                            onClose();
-                        }}
-                        className="w-full py-3.5 rounded-xl bg-white/5 hover:bg-red-500/10 text-zinc-400 hover:text-red-500 font-semibold flex items-center justify-center gap-2 transition-all group text-[14px]"
+                    <div className="mt-3 pt-3 border-t border-white/5 flex gap-2">
+                      <button
+                        onClick={() => navigateTo('TOPUP')}
+                        className="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm shadow-indigo-500/30"
                       >
-                        <LogOut className="w-4 h-4" />
-                        <span>ออกจากระบบ</span>
+                        <Zap className="w-3.5 h-3.5" />
+                        เติมเงินทันที
                       </button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 flex flex-col pt-4 space-y-4">
-                    <div className="space-y-1">
-                      <MenuListItem
-                         icon={<Home className="w-[18px] h-[18px] text-zinc-400 group-hover:text-white transition-colors" />}
-                         iconClassName="bg-transparent"
-                         title="หน้าแรก"
-                         rightElement={<span />}
-                         onClick={() => {
-                           setPage?.('SHOP');
-                           onClose();
-                         }}
-                       />
-                       <MenuListItem
-                         icon={<LayoutGrid className="w-[18px] h-[18px] text-zinc-400 group-hover:text-white transition-colors" />}
-                         iconClassName="bg-transparent"
-                         title="หมวดหมู่สินค้า"
-                         rightElement={<span />}
-                         onClick={() => {
-                           setPage?.('SHOP');
-                           onClose();
-                         }}
-                       />
-                       <MenuListItem
-                         icon={<ShoppingBag className="w-[18px] h-[18px] text-zinc-400 group-hover:text-white transition-colors" />}
-                         iconClassName="bg-transparent"
-                         title="สินค้าทั้งหมด"
-                         rightElement={<span />}
-                         onClick={() => {
-                           setPage?.('SHOP');
-                           onClose();
-                         }}
-                       />
-                       <div onClick={() => window.open('https://discord.gg/AQKtJpvyva', '_blank')}>
-                         <MenuListItem
-                           icon={<Phone className="w-[18px] h-[18px] text-zinc-400 group-hover:text-white transition-colors" />}
-                           iconClassName="bg-transparent"
-                           title="ติดต่อเรา"
-                           rightElement={<span />}
-                         />
-                       </div>
-                    </div>
-
-                    <div className="relative py-4 flex items-center justify-center">
-                      <div className="absolute inset-0 flex items-center px-4">
-                        <div className="w-full border-t border-white/10"></div>
-                      </div>
-                      <div className="relative bg-[#0a0a0a] px-3">
-                        <span className="text-xs font-semibold text-zinc-500 uppercase">ระบบสมาชิก</span>
-                      </div>
-                    </div>
-
-                    <div className="px-4 flex flex-col gap-3">
-                      <button 
-                        onClick={() => { onClose(); onLoginClick(); }}
-                        className="w-full py-3.5 rounded-xl bg-zinc-200 hover:bg-white text-black font-bold text-[14px] transition-colors flex justify-center items-center gap-2 group"
+                      <button
+                        onClick={() => navigateTo('PROFILE')}
+                        className="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 font-semibold text-xs flex items-center justify-center gap-1 transition-colors border border-white/10"
                       >
-                        <LogIn className="w-5 h-5" />
-                        เข้าสู่ระบบ
-                      </button>
-                      <button 
-                        onClick={() => { onClose(); if (onRegisterClick) onRegisterClick(); else onLoginClick(); }}
-                        className="w-full py-3.5 rounded-xl bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-white font-bold text-[14px] transition-colors flex justify-center items-center gap-2 group"
-                      >
-                        <UserPlus className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
-                        สมัครสมาชิก
+                        <Settings className="w-3.5 h-3.5" />
+                        โปรไฟล์
                       </button>
                     </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Quick Action Navigation Grid */}
+                  <div>
+                    <span className="text-[11px] font-bold text-zinc-500 tracking-wider uppercase px-1 mb-2.5 block">
+                      เมนูหลัก
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => navigateTo('SHOP')}
+                        className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-800 border border-white/5 hover:border-indigo-500/30 transition-all text-left group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors shrink-0">
+                          <Home className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">หน้าแรก</div>
+                          <div className="text-[10px] text-zinc-400">ร้านค้า</div>
+                        </div>
+                      </motion.button>
+
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => navigateTo('TOPUP')}
+                        className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-800 border border-white/5 hover:border-emerald-500/30 transition-all text-left group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0">
+                          <Zap className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">เติมเงิน</div>
+                          <div className="text-[10px] text-zinc-400">อัตโนมัติ</div>
+                        </div>
+                      </motion.button>
+
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => navigateTo('GAMETOPUP')}
+                        className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-800 border border-white/5 hover:border-cyan-500/30 transition-all text-left group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition-colors shrink-0">
+                          <Gamepad2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">เติมเกม</div>
+                          <div className="text-[10px] text-zinc-400">ราคาถูก</div>
+                        </div>
+                      </motion.button>
+
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => {
+                          if (openHistoryModal) openHistoryModal('purchases');
+                          onClose();
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-800 border border-white/5 hover:border-purple-500/30 transition-all text-left group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors shrink-0">
+                          <History className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">ประวัติ</div>
+                          <div className="text-[10px] text-zinc-400">คำสั่งซื้อ</div>
+                        </div>
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {/* Section: Support & Links */}
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold text-zinc-500 tracking-wider uppercase px-1 block">
+                      ติดต่อ & ช่วยเหลือ
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <a
+                        href="https://facebook.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#1877F2]/10 border border-[#1877F2]/20 text-[#1877F2] font-semibold text-xs hover:bg-[#1877F2]/20 transition-colors"
+                      >
+                        <Facebook className="w-4 h-4" />
+                        Facebook
+                      </a>
+                      <a
+                        href="https://discord.gg/AQKtJpvyva"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 text-[#5865F2] font-semibold text-xs hover:bg-[#5865F2]/20 transition-colors"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Discord
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Logout Button */}
+                  <div className="pt-2">
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        onLogoutClick();
+                        onClose();
+                      }}
+                      className="w-full py-3 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      ออกจากระบบ
+                    </motion.button>
+                  </div>
+                </div>
+              ) : (
+                /* Unauthenticated (Guest) User View */
+                <div className="space-y-5">
+                  {/* Welcome Member Banner */}
+                  <div className="relative p-4 rounded-3xl bg-gradient-to-br from-indigo-950/80 via-zinc-900 to-purple-950/60 border border-indigo-500/30 shadow-lg overflow-hidden">
+                    <div className="absolute top-0 right-0 p-3 opacity-20 pointer-events-none">
+                      <Sparkles className="w-20 h-20 text-indigo-400" />
+                    </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-extrabold border border-indigo-500/30 tracking-wider">
+                          WELCOME MEMBER
+                        </span>
+                      </div>
+                      <h3 className="text-base font-extrabold text-white leading-snug">
+                        เข้าสู่ระบบสมาชิก
+                      </h3>
+                      <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                        สะสมแต้ม สั่งซื้อสินค้า และรับสิทธิพิเศษมากมาย
+                      </p>
+
+                      <div className="mt-4 flex flex-col gap-2">
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            onClose();
+                            onLoginClick();
+                          }}
+                          className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 hover:brightness-110 text-white font-bold text-sm shadow-md shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all"
+                        >
+                          <LogIn className="w-4 h-4" />
+                          เข้าสู่ระบบ
+                        </motion.button>
+
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            onClose();
+                            if (onRegisterClick) onRegisterClick();
+                            else onLoginClick();
+                          }}
+                          className="w-full py-3 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-white/10 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all"
+                        >
+                          <UserPlus className="w-4 h-4 text-indigo-400" />
+                          สมัครสมาชิกใหม่
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Main Navigation Card Tiles Grid */}
+                  <div>
+                    <div className="flex items-center justify-between px-1 mb-2.5">
+                      <span className="text-[11px] font-bold text-zinc-400 tracking-wider uppercase">
+                        นำทางด่วน
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => navigateTo('SHOP')}
+                        className="group relative p-3.5 rounded-2xl bg-gradient-to-b from-zinc-900/90 to-zinc-950/80 border border-white/10 hover:border-indigo-500/50 transition-all text-left flex flex-col justify-between h-24 overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                            <Home className="w-5 h-5" />
+                          </div>
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">
+                            หน้าหลัก
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors">
+                            หน้าแรก
+                          </div>
+                          <div className="text-[10px] text-zinc-400">ร้านค้า KUWASHII</div>
+                        </div>
+                      </motion.button>
+
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => navigateTo('SHOP')}
+                        className="group relative p-3.5 rounded-2xl bg-gradient-to-b from-zinc-900/90 to-zinc-950/80 border border-white/10 hover:border-purple-500/50 transition-all text-left flex flex-col justify-between h-24 overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+                            <LayoutGrid className="w-5 h-5" />
+                          </div>
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                            หมวดหมู่
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
+                            หมวดหมู่สินค้า
+                          </div>
+                          <div className="text-[10px] text-zinc-400">เลือกดูประเภทสินค้า</div>
+                        </div>
+                      </motion.button>
+
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => navigateTo('SHOP')}
+                        className="group relative p-3.5 rounded-2xl bg-gradient-to-b from-zinc-900/90 to-zinc-950/80 border border-white/10 hover:border-cyan-500/50 transition-all text-left flex flex-col justify-between h-24 overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                            <ShoppingBag className="w-5 h-5" />
+                          </div>
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">
+                            ทั้งหมด
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                            สินค้าทั้งหมด
+                          </div>
+                          <div className="text-[10px] text-zinc-400">รายการสินค้าพร้อมส่ง</div>
+                        </div>
+                      </motion.button>
+
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => {
+                          onClose();
+                          onLoginClick();
+                        }}
+                        className="group relative p-3.5 rounded-2xl bg-gradient-to-b from-zinc-900/90 to-zinc-950/80 border border-white/10 hover:border-emerald-500/50 transition-all text-left flex flex-col justify-between h-24 overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                            <Zap className="w-5 h-5" />
+                          </div>
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                            เติมเงิน
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                            ระบบเติมเงิน
+                          </div>
+                          <div className="text-[10px] text-zinc-400">เติมเครดิต 24 ชม.</div>
+                        </div>
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {/* List Menu Section */}
+                  <div className="space-y-2 pt-1">
+                    <span className="text-[11px] font-bold text-zinc-400 tracking-wider uppercase px-1 block">
+                      บริการ & การติดต่อ
+                    </span>
+
+                    <div className="space-y-1.5">
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          onClose();
+                          onLoginClick();
+                        }}
+                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-zinc-900/60 hover:bg-zinc-800 border border-white/5 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform">
+                            <Gamepad2 className="w-4 h-4" />
+                          </div>
+                          <div className="text-left">
+                            <span className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors block">
+                              บริการเติมเกม
+                            </span>
+                            <span className="text-[10px] text-zinc-400 block">เติมเกมราคาพิเศษ</span>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-300">
+                          HOT
+                        </span>
+                      </motion.button>
+
+                      <a
+                        href="https://discord.gg/AQKtJpvyva"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-zinc-900/60 hover:bg-zinc-800 border border-white/5 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 group-hover:scale-105 transition-transform">
+                            <Phone className="w-4 h-4" />
+                          </div>
+                          <div className="text-left">
+                            <span className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors block">
+                              ติดต่อแอดมิน / ซัพพอร์ต
+                            </span>
+                            <span className="text-[10px] text-zinc-400 block">สอบถามปัญหาและแจ้งชำระ</span>
+                          </div>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Social Community Buttons */}
+                  <div className="pt-2">
+                    <span className="text-[11px] font-bold text-zinc-400 tracking-wider uppercase px-1 mb-2 block">
+                      ชุมชนของเรา
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <a
+                        href="https://facebook.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl bg-[#1877F2]/10 hover:bg-[#1877F2]/20 border border-[#1877F2]/25 text-[#1877F2] font-bold text-xs transition-colors"
+                      >
+                        <Facebook className="w-4 h-4" />
+                        Facebook
+                      </a>
+                      <a
+                        href="https://discord.gg/AQKtJpvyva"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/25 text-[#5865F2] font-bold text-xs transition-colors"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Discord
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Brand Info */}
+            <div className="p-4 border-t border-white/5 bg-black/40 shrink-0 text-center">
+              <p className="text-[11px] text-zinc-500 font-medium">
+                KUWASHII SHOP &copy; 2026 &middot; All Rights Reserved
+              </p>
             </div>
           </motion.div>
         </>
@@ -271,6 +527,3 @@ export const MobileDrawer = ({ isOpen, onClose, currentUser, onLoginClick, onReg
     </AnimatePresence>
   );
 };
-
-
-
