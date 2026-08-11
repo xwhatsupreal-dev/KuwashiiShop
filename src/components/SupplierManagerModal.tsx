@@ -37,14 +37,18 @@ interface SupplierManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentGame: string;
+  globalStats?: any;
   onItemImported?: () => void;
+  onOpenAdminWithPrefill?: (itemDraft: any) => void;
 }
 
 export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
   isOpen,
   onClose,
   currentGame,
-  onItemImported
+  globalStats,
+  onItemImported,
+  onOpenAdminWithPrefill
 }) => {
   useScrollLock(isOpen);
 
@@ -143,12 +147,45 @@ export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
     }
   };
 
+  // Available categories in shop
+  const shopCategories: string[] = Array.from(new Set([
+    ...(globalStats?.announcement_settings?.categories?.map((c: any) => c.title) || []),
+    'Grow A Garden 2',
+    'ROV',
+    'ALL STAR',
+    'AOT Revolution',
+    'ร้านค้าทั่วไป'
+  ]));
+
   const openImportModal = (product: SupplierProduct) => {
     setImportingProduct(product);
     setSellingPrice(product.price);
     setImportGame(currentGame === 'SHOP' ? 'ROV' : currentGame);
-    setImportCategory('Grow A Garden 2');
+    setImportCategory(shopCategories[0] || 'Grow A Garden 2');
     setImportStockQty(99);
+  };
+
+  const handleOpenInAdminForm = (product: SupplierProduct) => {
+    const descWithSupplierMeta = `${product.description || 'สินค้าจากระบบ API ร้านอื่น'}\n<!--supplierProductId:${product.id}-->\n<!--supplierUrl:${supplierUrl}-->`;
+    const draftItem = {
+      id: '',
+      name: product.name,
+      category: importCategory || shopCategories[0] || 'Grow A Garden 2',
+      price: parseFloat(String(sellingPrice)) || product.price,
+      quantity: importStockQty || 99,
+      initialQuantity: importStockQty || 99,
+      description: descWithSupplierMeta,
+      imageUrl: product.img || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80',
+      imageUrls: product.img ? [product.img] : [],
+      game: importGame || (currentGame === 'SHOP' ? 'ROV' : currentGame),
+      saleFormat: 'ขายรหัส',
+      isPinned: false,
+      popular: true
+    };
+    onClose();
+    if (onOpenAdminWithPrefill) {
+      onOpenAdminWithPrefill(draftItem);
+    }
   };
 
   const handleConfirmImport = async () => {
@@ -691,13 +728,27 @@ export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-400 mb-1">ชื่อหมวดหมู่ย่อย</label>
-                <input
-                  type="text"
-                  value={importCategory}
-                  onChange={(e) => setImportCategory(e.target.value)}
-                  className="w-full bg-zinc-900 border border-white/10 text-white px-3 py-2 rounded-xl"
-                />
+                <label className="block text-xs font-bold text-zinc-400 mb-1">หมวดหมู่สินค้าในร้าน (Category)</label>
+                <div className="space-y-2">
+                  <select
+                    value={importCategory}
+                    onChange={(e) => setImportCategory(e.target.value)}
+                    className="w-full bg-zinc-900 border border-white/10 text-white px-3 py-2 rounded-xl text-sm"
+                  >
+                    {shopCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={importCategory}
+                    onChange={(e) => setImportCategory(e.target.value)}
+                    placeholder="หรือพิมพ์ระบุหมวดหมู่ใหม่..."
+                    className="w-full bg-zinc-900 border border-white/10 text-white px-3 py-2 rounded-xl text-xs"
+                  />
+                </div>
               </div>
 
               <div>
@@ -710,18 +761,30 @@ export const SupplierManagerModal: React.FC<SupplierManagerModalProps> = ({
                 />
               </div>
 
-              <button
-                onClick={handleConfirmImport}
-                disabled={isSubmittingImport}
-                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
-              >
-                {isSubmittingImport ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4" />
+              <div className="space-y-2 pt-2">
+                <button
+                  onClick={handleConfirmImport}
+                  disabled={isSubmittingImport}
+                  className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-lg shadow-amber-500/20"
+                >
+                  {isSubmittingImport ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4" />
+                  )}
+                  นำเข้าลงร้านค้าทันที
+                </button>
+
+                {onOpenAdminWithPrefill && (
+                  <button
+                    onClick={() => handleOpenInAdminForm(importingProduct)}
+                    className="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors border border-white/10"
+                  >
+                    <ExternalLink className="w-4 h-4 text-amber-400" />
+                    เปิดในหน้าแก้ไขแอดมิน (Admin Form)
+                  </button>
                 )}
-                ยืนยันการนำเข้าสินค้า
-              </button>
+              </div>
             </div>
           </div>
         </div>

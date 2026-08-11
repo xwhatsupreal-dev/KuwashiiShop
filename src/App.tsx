@@ -2629,8 +2629,14 @@ export default function App() {
         isOpen={isSupplierManagerOpen}
         onClose={() => setIsSupplierManagerOpen(false)}
         currentGame={appScreen as any}
+        globalStats={globalStats}
         onItemImported={() => {
           fetchItems().then(setItems).catch(console.error);
+        }}
+        onOpenAdminWithPrefill={(itemDraft) => {
+          setIsSupplierManagerOpen(false);
+          setEditingItem(itemDraft as any);
+          setIsFormOpen(true);
         }}
       />
 
