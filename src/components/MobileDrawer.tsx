@@ -72,9 +72,9 @@ export const MobileDrawer = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/75 backdrop-blur-md z-[150]"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[150]"
           />
 
           {/* Side Drawer Panel */}
@@ -83,11 +83,11 @@ export const MobileDrawer = ({
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 320 }}
-            className="fixed top-0 left-0 bottom-0 w-[88%] max-w-[340px] bg-[#0b0c10] border-r border-white/10 shadow-[0_0_50px_rgba(99,102,241,0.2)] rounded-r-3xl z-[151] flex flex-col font-sans overflow-hidden"
+            className="fixed top-0 left-0 bottom-0 w-[88%] max-w-[340px] bg-[#0b0c10] border-r border-white/10 shadow-2xl rounded-r-3xl z-[151] flex flex-col font-sans overflow-hidden"
           >
             {/* Background Ambient Glows */}
-            <div className="absolute top-0 left-0 w-48 h-48 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 right-0 w-48 h-48 bg-purple-600/10 rounded-full blur-3xl pointer-events-none translate-x-1/3 translate-y-1/3" />
+            <div className="absolute top-0 left-0 w-48 h-48 bg-indigo-600/10 rounded-full blur-xl pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 right-0 w-48 h-48 bg-purple-600/10 rounded-full blur-xl pointer-events-none translate-x-1/3 translate-y-1/3" />
 
             {/* Header Section */}
             <div className="relative z-10 flex items-center justify-between p-5 border-b border-white/10 bg-black/20 shrink-0">

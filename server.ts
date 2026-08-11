@@ -498,7 +498,7 @@ app.post("/api/set-register-lock", (req, res) => {
 
 app.post("/api/send-otp", async (req: express.Request, res: express.Response) => {
   try {
-    const { toEmail, otp } = req.body;
+    const { toEmail, otp, type, subject: customSubject } = req.body;
     
     if (!toEmail || !otp) {
        res.status(400).json({ error: "Email and OTP are required" });
@@ -506,7 +506,7 @@ app.post("/api/send-otp", async (req: express.Request, res: express.Response) =>
     }
     
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      // If environment variables are missing, simulate success for development, but ideally the user should set them.
+      // If environment variables are missing, simulate success for development
       console.warn("SMTP credentials not set. Simulating OTP email send to " + toEmail);
       res.json({ success: true, simulated: true });
       return;
@@ -528,17 +528,19 @@ app.post("/api/send-otp", async (req: express.Request, res: express.Response) =>
     });
 
     const fromName = process.env.SMTP_FROM_NAME || "Kuwashii Shop";
+    const mailSubject = customSubject || (type === 'verify_email' ? "รหัส OTP สำหรับยืนยันอีเมล Kuwashii Shop" : "รหัส OTP สำหรับรีเซ็ตรหัสผ่าน Kuwashii Shop");
+    const mailTitle = type === 'verify_email' ? "คุณได้ทำการขอยืนยันอีเมลสำหรับบัญชีของคุณ" : "คุณได้ทำการขอรีเซ็ตรหัสผ่าน";
     
     const mailOptions = {
       from: `"${fromName}" <${process.env.SMTP_USER}>`,
       to: toEmail,
-      subject: "รหัส OTP สำหรับรีเซ็ตรหัสผ่าน Kuwashii Shop",
-      text: `รหัส OTP สำหรับรีเซ็ตรหัสผ่านของคุณคือ: ${otp}\nรหัสนี้จะหมดอายุใน 15 นาที`,
+      subject: mailSubject,
+      text: `รหัส OTP ของคุณคือ: ${otp}\nรหัสนี้จะหมดอายุใน 15 นาที`,
       html: `
         <div style="font-family: sans-serif; padding: 20px; background-color: #f9f9f9; border-radius: 10px;">
           <h2 style="color: #333;">Kuwashii Shop</h2>
-          <p>คุณได้ทำการขอรีเซ็ตรหัสผ่าน</p>
-          <p>รหัส OTP ของคุณคือ: <strong style="font-size: 24px; color: #d97706;">${otp}</strong></p>
+          <p>${mailTitle}</p>
+          <p>รหัส OTP ของคุณคือ: <strong style="font-size: 24px; color: #4f46e5;">${otp}</strong></p>
           <p style="color: #666; font-size: 14px;">รหัสนี้จะหมดอายุใน 15 นาที</p>
           <br>
           <p style="color: #999; font-size: 12px;">หากคุณไม่ได้ทำรายการนี้ กรุณาเพิกเฉยต่ออีเมลฉบับนี้</p>

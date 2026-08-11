@@ -1612,6 +1612,18 @@ export default function App() {
       showToast("รูปแบบอีเมลไม่ถูกต้อง", "error");
       return false;
     }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_email_verified, email_verified")
+      .eq("username", currentUser.username)
+      .single();
+
+    if (profile && (profile.is_email_verified || profile.email_verified)) {
+      showToast("ไม่สามารถเปลี่ยนอีเมลได้เนื่องจากยืนยันอีเมลเรียบร้อยแล้ว", "error");
+      return false;
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update({ email: trimmedEmail })

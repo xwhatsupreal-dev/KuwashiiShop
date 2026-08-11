@@ -12,8 +12,10 @@ export const ShootingStars = () => {
     let animationFrameId: number;
     let stars: Array<{x: number, y: number, length: number, speed: number, opacity: number, active: boolean, thickness: number}> = [];
 
+    const isMobile = window.innerWidth < 768;
+    const starCount = isMobile ? 6 : 10;
+
     const resize = () => {
-      // Only resize if actually changed to prevent mobile scroll lag
       if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -23,42 +25,44 @@ export const ShootingStars = () => {
     window.addEventListener('resize', resize, { passive: true });
     resize();
 
-    const createStar = () => {
-      return {
-        x: Math.random() * canvas.width * 1.5,
-        y: Math.random() * canvas.height * -0.5,
-        length: Math.random() * 100 + 40,
-        speed: Math.random() * 10 + 8,
-        opacity: Math.random() * 0.6 + 0.4,
-        thickness: Math.random() * 1.5 + 0.5,
-        active: true
-      };
-    };
+    const createStar = () => ({
+      x: Math.random() * canvas.width * 1.3,
+      y: Math.random() * canvas.height * -0.3,
+      length: Math.random() * 80 + 30,
+      speed: Math.random() * 8 + 6,
+      opacity: Math.random() * 0.5 + 0.3,
+      thickness: Math.random() * 1.2 + 0.5,
+      active: true
+    });
 
-    // Initial stars
-    for (let i = 0; i < 15; i++) {
-        stars.push(createStar());
+    for (let i = 0; i < starCount; i++) {
+      stars.push(createStar());
     }
 
-    const draw = () => {
+    let lastTime = 0;
+    const fps = isMobile ? 30 : 45;
+    const interval = 1000 / fps;
+
+    const draw = (currentTime: number) => {
+      animationFrameId = requestAnimationFrame(draw);
+      const delta = currentTime - lastTime;
+      if (delta < interval) return;
+      lastTime = currentTime - (delta % interval);
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      stars.forEach((star, index) => {
+      for (let i = 0; i < stars.length; i++) {
+        const star = stars[i];
         if (!star.active) {
-           if (Math.random() < 0.05) { // 5% chance per frame to respawn a dead star
-               stars[index] = createStar();
-           }
-           return;
+          if (Math.random() < 0.03) {
+            stars[i] = createStar();
+          }
+          continue;
         }
 
-        ctx.beginPath();
-        // Create gradient for a nice tail effect
-        const grad = ctx.createLinearGradient(star.x, star.y, star.x + star.length, star.y - star.length);
-        grad.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`);
-        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        
-        ctx.strokeStyle = grad;
+        ctx.strokeStyle = `rgba(199, 210, 254, ${star.opacity})`;
         ctx.lineWidth = star.thickness;
+        ctx.beginPath();
         ctx.moveTo(star.x, star.y);
         ctx.lineTo(star.x + star.length, star.y - star.length);
         ctx.stroke();
@@ -69,12 +73,10 @@ export const ShootingStars = () => {
         if (star.x < -star.length || star.y > canvas.height + star.length) {
           star.active = false;
         }
-      });
-      
-      animationFrameId = requestAnimationFrame(draw);
+      }
     };
 
-    draw();
+    animationFrameId = requestAnimationFrame(draw);
 
     return () => {
       window.removeEventListener('resize', resize);
@@ -85,7 +87,7 @@ export const ShootingStars = () => {
   return (
     <canvas 
       ref={canvasRef} 
-      className="fixed inset-0 pointer-events-none z-0" 
+      className="fixed inset-0 pointer-events-none z-0 will-change-transform" 
     />
   );
 };

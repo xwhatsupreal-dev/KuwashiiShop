@@ -30,18 +30,21 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
   const [editUsername, setEditUsername] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [userEmail, setUserEmail] = useState('-');
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
 
   useScrollLock(isOpen);
   useEffect(() => {
     if (isOpen && currentUser) {
       setEditUsername(currentUser.username || '');
-      supabase.from('profiles').select('email').eq('username', currentUser.username).single().then(({ data }) => {
-        if (data && data.email) {
+      supabase.from('profiles').select('email, is_email_verified, email_verified').eq('username', currentUser.username).single().then(({ data }) => {
+        if (data) {
           setUserEmail(data.email || '-');
           setEditEmail(data.email || '');
+          setIsEmailVerified(!!(data.is_email_verified || data.email_verified));
         } else {
           setUserEmail('-');
           setEditEmail('');
+          setIsEmailVerified(false);
         }
       });
     } else {
@@ -144,20 +147,30 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
 
             {/* Email Section */}
             <div>
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                อีเมล
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                  อีเมล
+                </label>
+                {isEmailVerified && (
+                  <span className="text-[10px] font-bold text-emerald-400">
+                    ✓ ยืนยันแล้ว (เปลี่ยนไม่ได้)
+                  </span>
+                )}
+              </div>
               <div className="flex gap-2">
                 <input
                   type="email"
+                  disabled={isEmailVerified}
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
                   placeholder={userEmail !== '-' ? userEmail : 'ใส่อีเมลของคุณ...'}
-                  className="flex-1 min-w-0 bg-zinc-900 border border-white/5 text-zinc-100 px-3.5 py-2.5 rounded-xl focus:outline-none focus:border-indigo-500 transition-all text-xs font-sans"
+                  className={`flex-1 min-w-0 bg-zinc-900 border border-white/5 text-zinc-100 px-3.5 py-2.5 rounded-xl focus:outline-none focus:border-indigo-500 transition-all text-xs font-sans ${
+                    isEmailVerified ? "opacity-60 cursor-not-allowed bg-zinc-900/50" : ""
+                  }`}
                 />
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={handleSaveEmail}
-                  disabled={editEmail === userEmail || !editEmail.includes('@')}
+                  disabled={isEmailVerified || editEmail === userEmail || !editEmail.includes('@')}
                   className="py-2.5 px-4 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-all text-xs shadow-md flex items-center gap-2 shrink-0"
                 >
                   <Save className="w-3.5 h-3.5 max-sm:hidden" /> บันทึก

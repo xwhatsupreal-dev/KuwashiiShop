@@ -27,7 +27,10 @@ import {
   Clock,
   RefreshCw,
   Gift,
-  Award
+  Award,
+  X,
+  Send,
+  KeyRound
 } from "lucide-react";
 import { supabase } from "../supabase";
 import { PurchaseRecord, TopupRecord } from "../types";
@@ -70,6 +73,14 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
   const [editUsername, setEditUsername] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [userEmail, setUserEmail] = useState("-");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+
+  // OTP Verification state
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [otpInput, setOtpInput] = useState("");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState("");
 
   // UI Toast & Action state
   const [copiedId, setCopiedId] = useState(false);
@@ -84,16 +95,20 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
       setEditUsername(currentUser.username || "");
       supabase
         .from("profiles")
-        .select("email")
+        .select("email, is_email_verified, email_verified")
         .eq("username", currentUser.username)
         .single()
         .then(({ data }) => {
-          if (data && data.email) {
-            setUserEmail(data.email || "-");
-            setEditEmail(data.email || "");
+          if (data) {
+            const em = data.email || "";
+            setUserEmail(em || "-");
+            setEditEmail(em);
+            const verified = !!(data.is_email_verified || data.email_verified);
+            setIsEmailVerified(verified);
           } else {
             setUserEmail("-");
             setEditEmail("");
+            setIsEmailVerified(false);
           }
         });
 
@@ -178,6 +193,10 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
 
   const handleSaveEmail = async () => {
     if (!editEmail.trim() || editEmail === userEmail) return;
+    if (isEmailVerified) {
+      showToast('error', 'ไม่สามารถเปลี่ยนอีเมลได้เนื่องจากยืนยันอีเมลเรียบร้อยแล้ว');
+      return;
+    }
     setIsSavingEmail(true);
     try {
       const success = await onChangeEmail(editEmail.trim());
@@ -192,6 +211,121 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
       showToast('error', 'เกิดข้อผิดพลาดในการบันทึกอีเมล');
     } finally {
       setIsSavingEmail(false);
+    }
+  };
+
+  const handleSendVerificationOtp = async () => {
+    const trimmedEmail = editEmail.trim();
+    if (!trimmedEmail || !trimmedEmail.includes("@")) {
+      showToast('error', 'กรุณาระบุอีเมลที่ถูกต้อง');
+      return;
+    }
+
+    if (isEmailVerified) {
+      showToast('error', 'อีเมลนี้ยืนยันแล้ว ไม่สามารถแก้ไขได้');
+      return;
+    }
+
+    setIsSendingOtp(true);
+    try {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expire = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+      const { error: dbErr } = await supabase
+        .from("profiles")
+        .update({
+          email: trimmedEmail,
+          otp_code: otp,
+          otp_expires_at: expire
+        })
+        .eq("username", currentUser.username);
+
+      if (dbErr) {
+        throw new Error("ไม่สามารถบันทึกข้อมูล OTP ได้");
+      }
+
+      const res = await fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          toEmail: trimmedEmail,
+          otp,
+          type: "verify_email",
+          subject: "รหัส OTP สำหรับยืนยันอีเมล Kuwashii Shop"
+        }),
+      });
+
+      const resData = await res.json();
+      if (resData.error) {
+        throw new Error(resData.error);
+      }
+
+      setOtpInput("");
+      setOtpError("");
+      setShowVerifyModal(true);
+      showToast('success', 'ส่งรหัส OTP ยืนยันอีเมลแล้ว กรุณาตรวจสอบกล่องจดหมาย');
+    } catch (err: any) {
+      console.error("OTP send error:", err);
+      showToast('error', err.message || 'เกิดข้อผิดพลาดในการส่ง OTP');
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtpCode = async () => {
+    if (otpInput.trim().length !== 6) {
+      setOtpError("กรุณากรอกรหัส OTP 6 หลัก");
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    setOtpError("");
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("otp_code, otp_expires_at")
+        .eq("username", currentUser.username)
+        .single();
+
+      if (!data) {
+        setOtpError("ไม่พบข้อมูลบัญชีผู้ใช้");
+        return;
+      }
+
+      if (data.otp_code !== otpInput.trim()) {
+        setOtpError("รหัส OTP ไม่ถูกต้อง");
+        return;
+      }
+
+      if (new Date(data.otp_expires_at) < new Date()) {
+        setOtpError("รหัส OTP หมดอายุแล้ว กรุณากดส่งรหัสใหม่อีกครั้ง");
+        return;
+      }
+
+      const { error: updateErr } = await supabase
+        .from("profiles")
+        .update({
+          email: editEmail.trim(),
+          is_email_verified: true,
+          email_verified: true,
+          otp_code: null,
+          otp_expires_at: null
+        })
+        .eq("username", currentUser.username);
+
+      if (updateErr) {
+        throw new Error("ไม่สามารถอัปเดตสถานะยืนยันได้");
+      }
+
+      setIsEmailVerified(true);
+      setUserEmail(editEmail.trim());
+      setShowVerifyModal(false);
+      showToast('success', 'ยืนยันอีเมลสำเร็จเรียบร้อยแล้ว!');
+    } catch (err: any) {
+      console.error("OTP verify error:", err);
+      setOtpError(err.message || 'เกิดข้อผิดพลาดในการยืนยัน OTP');
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -241,7 +375,7 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
       </AnimatePresence>
 
       {/* Top Header Navigation Bar */}
-      <div className="flex items-center justify-between gap-4 bg-zinc-900/60 p-3 sm:p-4 rounded-3xl border border-white/10 backdrop-blur-md">
+      <div className="flex items-center justify-between gap-4 bg-zinc-900/90 p-3 sm:p-4 rounded-3xl border border-white/10 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setAppScreen("SHOP")}
@@ -274,8 +408,8 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
 
       {/* Hero Profile Banner Card */}
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-950/80 via-zinc-900/90 to-purple-950/70 border border-white/10 p-5 sm:p-7 shadow-2xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none translate-y-1/3 -translate-x-1/3" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-xl pointer-events-none -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-600/10 rounded-full blur-xl pointer-events-none translate-y-1/3 -translate-x-1/3" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
           {/* User Info Avatar & Identity */}
@@ -304,15 +438,26 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
                 <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide truncate max-w-[220px] sm:max-w-xs">
                   {currentUser?.username || "ผู้ใช้งาน"}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] font-black flex items-center gap-1 shadow-sm">
-                  <Sparkles className="w-3 h-3 text-amber-400" />
-                  สมาชิก VIP
-                </span>
               </div>
 
-              <p className="text-xs text-zinc-400 truncate max-w-xs">
-                {userEmail !== "-" ? userEmail : "ยังไม่ได้ระบุอีเมล"}
-              </p>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-0.5">
+                <p className="text-xs text-zinc-400 truncate max-w-xs">
+                  {userEmail !== "-" ? userEmail : "ยังไม่ได้ระบุอีเมล"}
+                </p>
+                {userEmail !== "-" && (
+                  isEmailVerified ? (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold flex items-center gap-1 shadow-sm">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      ยืนยันอีเมลแล้ว
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-bold flex items-center gap-1 shadow-sm">
+                      <AlertCircle className="w-3 h-3 text-amber-400" />
+                      ยังไม่ได้ยืนยัน
+                    </span>
+                  )
+                )}
+              </div>
 
               {currentUser?.member_id && (
                 <div className="pt-1 flex items-center justify-center sm:justify-start gap-2">
@@ -502,35 +647,71 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
                   </div>
                 </div>
 
-                {/* Email Input */}
-                <div>
-                  <label className="text-xs font-bold text-zinc-400 block mb-1.5">
-                    อีเมล (Email Address)
-                  </label>
-                  <div className="flex gap-2">
+                {/* Email Input & Verification */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-zinc-400 block">
+                      อีเมล (Email Address)
+                    </label>
+                    {isEmailVerified ? (
+                      <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> ยืนยันเรียบร้อยแล้ว
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> ยังไม่ได้ยืนยันอีเมล
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <div className="relative flex-1">
                       <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
                         type="email"
+                        disabled={isEmailVerified}
                         value={editEmail}
                         onChange={(e) => setEditEmail(e.target.value)}
                         placeholder={userEmail !== "-" ? userEmail : "ระบุอีเมลของคุณ..."}
-                        className="w-full bg-zinc-950 border border-white/10 text-white pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:border-indigo-500 transition-all"
+                        className={`w-full bg-zinc-950 border text-white pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all ${
+                          isEmailVerified
+                            ? "border-emerald-500/30 text-zinc-300 cursor-not-allowed bg-zinc-950/60"
+                            : "border-white/10 focus:border-indigo-500"
+                        }`}
                       />
                     </div>
-                    <button
-                      onClick={handleSaveEmail}
-                      disabled={isSavingEmail || !editEmail.trim() || editEmail === userEmail || !editEmail.includes("@")}
-                      className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 shadow-md shadow-indigo-600/20"
-                    >
-                      {isSavingEmail ? (
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4" />
-                      )}
-                      <span>บันทึก</span>
-                    </button>
+
+                    {isEmailVerified ? (
+                      <div className="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-2 shrink-0">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        <span>ถ้ายืนยันเเล้วจะเปลี่ยนเมลไม่ได้</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleSendVerificationOtp}
+                        disabled={isSendingOtp || !editEmail.trim() || !editEmail.includes("@")}
+                        className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-md shadow-emerald-600/20"
+                      >
+                        {isSendingOtp ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4" />
+                        )}
+                        <span>ยืนยันอีเมล</span>
+                      </button>
+                    )}
                   </div>
+
+                  {isEmailVerified ? (
+                    <p className="text-[11px] text-emerald-400/90 font-medium pt-0.5 flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      อีเมลนี้ยืนยันแล้ว ไม่สามารถแก้ไขหรือเปลี่ยนอีเมลได้อีก
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-zinc-400 pt-0.5">
+                      * กรุณากดปุ่ม <strong className="text-emerald-400 font-bold">"ยืนยันอีเมล"</strong> เพื่อรับรหัส OTP (เมื่อยืนยันแล้วจะไม่สามารถเปลี่ยนอีเมลได้)
+                    </p>
+                  )}
                 </div>
 
                 {/* Account Member Reference ID */}
@@ -984,6 +1165,107 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
           </motion.div>
         )}
       </div>
+
+      {/* OTP Verification Modal */}
+      <AnimatePresence>
+        {showVerifyModal && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowVerifyModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-md bg-zinc-900 border border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl z-10 space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">ยืนยันอีเมลของคุณ</h3>
+                    <p className="text-xs text-zinc-400">กรอกรหัส OTP 6 หลักเพื่อยืนยัน</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowVerifyModal(false)}
+                  className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-xs text-zinc-300">
+                  รหัส OTP 6 หลักถูกส่งไปยังอีเมล <strong className="text-indigo-400">{editEmail}</strong> แล้ว (รหัสมีอายุ 15 นาที)
+                </p>
+
+                <div>
+                  <label className="text-xs font-bold text-zinc-400 block mb-1.5">
+                    รหัส OTP 6 หลัก
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otpInput}
+                    onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                    placeholder="123456"
+                    className="w-full text-center text-2xl tracking-[0.5em] font-mono bg-zinc-950 border border-white/10 text-emerald-400 py-3 rounded-2xl focus:outline-none focus:border-emerald-500 transition-all font-bold"
+                  />
+                </div>
+
+                {otpError && (
+                  <p className="text-xs text-rose-400 font-medium flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{otpError}</span>
+                  </p>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowVerifyModal(false)}
+                    className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-bold transition-all"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleVerifyOtpCode}
+                    disabled={isVerifyingOtp || otpInput.trim().length !== 6}
+                    className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30"
+                  >
+                    {isVerifyingOtp ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ShieldCheck className="w-4 h-4" />
+                    )}
+                    <span>ยืนยันรหัส OTP</span>
+                  </button>
+                </div>
+
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={handleSendVerificationOtp}
+                    disabled={isSendingOtp}
+                    className="text-xs text-indigo-400 hover:underline disabled:opacity-50"
+                  >
+                    ยังไม่ได้รับรหัส? กดส่งรหัสอีกครั้ง
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
