@@ -63,6 +63,9 @@ import {
   Image as ImageIcon,
   RefreshCw,
   Gamepad2,
+  Sun,
+  Moon,
+  ChevronUp,
 } from "lucide-react";
 
 import {
@@ -3144,11 +3147,12 @@ export default function App() {
                           </span>
                         </div>
 
-                        {/* Category Card Banner */}
-                        <div className="bg-[#0e0e14] border border-zinc-800/80 rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex items-center justify-between gap-4 shadow-xl relative overflow-hidden">
-                          <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Category View Header Grid matching reference */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                          {/* Left: Category Card */}
+                          <div className="md:col-span-2 bg-[#0e0e14] border border-zinc-800/80 rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex flex-col justify-between gap-3 shadow-xl relative overflow-hidden">
                             {categoryImage ? (
-                              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
+                              <div className="w-full h-32 sm:h-40 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-900 border border-white/5 relative">
                                 <img
                                   src={categoryImage}
                                   alt={selectedCategory}
@@ -3157,28 +3161,66 @@ export default function App() {
                                 />
                               </div>
                             ) : (
-                              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-center shrink-0 text-purple-400">
-                                <Gamepad2 className="w-7 h-7" />
+                              <div className="w-full h-28 sm:h-32 rounded-xl sm:rounded-2xl bg-purple-950/20 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                                <Gamepad2 className="w-10 h-10" />
                               </div>
                             )}
 
-                            <div className="min-w-0">
-                              <h2 className="text-lg sm:text-2xl font-black text-purple-400 tracking-tight leading-tight truncate">
-                                {selectedCategory}
-                              </h2>
-                              <p className="text-xs sm:text-sm text-zinc-400 font-medium mt-0.5">
-                                0 หมวดหมู่ {categoryItemCount} สินค้า
-                              </p>
+                            <div className="flex items-center justify-between gap-2 pt-1">
+                              <div className="min-w-0">
+                                <h2 className="text-lg sm:text-xl font-black text-[#d946ef] tracking-tight leading-tight truncate">
+                                  {selectedCategory}
+                                </h2>
+                                <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                                  0 หมวดหมู่ {categoryItemCount} สินค้า
+                                </p>
+                              </div>
+
+                              <button
+                                onClick={() => setSelectedCategory("all")}
+                                className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:text-white text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+                              >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                                <span>กลับไปหมวดหมู่</span>
+                              </button>
                             </div>
                           </div>
 
-                          <button
-                            onClick={() => setSelectedCategory("all")}
-                            className="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:text-white text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                            <span>กลับไปหมวดหมู่</span>
-                          </button>
+                          {/* Right: Language & Theme Controls matching reference */}
+                          <div className="bg-[#0e0e14] border border-zinc-800/80 rounded-2xl sm:rounded-3xl p-4 flex flex-col justify-between gap-3 shadow-xl">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-zinc-300">ภาษา</span>
+                              <div className="flex items-center gap-1.5">
+                                <button className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#241238] border border-purple-500/50 text-purple-300 shadow-sm cursor-pointer">
+                                  ไทย
+                                </button>
+                                <button className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer">
+                                  English
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-zinc-300">ธีม</span>
+                              <div className="flex items-center gap-1.5">
+                                <button className="p-2 px-3 rounded-xl text-xs font-bold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer">
+                                  <Sun className="w-4 h-4" />
+                                </button>
+                                <button className="p-2 px-3 rounded-xl text-xs font-bold bg-[#241238] border border-purple-500/50 text-purple-300 shadow-sm cursor-pointer">
+                                  <Moon className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-zinc-800/80 text-xs">
+                              <span className="text-zinc-500 font-medium">ช่วงราคา</span>
+                              <span className="font-black text-purple-400">
+                                {items.filter(i => (i.category || "") === selectedCategory).length > 0
+                                  ? `${Math.min(...items.filter(i => (i.category || "") === selectedCategory).map(i => i.price))} - ${Math.max(...items.filter(i => (i.category || "") === selectedCategory).map(i => i.price))}`
+                                  : '10 - 50'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     );
@@ -3376,6 +3418,15 @@ export default function App() {
               </div>
             </div>
           </footer>
+
+          {/* Floating Scroll-to-Top Button matching screenshot */}
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="fixed bottom-6 right-6 z-40 w-11 h-11 rounded-full bg-[#241238]/90 hover:bg-[#381656] backdrop-blur-md border border-purple-500/40 text-purple-300 hover:text-white flex items-center justify-center shadow-xl shadow-purple-950/60 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            title="เลื่อนขึ้นด้านบน"
+          >
+            <ChevronUp className="w-5 h-5 stroke-[2.5]" />
+          </button>
 
           <MobileDrawer
             isOpen={isAstdMenuOpen}

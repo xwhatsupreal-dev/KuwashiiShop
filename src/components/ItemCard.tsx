@@ -148,9 +148,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
       {/* Product Information */}
       <div className="flex flex-col pt-2.5 pb-1 flex-1 justify-between">
-        {/* Title */}
+        {/* Title: Left-aligned matching screenshot */}
         <h3
-          className="font-bold text-sm sm:text-base text-zinc-100 text-center line-clamp-1 truncate tracking-tight mb-1 group-hover:text-purple-300 transition-colors"
+          className="font-medium text-sm sm:text-base text-zinc-200 text-left line-clamp-1 truncate tracking-tight mb-1 px-0.5 group-hover:text-purple-300 transition-colors"
           title={item.name}
         >
           {item.name}
@@ -163,10 +163,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               <span className="text-[#ff2b42] font-black text-base sm:text-lg tracking-tight">
                 {item.price.toLocaleString()}฿
               </span>
-              <span className="text-zinc-500 font-bold text-xs sm:text-sm line-through">
+              <span className="text-zinc-500 font-normal text-xs sm:text-sm line-through">
                 {item.originalPrice!.toLocaleString()}฿
               </span>
-              <span className="bg-[#ff2442] text-white font-black text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-full shadow-sm">
+              <span className="bg-[#ff203a] text-white font-black text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md shadow-sm">
                 -{discountAmount.toLocaleString()}฿
               </span>
             </>
