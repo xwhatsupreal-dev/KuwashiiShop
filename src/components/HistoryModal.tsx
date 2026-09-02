@@ -11,12 +11,12 @@ interface HistoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   username: string;
-  initialTab?: 'purchases' | 'topups' | 'gametopups';
+  initialTab?: 'purchases' | 'topups';
   items?: any[];
 }
 
 export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchases', items = [] }: HistoryModalProps) {
-  const [activeTab, setActiveTab] = useState<'purchases' | 'topups' | 'gametopups'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'purchases' | 'topups'>(initialTab);
 
   useScrollLock(isOpen);
   useEffect(() => {
@@ -57,8 +57,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
   // Sort by date, newest first
   const sortedPurchases = [...purchases].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const sortedTopups = [...topups].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const filteredNormalPurchases = sortedPurchases.filter(p => p.game !== 'GAMETOPUP' && (!searchTerm || p.itemName.toLowerCase().includes(searchTerm.toLowerCase())));
-  const filteredGameTopups = sortedPurchases.filter(p => p.game === 'GAMETOPUP' && (!searchTerm || p.itemName.toLowerCase().includes(searchTerm.toLowerCase())));
+  const filteredNormalPurchases = sortedPurchases.filter(p => !searchTerm || p.itemName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <AnimatePresence>
@@ -322,40 +321,6 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                   </div>
                 )}
               </div>
-            )}
-
-            {activeTab === 'gametopups' && (
-              filteredGameTopups.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mx-auto mb-4 text-zinc-500">
-                    <ShoppingBag className="w-8 h-8" />
-                  </div>
-                  <p className="text-zinc-400 font-medium">ยังไม่มีประวัติการเติมเกม</p>
-                </div>
-              ) : (
-                filteredGameTopups.map((purchase) => (
-                  <motion.div 
-                    key={purchase.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-zinc-900/50 border border-white/5 rounded-xl p-4 hover:bg-zinc-900/80 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="font-bold text-white text-sm sm:text-base mb-1">{purchase.itemName}</div>
-                        <div className="text-xs text-zinc-400 flex items-center gap-2">
-                          <Calendar className="w-3 h-3" />
-                          {formatThaiDate(purchase.date)}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-cyan-400">฿{purchase.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                        <div className="text-xs text-zinc-500 mt-1">จำนวน: {purchase.quantity}</div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              )
             )}
             {activeTab === 'topups' && (
               sortedTopups.length === 0 ? (
