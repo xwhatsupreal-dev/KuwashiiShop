@@ -29,10 +29,52 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   onCategoryClick,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  const [isPressing, setIsPressing] = React.useState(false);
+  const longPressTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const didLongPressTriggerRef = React.useRef(false);
 
   const hasDiscount = Boolean(item.originalPrice && item.originalPrice > item.price);
   const discountAmount = hasDiscount ? (item.originalPrice! - item.price) : 0;
   const isOutOfStock = item.quantity === 0;
+
+  // Long-press handling for touch & mouse
+  const handlePressStart = () => {
+    didLongPressTriggerRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      setIsPressing(true);
+      didLongPressTriggerRef.current = true;
+    }, 250);
+  };
+
+  const handlePressEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    if (didLongPressTriggerRef.current) {
+      setTimeout(() => {
+        setIsPressing(false);
+      }, 1500);
+    } else {
+      setIsPressing(false);
+    }
+  };
+
+  const handlePressCancel = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    setIsPressing(false);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <motion.div
@@ -43,13 +85,25 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       transition={{ duration: 0.3, ease: "easeOut" }}
       exit={{ opacity: 0, scale: 0.98 }}
       whileHover={{ y: -4, transition: { duration: 0.15 } }}
-      className="group relative flex flex-col justify-between bg-[#0d0d12] hover:bg-[#121218] transition-all duration-300 border border-zinc-800/80 hover:border-purple-500/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-lg hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] overflow-hidden text-left"
+      className="group relative flex flex-col justify-between bg-[#0d0d12] hover:bg-[#121218] transition-all duration-300 border border-zinc-800/80 hover:border-purple-500/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-lg hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] overflow-hidden text-left select-none"
       id={`item-card-${item.id}`}
+      onTouchStart={handlePressStart}
+      onTouchEnd={handlePressEnd}
+      onTouchCancel={handlePressCancel}
+      onMouseDown={handlePressStart}
+      onMouseUp={handlePressEnd}
+      onMouseLeave={handlePressCancel}
     >
       {/* Top Image Container */}
       <div
         className="relative w-full aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-900 border border-white/5 flex items-center justify-center cursor-pointer group/carousel"
         onClick={(e) => {
+          if (didLongPressTriggerRef.current) {
+            e.stopPropagation();
+            onInquire(item);
+            setIsPressing(false);
+            return;
+          }
           e.stopPropagation();
           onInquire(item);
         }}
@@ -144,6 +198,21 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             </span>
           </div>
         )}
+
+        {/* Long Press / Hover "ดูรายละเอียด" Overlay Pill matching screenshot */}
+        <div
+          className={`absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-[2px] transition-all duration-200 pointer-events-none ${
+            isPressing ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100'
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onInquire(item);
+          }}
+        >
+          <div className="px-6 py-2.5 rounded-full border-2 border-[#a855f7] bg-black/70 text-[#d8b4fe] font-black text-sm tracking-wide shadow-[0_0_20px_rgba(168,85,247,0.4)] cursor-pointer hover:bg-purple-950/80 hover:text-white transition-all transform active:scale-95">
+            ดูรายละเอียด
+          </div>
+        </div>
       </div>
 
       {/* Product Information */}
