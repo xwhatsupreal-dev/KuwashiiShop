@@ -268,8 +268,10 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
 
       if (resData.simulated) {
         setSimulatedOtpCode(otp);
-        showToast('success', `ส่งรหัส OTP แล้ว (โหมดจำลอง: ${otp})`);
+        setOtpInput(otp);
+        showToast('success', `ระบบใส่รหัส OTP จำลองให้แล้ว (${otp}) กด "ยืนยันรหัส OTP" ได้เลย`);
       } else {
+        setOtpInput("");
         setSimulatedOtpCode(null);
         showToast('success', 'ส่งรหัส OTP ยืนยันอีเมลแล้ว กรุณาตรวจสอบกล่องจดหมาย');
       }

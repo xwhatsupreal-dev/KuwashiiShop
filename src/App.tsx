@@ -3117,86 +3117,72 @@ export default function App() {
                     />
                   </>
                 ) : (
-                  !search && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="max-w-7xl mx-auto mb-6 w-full flex flex-col gap-2 mt-2"
-                    >
-                      <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 mb-1">
-                        <button
-                          onClick={() => setSelectedCategory("all")}
-                          className="hover:text-[#0ea5e9] transition-colors cursor-pointer text-[#0ea5e9]"
-                        >
-                          รายการหมวดหมู่
-                        </button>
-                        <span className="text-zinc-600">&gt;</span>
-                        <motion.span
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.1 }}
-                          className="text-white uppercase"
-                        >
-                          {selectedCategory}
-                        </motion.span>
-                      </div>
+                  !search && (() => {
+                    const currentCategoryObj = (globalStats?.announcement_settings?.categories || []).find((c: any) => c.title === selectedCategory);
+                    const categoryImage = currentCategoryObj?.image || items.find((i) => i.category === selectedCategory && (i.imageUrl || (i.imageUrls && i.imageUrls[0])))?.imageUrl || items.find((i) => i.category === selectedCategory && i.imageUrls && i.imageUrls[0])?.imageUrls?.[0];
+                    const categoryItemCount = items.filter((i) => (i.category || "") === selectedCategory).length;
 
-                      <div className="flex flex-row justify-between items-center gap-3">
-                        <div className="flex items-center gap-3">
+                    return (
+                      <motion.div
+                        initial={{ opacity: 0, y: -15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="max-w-7xl mx-auto mb-6 w-full flex flex-col gap-3 mt-1"
+                      >
+                        {/* Breadcrumbs */}
+                        <div className="flex items-center gap-2 text-xs font-bold text-zinc-400">
                           <button
                             onClick={() => setSelectedCategory("all")}
-                            className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer flex-shrink-0"
-                            title="ย้อนกลับ"
+                            className="hover:text-purple-400 transition-colors cursor-pointer text-zinc-400 flex items-center gap-1"
                           >
-                            <ChevronLeft className="w-5 h-5" />
+                            <ChevronLeft className="w-3.5 h-3.5" />
+                            รายการหมวดหมู่
                           </button>
-                          <motion.h2
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{
-                              delay: 0.15,
-                              type: "spring",
-                              stiffness: 200,
-                            }}
-                            className="text-2xl md:text-3xl font-black text-[#0ea5e9] tracking-tight uppercase leading-tight font-display line-clamp-1"
-                          >
+                          <span className="text-zinc-600">/</span>
+                          <span className="text-purple-400 font-bold uppercase">
                             {selectedCategory}
-                          </motion.h2>
-                        </div>
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{
-                            delay: 0.2,
-                            type: "spring",
-                            stiffness: 200,
-                          }}
-                          className="flex items-center justify-center gap-1 bg-[#002f5d] border border-[#0ea5e9]/30 rounded-full px-2.5 py-1 shadow-md shadow-[#0ea5e9]/10 whitespace-nowrap shrink-0"
-                        >
-                          <Star className="w-3 h-3 fill-[#0ea5e9] text-[#0ea5e9]" />
-                          <span className="text-[#0ea5e9] text-[10px] font-bold">
-                            แนะนำ
                           </span>
-                        </motion.div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-1 mt-1">
-                        <h3 className="text-sm font-bold text-[#0ea5e9]">
-                          สินค้าในหมวดหมู่นี้
-                        </h3>
-                        <div className="text-zinc-300 font-bold text-xs">
-                          ทั้งหมด{" "}
-                          {
-                            items.filter(
-                              (i) => (i.category || "") === selectedCategory,
-                            ).length
-                          }{" "}
-                          สินค้า
                         </div>
-                      </div>
-                    </motion.div>
-                  )
+
+                        {/* Category Card Banner */}
+                        <div className="bg-[#0e0e14] border border-zinc-800/80 rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex items-center justify-between gap-4 shadow-xl relative overflow-hidden">
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            {categoryImage ? (
+                              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
+                                <img
+                                  src={categoryImage}
+                                  alt={selectedCategory}
+                                  referrerPolicy="no-referrer"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-center shrink-0 text-purple-400">
+                                <Gamepad2 className="w-7 h-7" />
+                              </div>
+                            )}
+
+                            <div className="min-w-0">
+                              <h2 className="text-lg sm:text-2xl font-black text-purple-400 tracking-tight leading-tight truncate">
+                                {selectedCategory}
+                              </h2>
+                              <p className="text-xs sm:text-sm text-zinc-400 font-medium mt-0.5">
+                                0 หมวดหมู่ {categoryItemCount} สินค้า
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setSelectedCategory("all")}
+                            className="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:text-white text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            <span>กลับไปหมวดหมู่</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    );
+                  })()
                 )}
 
                 {/* Admin Tools ASTD */}
