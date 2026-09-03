@@ -88,7 +88,7 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
             </button>
           </div>
 
-          <div className="flex gap-6 mb-4 border-b border-white/10 shrink-0 overflow-x-auto scrollbar-none">
+          <div className="flex gap-6 mb-5 border-b border-white/10 shrink-0 overflow-x-auto scrollbar-none">
             <button 
               onClick={() => setActiveTab('purchases')}
               className={`pb-3 text-sm font-bold transition-all relative border-b-2 whitespace-nowrap ${activeTab === 'purchases' ? 'text-[#0ca5e9] border-[#0ca5e9]' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
@@ -101,64 +101,65 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
             >
               การเติมเงิน
             </button>
-            
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 space-y-4 min-h-0">
+          <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent space-y-4 min-h-0">
             {activeTab === 'purchases' && (
-              <div>
-                <div className="mb-4 bg-zinc-900/50 rounded-xl p-4 border border-white/5 space-y-3">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="w-4 h-4 text-zinc-500" />
-                      </div>
-                      <input 
-                        type="text" 
-                        placeholder="ค้นหาสินค้า..." 
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#121215] border border-white/10 text-zinc-100 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-[#0ca5e9] focus:ring-1 focus:ring-[#0ca5e9] transition-all"
-                      />
+              <div className="flex flex-col h-full">
+                {/* Clean Action Bar */}
+                <div className="flex flex-col sm:flex-row gap-2.5 mb-5 shrink-0">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Search className="w-4 h-4 text-zinc-500" />
                     </div>
+                    <input 
+                      type="text" 
+                      placeholder="ค้นหาประวัติการสั่งซื้อ..." 
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className="w-full h-11 bg-zinc-900/60 border border-white/5 text-zinc-100 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[#0ca5e9]/50 focus:ring-1 focus:ring-[#0ca5e9]/50 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2.5">
                     <button 
-                      className="bg-white/5 border border-white/5 hover:bg-white/10 text-zinc-300 px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2 font-medium transition-all shadow-sm"
                       onClick={() => {
                         const texts = selectedItems.map(id => sortedPurchases.find(p => p.id === id)?.credentialData).filter(Boolean);
                         if (texts.length) navigator.clipboard.writeText(texts.join('\n'));
                       }}
+                      disabled={selectedItems.length === 0}
+                      className="flex-1 sm:flex-none h-11 bg-zinc-900/60 disabled:opacity-50 disabled:cursor-not-allowed border border-white/5 hover:border-white/10 hover:bg-zinc-800 text-zinc-300 px-4 rounded-xl text-sm flex items-center justify-center gap-2 font-medium transition-all shadow-sm"
                     >
-                      <Copy className="w-4 h-4 text-zinc-500" /> คัดลอกที่เลือก
+                      <Copy className="w-4 h-4 text-zinc-500" /> คัดลอก
+                      {selectedItems.length > 0 && (
+                        <span className="bg-[#0ca5e9] text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold leading-none">
+                          {selectedItems.length}
+                        </span>
+                      )}
                     </button>
-                  </div>
-                  <div className="flex items-center justify-between">
                     <button 
-                      className="bg-white/5 border border-white/5 hover:bg-white/10 text-zinc-300 px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-medium transition-all shadow-sm"
                       onClick={() => {
                         const texts = filteredNormalPurchases.map(p => p.credentialData).filter(Boolean);
                         if (texts.length) navigator.clipboard.writeText(texts.join('\n'));
                       }}
+                      disabled={filteredNormalPurchases.length === 0}
+                      className="flex-1 sm:flex-none h-11 bg-zinc-900/60 disabled:opacity-50 disabled:cursor-not-allowed border border-white/5 hover:border-white/10 hover:bg-zinc-800 text-zinc-300 px-4 rounded-xl text-sm flex items-center justify-center gap-2 font-medium transition-all shadow-sm"
                     >
-                      <Copy className="w-4 h-4 text-zinc-500" /> คัดลอกทั้งหมด
+                      <Copy className="w-4 h-4 text-zinc-500" /> ทั้งหมด
                     </button>
-                    <div className="relative">
-                      <select className="appearance-none bg-[#121215] border border-white/10 text-zinc-300 px-4 py-2 pr-8 rounded-lg text-sm font-medium focus:outline-none focus:border-[#0ca5e9]">
-                        <option>{filteredNormalPurchases.length} รายการ</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                    </div>
                   </div>
                 </div>
 
                 {filteredNormalPurchases.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mx-auto mb-4 text-zinc-500">
-                      <ShoppingCart className="w-8 h-8" />
+                  <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <div className="w-20 h-20 rounded-full bg-zinc-900/80 border border-white/5 flex items-center justify-center mb-5 text-zinc-600 shadow-inner">
+                      <ShoppingCart className="w-8 h-8" strokeWidth={1.5} />
                     </div>
-                    <p className="text-zinc-400 font-medium">ยังไม่มีประวัติการทำรายการ</p>
+                    <h4 className="text-zinc-200 font-bold text-lg mb-1.5">ยังไม่มีประวัติการทำรายการ</h4>
+                    <p className="text-zinc-500 text-sm">รายการสั่งซื้อของคุณจะแสดงที่นี่เมื่อทำรายการสำเร็จ</p>
                   </div>
                 ) : (
-                  <div className="border border-white/5 rounded-xl overflow-hidden divide-y divide-white/5 bg-[#121215]">
+                  <div className="space-y-3 pb-4">
                     {filteredNormalPurchases.map((purchase) => {
                       const date = formatThaiDate(purchase.date);
                       const time = formatThaiTime(purchase.date);
@@ -169,17 +170,17 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                       return (
                         <motion.div 
                           key={purchase.id} 
-                          initial={{ opacity: 0, y: 30 }}
+                          initial={{ opacity: 0, y: 15 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true, margin: "0px 0px -20px 0px" }}
-                          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                          className="flex flex-col"
+                          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                          className="flex flex-col bg-zinc-900/40 border border-white/5 hover:border-white/10 transition-colors rounded-2xl overflow-hidden"
                         >
-                          <div className="p-4 flex gap-3 items-start relative w-full">
-                            <div className="pt-1 sm:pt-3.5 shrink-0">
+                          <div className="p-4 sm:p-5 flex gap-3.5 items-start relative w-full">
+                            <div className="pt-1 shrink-0">
                                <input 
                                  type="checkbox" 
-                                 className="w-5 h-5 rounded border-zinc-700 bg-[#121215] checked:bg-[#0ca5e9] checked:border-[#0ca5e9] focus:ring-[#0ca5e9] transition-colors cursor-pointer" 
+                                 className="w-5 h-5 rounded border-zinc-700 bg-black/50 checked:bg-[#0ca5e9] checked:border-[#0ca5e9] focus:ring-[#0ca5e9] transition-colors cursor-pointer" 
                                  checked={selectedItems.includes(purchase.id)}
                                  onChange={(e) => {
                                    if (e.target.checked) setSelectedItems([...selectedItems, purchase.id]);
@@ -188,15 +189,15 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                                />
                             </div>
                             
-                            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3">
+                            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-4">
                               <div className="flex gap-3 items-center flex-1 min-w-0">
-                                <img src={items.find(item => String(item.id) === String(purchase.itemId) || item.name === purchase.itemName)?.imageUrls?.[0] || items.find(item => String(item.id) === String(purchase.itemId) || item.name === purchase.itemName)?.imageUrl || (purchase as any).imageUrl || "https://img2.pic.in.th/pic/Screenshot_20241029_163939_Facebook.jpg"} alt="" className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border border-white/5 shrink-0 shadow-sm" />
+                                <img src={items.find(item => String(item.id) === String(purchase.itemId) || item.name === purchase.itemName)?.imageUrls?.[0] || items.find(item => String(item.id) === String(purchase.itemId) || item.name === purchase.itemName)?.imageUrl || (purchase as any).imageUrl || "https://img2.pic.in.th/pic/Screenshot_20241029_163939_Facebook.jpg"} alt="" className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-white/10 shrink-0 shadow-sm" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-zinc-100 font-bold text-sm sm:text-base pr-2 mb-1.5 whitespace-normal leading-tight">
                                     {purchase.itemName}
                                   </p>
                                   <div className="flex items-center gap-2">
-                                    <span className="flex items-center text-xs font-bold text-[#10b981]">
+                                    <span className="flex items-center text-xs font-bold text-[#10b981] bg-[#10b981]/10 px-1.5 py-0.5 rounded-md">
                                        <div className="w-1.5 h-1.5 rounded-full bg-[#10b981] mr-1.5"></div> 
                                        จัดส่งสำเร็จ
                                     </span>
@@ -219,19 +220,19 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
                                       );
                                     }
                                   }}
-                                  className="px-4 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-sm font-medium text-zinc-300 transition-all shadow-sm"
+                                  disabled={!canExpand}
+                                  className="px-4 py-2 bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 border border-white/5 rounded-xl text-sm font-medium text-zinc-300 transition-all shadow-sm"
                                 >
                                   {expandedPurchases.includes(purchase.id) ? 'ปิดข้อมูล' : 'ดูข้อมูล'}
                                 </button>
-                                  {/* claim button removed */}
                                </div>
                             </div>
                           </div>
                           
                           {/* Expanded content */}
                           {hasCredentialData && expandedPurchases.includes(purchase.id) && (
-                            <div className="p-4 bg-zinc-900 border-t border-white/5">
-                              <div className="text-xs font-semibold text-zinc-300 mb-2 flex items-center gap-1.5 uppercase tracking-widest font-mono">
+                            <div className="p-4 sm:p-5 bg-black/40 border-t border-white/5">
+                              <div className="text-xs font-semibold text-zinc-400 mb-3 flex items-center gap-1.5 uppercase tracking-widest font-mono">
                                 {purchase.credentialData!.includes('ลิ้งค์ดาวน์โหลด:') ? 'ดาวน์โหลดไฟล์ตัวรัน' : purchase.game === 'ROV' ? 'Username:Password' : 'ข้อมูลบัญชี / โค้ด'}
                               </div>
                               <div className="space-y-2">
@@ -323,66 +324,69 @@ export function HistoryModal({ isOpen, onClose, username, initialTab = 'purchase
               </div>
             )}
             {activeTab === 'topups' && (
-              sortedTopups.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mx-auto mb-4 text-zinc-500">
-                    <DollarSign className="w-8 h-8" />
+              <div className="flex flex-col h-full">
+                {sortedTopups.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <div className="w-20 h-20 rounded-full bg-zinc-900/80 border border-white/5 flex items-center justify-center mb-5 text-zinc-600 shadow-inner">
+                      <DollarSign className="w-8 h-8" strokeWidth={1.5} />
+                    </div>
+                    <h4 className="text-zinc-200 font-bold text-lg mb-1.5">ยังไม่มีประวัติการเติมเงิน</h4>
+                    <p className="text-zinc-500 text-sm">ประวัติการเติมเงินของคุณจะแสดงที่นี่เมื่อเติมเงินสำเร็จ</p>
                   </div>
-                  <p className="text-zinc-400 font-medium">ยังไม่มีประวัติการเติมเงิน</p>
-                </div>
-              ) : (
-                <div className="border border-white/5 rounded-xl overflow-hidden divide-y divide-white/5 bg-[#121215]">
-                  {sortedTopups.map((topup) => {
-                    const date = formatThaiDate(topup.date);
-                    const time = formatThaiTime(topup.date);
-                    return (
-                      <motion.div 
-                        key={topup.id} 
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "0px 0px -20px 0px" }}
-                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className="bg-[#121215] flex flex-col"
-                      >
-                        <div className="p-4 flex gap-3 items-start relative w-full">
-                          
-                          <div className="w-12 h-12 rounded-lg border border-white/5 bg-zinc-900 flex items-center justify-center shrink-0">
-                            <DollarSign className="w-6 h-6 text-[#10b981]" />
-                          </div>
-
-                          <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3">
-                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                              <p className="text-zinc-100 font-bold text-sm sm:text-base truncate pr-2 mb-1.5 align-middle">
-                                การเติมเงินผ่าน {topup.method}
-                              </p>
-                              <div className="flex items-center gap-2">
-                                <span className="flex items-center text-xs font-bold text-[#10b981]">
-                                   <div className="w-1.5 h-1.5 rounded-full bg-[#10b981] mr-1.5"></div> 
-                                   สำเร็จเรียบร้อย
-                                </span>
-                                <span className="text-xs text-zinc-500">
-                                  {date} {time}
-                                </span>
-                              </div>
-                              {topup.refCode && (
-                                <div className="text-[10px] text-zinc-500 font-mono mt-1 w-full truncate">
-                                  อ้างอิง: {topup.refCode}
-                                </div>
-                              )}
-                            </div>
+                ) : (
+                  <div className="space-y-3 pb-4">
+                    {sortedTopups.map((topup) => {
+                      const date = formatThaiDate(topup.date);
+                      const time = formatThaiTime(topup.date);
+                      return (
+                        <motion.div 
+                          key={topup.id} 
+                          initial={{ opacity: 0, y: 15 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: "0px 0px -20px 0px" }}
+                          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                          className="bg-zinc-900/40 border border-white/5 hover:border-white/10 transition-colors rounded-2xl overflow-hidden flex flex-col"
+                        >
+                          <div className="p-4 sm:p-5 flex gap-3.5 items-start relative w-full">
                             
-                            <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end items-end sm:items-center">
-                              <div className={`font-mono font-bold text-right text-lg sm:text-xl px-2 ${topup.amount > 0 ? (topup.game === 'ROV' ? 'text-amber-500' : 'text-[#10b981]') : 'text-rose-500'}`}>
-                                {topup.amount > 0 ? '+' : ''}{topup.amount} {topup.game === 'ROV' ? 'เครดิต' : '฿'}
+                            <div className="w-12 h-12 rounded-xl border border-white/10 bg-black/40 flex items-center justify-center shrink-0 shadow-sm">
+                              <DollarSign className="w-6 h-6 text-[#10b981]" />
+                            </div>
+
+                            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-4">
+                              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <p className="text-zinc-100 font-bold text-sm sm:text-base truncate pr-2 mb-1.5 align-middle">
+                                  การเติมเงินผ่าน {topup.method}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <span className="flex items-center text-xs font-bold text-[#10b981] bg-[#10b981]/10 px-1.5 py-0.5 rounded-md">
+                                     <div className="w-1.5 h-1.5 rounded-full bg-[#10b981] mr-1.5"></div> 
+                                     สำเร็จเรียบร้อย
+                                  </span>
+                                  <span className="text-xs text-zinc-500">
+                                    {date} {time}
+                                  </span>
+                                </div>
+                                {topup.refCode && (
+                                  <div className="text-[10px] text-zinc-500 font-mono mt-2 w-full truncate bg-black/40 px-2 py-1 rounded inline-block w-auto max-w-fit">
+                                    อ้างอิง: {topup.refCode}
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end items-end sm:items-center mt-1 sm:mt-0">
+                                <div className={`font-mono font-bold text-right text-lg sm:text-xl px-2 ${topup.amount > 0 ? (topup.game === 'ROV' ? 'text-amber-500' : 'text-[#10b981]') : 'text-rose-500'}`}>
+                                  {topup.amount > 0 ? '+' : ''}{topup.amount} {topup.game === 'ROV' ? 'เครดิต' : '฿'}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </motion.div>
