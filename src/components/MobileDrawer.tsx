@@ -39,6 +39,7 @@ interface MobileDrawerProps {
   setPage?: (page: string) => void;
   setShowTopupModal?: (show: boolean) => void;
   openHistoryModal?: (tab: 'purchases' | 'topups') => void;
+  onNavigateProfile?: (tab: 'profile' | 'purchases' | 'topups') => void;
   globalStats?: any;
 }
 
@@ -52,6 +53,7 @@ export const MobileDrawer = ({
   setPage,
   setShowTopupModal,
   openHistoryModal,
+  onNavigateProfile,
   globalStats
 }: MobileDrawerProps) => {
   const shopLogoUrl = globalStats?.announcement_settings?.shopLogoUrl;
@@ -212,7 +214,8 @@ export const MobileDrawer = ({
                       <motion.button
                         whileTap={{ scale: 0.97 }}
                         onClick={() => {
-                          if (openHistoryModal) openHistoryModal('purchases');
+                          if (onNavigateProfile) onNavigateProfile('purchases');
+                          else if (openHistoryModal) openHistoryModal('purchases');
                           onClose();
                         }}
                         className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-800 border border-white/5 hover:border-purple-500/30 transition-all text-left group"
@@ -274,49 +277,42 @@ export const MobileDrawer = ({
                 /* Unauthenticated (Guest) User View */
                 <div className="space-y-5">
                   {/* Welcome Member Banner */}
-                  <div className="relative p-4 rounded-3xl bg-gradient-to-br from-indigo-950/80 via-zinc-900 to-purple-950/60 border border-indigo-500/30 shadow-lg overflow-hidden">
-                    <div className="absolute top-0 right-0 p-3 opacity-20 pointer-events-none">
-                      <Sparkles className="w-20 h-20 text-indigo-400" />
+                  <div className="relative p-5 rounded-2xl bg-zinc-900/50 border border-white/5 overflow-hidden flex flex-col items-center text-center">
+                    <div className="w-12 h-12 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3">
+                      <User className="w-6 h-6 text-indigo-400" />
                     </div>
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-extrabold border border-indigo-500/30 tracking-wider">
-                          WELCOME MEMBER
-                        </span>
-                      </div>
-                      <h3 className="text-base font-extrabold text-white leading-snug">
-                        เข้าสู่ระบบสมาชิก
-                      </h3>
-                      <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
-                        สะสมแต้ม สั่งซื้อสินค้า และรับสิทธิพิเศษมากมาย
-                      </p>
+                    <h3 className="text-base font-bold text-white">
+                      เข้าสู่ระบบสมาชิก
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-1 mb-5">
+                      เข้าสู่ระบบเพื่อสั่งซื้อสินค้าและจัดการโปรไฟล์
+                    </p>
 
-                      <div className="mt-4 flex flex-col gap-2">
-                        <motion.button
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            onClose();
-                            onLoginClick();
-                          }}
-                          className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 hover:brightness-110 text-white font-bold text-sm shadow-md shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all"
-                        >
-                          <LogIn className="w-4 h-4" />
-                          เข้าสู่ระบบ
-                        </motion.button>
+                    <div className="w-full flex flex-col gap-2.5">
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          onClose();
+                          onLoginClick();
+                        }}
+                        className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+                      >
+                        <LogIn className="w-4 h-4" />
+                        เข้าสู่ระบบ
+                      </motion.button>
 
-                        <motion.button
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            onClose();
-                            if (onRegisterClick) onRegisterClick();
-                            else onLoginClick();
-                          }}
-                          className="w-full py-3 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-white/10 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all"
-                        >
-                          <UserPlus className="w-4 h-4 text-indigo-400" />
-                          สมัครสมาชิกใหม่
-                        </motion.button>
-                      </div>
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          onClose();
+                          if (onRegisterClick) onRegisterClick();
+                          else onLoginClick();
+                        }}
+                        className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-zinc-300 font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        สมัครสมาชิกใหม่
+                      </motion.button>
                     </div>
                   </div>
 
@@ -425,30 +421,6 @@ export const MobileDrawer = ({
                     </span>
 
                     <div className="space-y-1.5">
-                      <motion.button
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          onClose();
-                          onLoginClick();
-                        }}
-                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-zinc-900/60 hover:bg-zinc-800 border border-white/5 transition-colors group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform">
-                            <Gamepad2 className="w-4 h-4" />
-                          </div>
-                          <div className="text-left">
-                            <span className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors block">
-                              บริการเติมเกม
-                            </span>
-                            <span className="text-[10px] text-zinc-400 block">เติมเกมราคาพิเศษ</span>
-                          </div>
-                        </div>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-300">
-                          HOT
-                        </span>
-                      </motion.button>
-
                       <a
                         href="https://discord.gg/AQKtJpvyva"
                         target="_blank"

@@ -5,7 +5,7 @@ import { AnimatePresence } from 'motion/react';
 import { useRef, useEffect } from 'react';
 import { MarqueeAnnouncement } from './MarqueeAnnouncement';
 
-export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, onRegisterClick, onLogout, setAppScreen, currentScreen, globalStats, onLogoClick }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, onRegisterClick?: () => void, onLogout?: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any, onLogoClick?: () => void }) => {
+export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLoginClick, onRegisterClick, onLogout, setAppScreen, currentScreen, globalStats, onLogoClick, onNavigateProfile }: { toggleSidebar: () => void, onSearchToggle: () => void, currentUser: any, onLoginClick: () => void, onRegisterClick?: () => void, onLogout?: () => void, setAppScreen?: (screen: string) => void, currentScreen?: string, globalStats?: any, onLogoClick?: () => void, onNavigateProfile?: (tab: 'profile' | 'purchases' | 'topups') => void }) => {
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -134,13 +134,13 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
                       </div>
                       <div className="p-1.5 flex flex-col gap-0.5">
                         <button
-                          onClick={() => { setAppScreen?.("PROFILE"); setIsDropdownOpen(false); }}
+                          onClick={() => { onNavigateProfile ? onNavigateProfile('profile') : setAppScreen?.("PROFILE"); setIsDropdownOpen(false); }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors text-[12px] font-medium group"
                         >
                           <Settings className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" /> จัดการโปรไฟล์
                         </button>
                         <button
-                          onClick={() => { setAppScreen?.("PROFILE"); setIsDropdownOpen(false); }}
+                          onClick={() => { onNavigateProfile ? onNavigateProfile('purchases') : setAppScreen?.("PROFILE"); setIsDropdownOpen(false); }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors text-[12px] font-medium group"
                         >
                           <Box className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" /> สถานะคำสั่งซื้อ
@@ -152,7 +152,7 @@ export const ShopHeader = ({ toggleSidebar, onSearchToggle, currentUser, onLogin
                           <Wallet className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" /> เติมเงิน
                         </button>
                         <button
-                          onClick={() => { setAppScreen?.("PROFILE"); setIsDropdownOpen(false); }}
+                          onClick={() => { onNavigateProfile ? onNavigateProfile('topups') : setAppScreen?.("PROFILE"); setIsDropdownOpen(false); }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors text-[12px] font-medium group"
                         >
                           <History className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" /> ประวัติการเติมเงิน

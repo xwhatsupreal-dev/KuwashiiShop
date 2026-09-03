@@ -245,6 +245,7 @@ export default function App() {
   const [appScreen, setAppScreen] = useState<string>(
     initialState.initAppScreen,
   );
+  const [profileInitialTab, setProfileInitialTab] = useState<"profile" | "purchases" | "topups">("profile");
 
   // Route handlers for Discord Auth redirection parameters
   useEffect(() => {
@@ -557,8 +558,8 @@ export default function App() {
   );
 
   const openHistoryModal = (tab: "purchases" | "topups") => {
-    setHistoryTab(tab);
-    setShowHistoryModal(true);
+    setProfileInitialTab(tab);
+    setAppScreen("PROFILE");
   };
   const [viewingUserHistory, setViewingUserHistory] = useState<string | null>(
     null,
@@ -2136,10 +2137,10 @@ export default function App() {
 
       if (item.gachaPool && item.gachaPool.length > 0 && drops.length > 0) {
         // Direct purchase, go straight to history to view credential/product
-        setShowHistoryModal(true);
+        openHistoryModal("purchases");
       } else {
         // Direct purchase, go straight to history to view credential/product
-        setShowHistoryModal(true);
+        openHistoryModal("purchases");
       }
     } catch (err) {
       console.error(err);
@@ -2561,7 +2562,7 @@ export default function App() {
         isOpen={!!gachaResult}
         onClose={() => {
           setGachaResult(null);
-          setShowHistoryModal(true);
+          openHistoryModal("purchases");
         }}
         result={gachaResult}
       />
@@ -2811,6 +2812,10 @@ export default function App() {
             onLogout={handleLogout}
             setAppScreen={setAppScreen}
             currentScreen={appScreen}
+            onNavigateProfile={(tab) => {
+              setProfileInitialTab(tab);
+              setAppScreen("PROFILE");
+            }}
             onLogoClick={() => {
               setIsLoadingStock(true);
               setTimeout(() => {
@@ -2958,6 +2963,7 @@ export default function App() {
                 onChangeUsername={handleChangeUsername}
                 onChangeEmail={handleChangeEmail}
                 items={items}
+                initialTab={profileInitialTab}
               />
             ) : appScreen === "TOPUP" ? (
               <TopupPage
@@ -3358,6 +3364,10 @@ export default function App() {
             setPage={setAppScreen}
             setShowTopupModal={setShowTopupModal}
             openHistoryModal={openHistoryModal}
+            onNavigateProfile={(tab) => {
+              setProfileInitialTab(tab);
+              setAppScreen("PROFILE");
+            }}
             globalStats={globalStats}
           />
           <SearchOverlay

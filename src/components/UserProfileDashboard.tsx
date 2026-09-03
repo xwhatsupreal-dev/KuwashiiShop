@@ -45,6 +45,7 @@ interface UserProfileDashboardProps {
   onChangeUsername: (newUsername: string) => Promise<boolean>;
   onChangeEmail: (newEmail: string) => Promise<boolean>;
   items?: any[];
+  initialTab?: "profile" | "purchases" | "topups";
 }
 
 export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
@@ -54,8 +55,13 @@ export const UserProfileDashboard: React.FC<UserProfileDashboardProps> = ({
   onChangeUsername,
   onChangeEmail,
   items: globalItems = [],
+  initialTab = "profile"
 }) => {
-  const [activeTab, setActiveTab] = useState<"profile" | "purchases" | "topups">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "purchases" | "topups">(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // History state
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
