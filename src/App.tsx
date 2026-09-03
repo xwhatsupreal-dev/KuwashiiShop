@@ -3067,31 +3067,6 @@ export default function App() {
                           </motion.div>
                         )}
                       </div>
-
-                      <div className="flex items-center gap-4 mb-4 mt-8">
-                        <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2 whitespace-nowrap">
-                          <span className="bg-zinc-800/80 p-1.5 rounded-lg border border-zinc-700/50">🎮</span> เมนูเติมเกม
-                        </h2>
-                        <div className="h-px bg-gradient-to-r from-zinc-700/80 to-transparent flex-1"></div>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.4 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            showToast("เปิดให้บริการให้เร็วๆนี้", "info");
-                          }}
-                          className="cursor-pointer rounded-2xl overflow-hidden border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] group bg-gradient-to-br from-cyan-600 to-blue-800 flex items-center justify-center aspect-[2/1]"
-                        >
-                          <div className="flex flex-col items-center justify-center gap-2 text-white p-4 text-center">
-                            <Gamepad2 className="w-8 h-8 sm:w-10 sm:h-10 opacity-90 group-hover:scale-110 transition-transform" />
-                            <span className="font-bold text-sm sm:text-base">บริการรับเติมเกม</span>
-                          </div>
-                        </motion.div>
-                      </div>
                     </div>
                     <RecentPurchases appScreen={appScreen} items={items} />
                     <CategoryList
