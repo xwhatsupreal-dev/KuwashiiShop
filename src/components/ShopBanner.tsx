@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Users, Layers, Package, CheckSquare, Wallet } from 'lucide-react';
+import { User, Layers, PackageCheck, ShoppingBag, Coins } from 'lucide-react';
 
 export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, items?: any[] }) => {
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
@@ -73,58 +73,47 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
 
       {/* Stats Grid */}
       {showStatsBlock && (
-        <div className="px-4 max-w-7xl mx-auto mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="px-4 max-w-7xl mx-auto mb-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
           {showStatUsers && (
-            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
-              <Users className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
-              <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">ผู้ใช้งานทั้งหมด</span>
-              <div className="flex items-baseline gap-1 z-10">
-                <span className="text-2xl font-bold text-zinc-100">{globalStats?.user_count || '0'}</span>
-                <span className="text-xs text-zinc-400">คน</span>
-              </div>
-            </div>
-          )}
-
-          {showStatCategories && (
-            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
-              <Layers className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
-              <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">จำนวนหมวดหมู่</span>
-              <div className="flex items-baseline gap-1 z-10">
-                <span className="text-2xl font-bold text-zinc-100">{categoriesCount}</span>
-                <span className="text-xs text-zinc-400">หมวด</span>
-              </div>
-            </div>
-          )}
-
-          {showStatItems && (
-            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
-              <Package className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
-              <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">สินค้าพร้อมจำหน่าย</span>
-              <div className="flex items-baseline gap-1 z-10">
-                <span className="text-2xl font-bold text-zinc-100">{availableItemsCount}</span>
-                <span className="text-xs text-zinc-400">ชิ้น</span>
-              </div>
-            </div>
-          )}
-
-          {showStatSold && (
-            <div className="border border-cyan-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
-              <CheckSquare className="absolute -right-2 -bottom-2 w-16 h-16 text-cyan-100/60 stroke-[1.5px]" />
-              <span className="text-xs font-semibold text-zinc-400 mb-1 z-10">จำหน่ายไปแล้ว</span>
-              <div className="flex items-baseline gap-1 z-10">
-                <span className="text-2xl font-bold text-zinc-100">{soldItemsCount.toLocaleString()}</span>
-                <span className="text-xs text-zinc-400">ครั้ง</span>
+            <div className="border border-white/5 rounded-2xl p-4 flex flex-col relative overflow-hidden bg-[#09090b]">
+              <User className="absolute -right-4 top-1/2 -translate-y-1/2 w-24 h-24 text-sky-500/40 stroke-[1.5px] pointer-events-none" />
+              <span className="text-xs font-semibold text-zinc-400 mb-0.5 z-10">ผู้ใช้งาน</span>
+              <div className="flex items-baseline gap-1.5 z-10">
+                <span className="text-3xl font-black text-sky-400 tracking-tight">{globalStats?.user_count || '0'}</span>
+                <span className="text-xs text-zinc-400 font-medium">คน</span>
               </div>
             </div>
           )}
 
           {showStatTopup && (
-            <div className="border border-amber-300 rounded-xl p-4 flex flex-col relative overflow-hidden bg-black/60">
-              <Wallet className="absolute -right-2 -bottom-2 w-16 h-16 text-amber-100/60 stroke-[1.5px]" />
-              <span className="text-xs font-semibold text-amber-400 mb-1 z-10">ยอดเติมทั้งหมด</span>
-              <div className="flex items-baseline gap-1 z-10">
-                <span className="text-2xl font-bold text-zinc-100">{totalTopupCount.toLocaleString()}</span>
-                <span className="text-xs text-zinc-400">บาท</span>
+            <div className="border border-white/5 rounded-2xl p-4 flex flex-col relative overflow-hidden bg-[#09090b]">
+              <Coins className="absolute -right-4 top-1/2 -translate-y-1/2 w-24 h-24 text-sky-500/40 stroke-[1.5px] pointer-events-none" />
+              <span className="text-xs font-semibold text-zinc-400 mb-0.5 z-10">ยอดเติม</span>
+              <div className="flex items-baseline gap-1.5 z-10">
+                <span className="text-3xl font-black text-sky-400 tracking-tight">{totalTopupCount.toLocaleString()}</span>
+                <span className="text-xs text-zinc-400 font-medium">บาท</span>
+              </div>
+            </div>
+          )}
+
+          {showStatItems && (
+            <div className="border border-white/5 rounded-2xl p-4 flex flex-col relative overflow-hidden bg-[#09090b]">
+              <PackageCheck className="absolute -right-4 top-1/2 -translate-y-1/2 w-24 h-24 text-sky-500/40 stroke-[1.5px] pointer-events-none" />
+              <span className="text-xs font-semibold text-zinc-400 mb-0.5 z-10">สต็อก</span>
+              <div className="flex items-baseline gap-1.5 z-10">
+                <span className="text-3xl font-black text-sky-400 tracking-tight">{availableItemsCount}</span>
+                <span className="text-xs text-zinc-400 font-medium">ชิ้น</span>
+              </div>
+            </div>
+          )}
+
+          {showStatSold && (
+            <div className="border border-white/5 rounded-2xl p-4 flex flex-col relative overflow-hidden bg-[#09090b]">
+              <ShoppingBag className="absolute -right-4 top-1/2 -translate-y-1/2 w-24 h-24 text-sky-500/40 stroke-[1.5px] pointer-events-none" />
+              <span className="text-xs font-semibold text-zinc-400 mb-0.5 z-10">ยอดขาย</span>
+              <div className="flex items-baseline gap-1.5 z-10">
+                <span className="text-3xl font-black text-sky-400 tracking-tight">{soldItemsCount.toLocaleString()}</span>
+                <span className="text-xs text-zinc-400 font-medium">ครั้ง</span>
               </div>
             </div>
           )}
