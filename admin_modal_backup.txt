@@ -342,31 +342,31 @@ export const AdminModal: React.FC<AdminModalProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative max-w-lg w-full rounded-3xl border border-white/10 bg-[#09090b] shadow-2xl z-10 max-h-[90dvh] flex flex-col mx-auto overflow-hidden">
-          {/* Accent strip */}
-          <div className="h-1 w-full bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-400 shrink-0" />
-          
-          <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-5 mt-2">
-                <div>
-                  <h3 className="font-display text-lg font-bold text-white flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-sky-400" />
-                    <span>{editingItem ? 'แก้ไขสต๊อกสินค้า' : 'เพิ่มไอเทมใหม่ในระบบ'}</span>
-                  </h3>
-                  <p className="text-xs text-zinc-400 font-display tracking-tight mt-0.5">
-                    กรอกรายละเอียดไอเทมเพื่อเพิ่มลงในร้านค้า
-                  </p>
-                </div>
-                <motion.button whileTap={{ scale: 0.95 }}
-                  type="button"
-                  onClick={onClose}
-                  className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900 transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </motion.button>
-              </div>
+          className="relative max-w-sm w-full rounded-2xl border border-white/5 bg-transparent p-4 sm:p-5 overflow-hidden shadow-2xl z-10 max-h-[90dvh] overflow-y-auto mx-auto"
+        >
+          {/* Neon orange accent strip */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-amber-600 to-amber-400" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between mb-5 mt-2">
+            <div>
+              <h3 className="font-display text-lg font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                <span>{editingItem ? 'แก้ไขสต๊อกสินค้า' : 'เพิ่มไอเทมใหม่ในระบบ'}</span>
+              </h3>
+              <p className="text-xs text-zinc-400 font-display tracking-tight mt-0.5">
+                กรอกรายละเอียดไอเทมในเกม Attack on Titan Revolution ของคลังสต๊อกคุณ
+              </p>
+            </div>
+            <motion.button whileTap={{ scale: 0.95 }}
+              onClick={onClose}
+              className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </motion.button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name input */}
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-1.5 font-display tracking-tight">
@@ -377,7 +377,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="เช่น Yeager Bloodline, Attack Serum..."
-                className={`w-full bg-zinc-900 border text-zinc-100 px-3.5 py-2.5 rounded-2xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all font-display tracking-tight font-medium placeholder-zinc-600 ${
+                className={`w-full bg-zinc-900 border text-zinc-100 px-3.5 py-2.5 rounded-2xl text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all font-display tracking-tight font-medium placeholder-zinc-600 ${
                   errors.name ? 'border-red-500/80 bg-red-950/10' : 'border-white/5'
                 }`}
               />
@@ -404,7 +404,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                       onClick={() => setCategory(cat)}
                       className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all text-left flex items-center gap-1.5 border cursor-pointer select-none ${
                         isActive
-                          ? 'bg-sky-500/15 border-sky-500/80 text-sky-400 font-extrabold shadow-sm shadow-sky-500/5'
+                          ? 'bg-amber-500/15 border-amber-500/80 text-amber-400 font-extrabold shadow-sm shadow-amber-500/5'
                           : 'bg-zinc-900/60 border-zinc-850 hover:border-white/10 text-zinc-400 hover:text-zinc-300'
                       }`}
                     >
@@ -427,7 +427,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               <select
                 value={saleFormat}
                 onChange={(e) => setSaleFormat(e.target.value as 'ขายรหัส' | 'กล่องสุ่ม' | 'ไฟล์ตัวรัน')}
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-200 px-3 py-2.5 rounded-2xl text-sm focus:outline-none focus:border-sky-500 transition-all cursor-pointer font-display tracking-tight"
+                className="w-full bg-zinc-900 border border-white/5 text-zinc-200 px-3 py-2.5 rounded-2xl text-sm focus:outline-none focus:border-amber-500 transition-all cursor-pointer font-display tracking-tight"
               >
                 <option value="ขายรหัส">ขายรหัส</option>
                 <option value="กล่องสุ่ม">กล่องสุ่ม</option>
@@ -435,7 +435,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               </select>
             </div>
             {/* Quantity, Initial Quantity, Pieces per pack, and Price row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-1.5 font-display tracking-tight flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1.5">
@@ -453,7 +453,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     min="0"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-850 text-emerald-400 px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-sky-500 transition-all font-mono font-bold"
+                    className="w-full bg-zinc-900 border border-zinc-850 text-emerald-400 px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-amber-500 transition-all font-mono font-bold"
                   />
                 )}
                 {errors.quantity && <p className="text-xs text-red-500 mt-1">{errors.quantity}</p>}
@@ -470,13 +470,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   placeholder="ปล่อยว่างเพื่อเท่าคงเหลือ"
                   value={initialQuantity}
                   onChange={(e) => setInitialQuantity(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-850 text-zinc-200 px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-sky-500 transition-all font-mono font-medium placeholder:text-zinc-600"
+                  className="w-full bg-zinc-900 border border-zinc-850 text-zinc-200 px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-amber-500 transition-all font-mono font-medium placeholder:text-zinc-600"
                 />
               </div>
 
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-1.5 font-display tracking-tight flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   <span>จำนวนชิ้นต่อชุด</span>
                 </label>
                 <input
@@ -485,7 +485,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   placeholder="เช่น 360 ชิ้นต่อ 1 สต๊อก"
                   value={piecesPerUnit}
                   onChange={(e) => setPiecesPerUnit(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-850 text-sky-400 px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-sky-500 transition-all font-mono font-medium placeholder:text-zinc-600"
+                  className="w-full bg-zinc-900 border border-zinc-850 text-amber-400 px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-amber-500 transition-all font-mono font-medium placeholder:text-zinc-600"
                 />
               </div>
 
@@ -500,7 +500,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   placeholder="ปล่อยว่างหากไม่มีส่วนลด"
                   value={originalPrice}
                   onChange={(e) => setOriginalPrice(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-850 text-zinc-400 line-through px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-sky-500 transition-all font-mono font-medium placeholder:line-through-none"
+                  className="w-full bg-zinc-900 border border-zinc-850 text-zinc-400 line-through px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-amber-500 transition-all font-mono font-medium placeholder:line-through-none"
                 />
               </div>
 
@@ -514,7 +514,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   min="0"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-850 text-zinc-100 px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-sky-500 transition-all font-mono font-medium"
+                  className="w-full bg-zinc-900 border border-zinc-850 text-zinc-100 px-3 py-2 rounded-2xl text-sm focus:outline-none focus:border-amber-500 transition-all font-mono font-medium"
                 />
                 {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
               </div>
@@ -527,10 +527,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               const totalItems = currentQty * pCount;
               if (pCount > 1) {
                 return (
-                  <div className="bg-sky-500/5 border border-sky-500/20 p-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <span className="text-xs text-sky-300 font-medium">💡 คำนวณคลังเสมือนจริง:</span>
+                  <div className="bg-amber-500/5 border border-amber-500/20 p-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-xs text-amber-300 font-medium">💡 คำนวณคลังเสมือนจริง:</span>
                     <span className="text-xs font-mono text-zinc-300">
-                      ได้สินค้า <strong className="text-sky-400 font-extrabold">{pCount}</strong> ชิ้นต่อชุด × สต๊อกมี <strong className="text-emerald-400 font-extrabold">{currentQty}</strong> ชุด = จะมีของข้างในรวมทั้งหมด <strong className="text-white text-sm bg-zinc-900 px-2 py-0.5 rounded-md border border-white/5 font-extrabold">{totalItems} ชิ้น</strong>
+                      ได้สินค้า <strong className="text-amber-400 font-extrabold">{pCount}</strong> ชิ้นต่อชุด × สต๊อกมี <strong className="text-emerald-400 font-extrabold">{currentQty}</strong> ชุด = จะมีของข้างในรวมทั้งหมด <strong className="text-white text-sm bg-zinc-900 px-2 py-0.5 rounded-md border border-white/5 font-extrabold">{totalItems} ชิ้น</strong>
                     </span>
                   </div>
                 );
@@ -548,7 +548,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="ระบุสถานะหรือบัฟ เช่น 'เพิ่มโอกาสดรอป 20%, ดาเมจฟันไททันแรงขึ้น...'"
                 rows={3}
-                className="w-full bg-zinc-900 border border-white/5 text-zinc-200 px-3 py-2.5 rounded-2xl text-sm focus:outline-none focus:border-sky-500 transition-all font-display tracking-tight placeholder-zinc-600 resize-none"
+                className="w-full bg-zinc-900 border border-white/5 text-zinc-200 px-3 py-2.5 rounded-2xl text-sm focus:outline-none focus:border-amber-500 transition-all font-display tracking-tight placeholder-zinc-600 resize-none"
               />
             </div>
 
@@ -560,7 +560,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   id="pin-checkbox"
                   checked={isPinned}
                   onChange={(e) => setIsPinned(e.target.checked)}
-                  className="w-4 h-4 accent-sky-500 rounded cursor-pointer"
+                  className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                 />
                 <label htmlFor="pin-checkbox" className="text-xs font-semibold text-zinc-350 cursor-pointer font-display tracking-tight select-none flex items-center gap-1">
                   <span>📌 ปักหมุดให้อยู่บนสุด</span>
@@ -593,7 +593,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   value={accountCredentialsText}
                   onChange={e => setAccountCredentialsText(e.target.value)}
                   placeholder="USER1:PASS1&#10;USER2:PASS2..."
-                  className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-sky-500 h-32 resize-y"
+                  className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-amber-500 h-32 resize-y"
                 />
               </div>
             )}
@@ -612,7 +612,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     value={fileLink}
                     onChange={e => setFileLink(e.target.value)}
                     placeholder="https://..."
-                    className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-sky-500"
+                    className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
@@ -622,7 +622,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     value={filePassword}
                     onChange={e => setFilePassword(e.target.value)}
                     placeholder="รหัสผ่าน..."
-                    className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-sky-500"
+                    className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -637,7 +637,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   <motion.button whileTap={{ scale: 0.95 }}
                     type="button"
                     onClick={() => setGachaPool([...gachaPool, { id: generateObjectId(), name: '' }])}
-                    className="flex items-center gap-1 text-xs font-bold text-sky-500 hover:text-sky-400 transition-colors"
+                    className="flex items-center gap-1 text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" /> เพิ่ม
                   </motion.button>
@@ -657,7 +657,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                               newPool[index].name = e.target.value;
                               setGachaPool(newPool);
                             }}
-                            className="flex-1 bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-lg text-xs focus:outline-none focus:border-sky-500 transition-all font-display tracking-tight"
+                            className="flex-1 bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-lg text-xs focus:outline-none focus:border-amber-500 transition-all font-display tracking-tight"
                           />
                           <input
                             type="color"
@@ -705,7 +705,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                               }
                               setGachaPool(newPool);
                             }}
-                            className="flex-1 bg-transparent border border-white/5 text-zinc-200 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-sky-500 transition-all font-mono"
+                            className="flex-1 bg-transparent border border-white/5 text-zinc-200 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-amber-500 transition-all font-mono"
                           />
                         </div>
 
@@ -781,7 +781,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     imageType === 'presets' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-300'
                   }`}
                 >
-                  <Sparkles className="w-3 h-3 text-sky-500" />
+                  <Sparkles className="w-3 h-3 text-amber-500" />
                   <span>รูปภาพตัวอย่าง</span>
                 </motion.button>
               </div>
@@ -794,7 +794,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="https://images.unsplash.com/... หรือ ลิงก์รูปภาพอื่นๆ"
-                    className="w-full bg-transparent border border-zinc-850 text-zinc-100 px-3 py-2 rounded-2xl text-xs focus:outline-none focus:border-sky-500 font-mono"
+                    className="w-full bg-transparent border border-zinc-850 text-zinc-100 px-3 py-2 rounded-2xl text-xs focus:outline-none focus:border-amber-500 font-mono"
                   />
                   {imageUrl && (
                     <div className="mt-2 text-center">
@@ -817,7 +817,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     onClick={() => fileInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition-colors ${
                       dragActive
-                        ? 'border-sky-500 bg-sky-500/5'
+                        ? 'border-amber-500 bg-amber-500/5'
                         : uploadedImages.length > 0
                         ? 'border-white/10 bg-zinc-900/60'
                         : 'border-white/5 hover:border-white/10 hover:bg-zinc-900/20'
@@ -873,7 +873,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         type="button"
                         key={preset.name}
                         onClick={() => handlePresetSelect(preset.url)}
-                        className="group relative h-16 rounded-lg overflow-hidden border border-white/5 hover:border-sky-500 transition-all text-left flex items-end p-1 cursor-pointer bg-transparent"
+                        className="group relative h-16 rounded-lg overflow-hidden border border-white/5 hover:border-amber-500 transition-all text-left flex items-end p-1 cursor-pointer bg-transparent"
                       >
                         <img src={preset.url} alt={preset.name} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-90 group-hover:scale-105 transition-all" />
                         <span className="relative text-[9px] text-white font-bold leading-none bg-black/80 p-0.5 rounded border border-white/5/30 w-full text-center truncate">
@@ -898,7 +898,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 value={imageUrlsText}
                 onChange={e => setImageUrlsText(e.target.value)}
                 placeholder="https://images.unsplash.com/...\nhttps://images.unsplash.com/..."
-                className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-sky-500 h-24 resize-y"
+                className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-amber-500 h-24 resize-y"
               />
             </div>
 
@@ -919,9 +919,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               </div>
             </div>
 
-            </div>
             {/* Submit and Cancel items */}
-            <div className="flex gap-2.5 bg-[#09090b] border-t border-white/5 p-4 sm:p-6 shrink-0 mt-auto">
+            <div className="flex gap-2.5 border-t border-white/5 pt-4 mt-5">
               <motion.button whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={onClose}
@@ -929,6 +928,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               >
                 ยกเลิก
               </motion.button>
+
               <motion.button whileTap={{ scale: 0.95 }}
                 type="submit"
                 className="w-1/2 py-2.5 px-4 rounded-2xl bg-zinc-100 hover:bg-white text-zinc-900 border-white text-xs font-bold shadow-lg flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-all"
