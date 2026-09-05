@@ -12,7 +12,7 @@ export const ShopBanner = ({ globalStats, items = [] }: { globalStats: any, item
     ? configuredCategories.length 
     : new Set(items.map(i => i.category)).size;
   
-  const availableItemsCount = items.filter(i => i.quantity > 0).length;
+  const availableItemsCount = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
   const soldItemsCount = globalStats?.total_purchases || 0;
   const totalTopupCount = globalStats?.total_topups || 0;
   
