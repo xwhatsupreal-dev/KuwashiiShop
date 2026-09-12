@@ -96,11 +96,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     >
       {/* Popular Fire Badge on the card edge */}
       {item.isPopular && (
-        <img 
-          src="https://img2.pic.in.th/1000121600.png" 
-          alt="Hot" 
-          className="absolute -top-2 -right-2 sm:-top-2.5 sm:-right-2.5 w-8 h-8 sm:w-10 sm:h-10 z-40 drop-shadow-[0_0_8px_rgba(255,100,0,0.8)] pointer-events-none" 
-        />
+        <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 z-40 flex items-center gap-1 bg-[#121218]/90 backdrop-blur-md rounded-full pl-2.5 pr-0.5 py-0.5 sm:py-1 shadow-lg border border-orange-500/30 pointer-events-none">
+          <span className="text-[10px] sm:text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-300 tracking-wide pt-px">ยอดนิยม</span>
+          <img 
+            src="https://img2.pic.in.th/1000121600.png" 
+            alt="Hot" 
+            className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-[0_0_6px_rgba(255,100,0,0.6)]" 
+          />
+        </div>
       )}
 
       {/* Top Image Container */}
