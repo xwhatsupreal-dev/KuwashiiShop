@@ -97,7 +97,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       {/* Popular Fire Badge on the card edge */}
       {item.isPopular && (
         <img 
-          src="/fire.png" 
+          src="https://img2.pic.in.th/1000121599.png" 
           alt="Hot" 
           className="absolute -top-3 -right-3 w-10 h-10 sm:w-12 sm:h-12 z-40 drop-shadow-[0_0_8px_rgba(255,100,0,0.8)] pointer-events-none" 
         />
