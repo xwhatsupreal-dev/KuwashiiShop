@@ -163,7 +163,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
           {/* Warning Section */}
           <div className="mb-4 bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
             <p className="text-red-400 font-bold text-sm mb-1">⚠️ คำเตือนก่อนสั่งซื้อ</p>
-            <p className="text-red-400/90 text-xs">อย่าลืมอัดคลิปก่อนสั่งซื้อสินค้า เพื่อจะได้เคลมสินค้านั้นได้ทุกครั้งหากสินค้าที่ได้มาเกิดข้อผิดพลาด</p>
+            <p className="text-red-400/90 text-xs">อย่าลืมอัดคลิปก่อนสั่งซื้อสินค้าทุกครั้ง "หากสินค้านั้นมีประกัน" เพื่อจะได้เคลมสินค้านั้นได้ทุกครั้งหากสินค้าที่ได้มาเกิดข้อผิดพลาด</p>
           </div>
 
           {/* Title & Share */}
@@ -219,6 +219,17 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
               <Info className="w-5 h-5 text-[#0ea5e9]" />
               รายละเอียดสินค้า
             </div>
+            
+            {item.warrantyDuration && (
+              <div className="bg-sky-500/10 border border-sky-500/20 p-3 rounded-xl mb-3 flex items-start gap-2">
+                <span className="text-lg">🛡️</span>
+                <div>
+                  <div className="text-sky-400 font-bold text-sm">การรับประกันสินค้า</div>
+                  <div className="text-sky-400/90 text-xs mt-0.5">สินค้าชิ้นนี้มีประกันหลังการขาย: <span className="font-bold underline underline-offset-2">{item.warrantyDuration}</span></div>
+                </div>
+              </div>
+            )}
+
             {item.description ? (
               <div className="bg-black/20 border border-white/5 p-4 rounded-xl text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">
                 {item.description}

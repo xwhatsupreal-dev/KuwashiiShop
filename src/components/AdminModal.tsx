@@ -50,6 +50,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [accountCredentialsText, setAccountCredentialsText] = useState('');
   const [fileLink, setFileLink] = useState('');
   const [filePassword, setFilePassword] = useState('');
+  const [warrantyDuration, setWarrantyDuration] = useState('');
   const [claimedJackpots, setClaimedJackpots] = useState<any[]>([]);
   
   const [imageType, setImageType] = useState<'url' | 'upload' | 'presets'>('url');
@@ -105,6 +106,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       setAccountCredentialsText(editingItem.accountCredentials ? editingItem.accountCredentials.join('\n') : '');
       setFileLink(editingItem.fileLink || '');
       setFilePassword(editingItem.filePassword || '');
+      setWarrantyDuration(editingItem.warrantyDuration || '');
       
       const fetchClaims = async () => {
         if (editingItem.category === 'สุ่มตัวละคร - ออสตา' || (Array.isArray(editingItem.gachaPool) && editingItem.gachaPool.length > 0)) {
@@ -320,6 +322,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       accountCredentials: accCreds.length > 0 ? accCreds : undefined,
       fileLink: saleFormat === 'ไฟล์ตัวรัน' ? fileLink.trim() : undefined,
       filePassword: saleFormat === 'ไฟล์ตัวรัน' ? filePassword.trim() : undefined,
+      warrantyDuration: saleFormat === 'ขายรหัส' ? warrantyDuration.trim() : undefined,
     }, notifyDiscord, stockWebhookUrl);
     
     onClose();
@@ -595,6 +598,19 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   placeholder="USER1:PASS1&#10;USER2:PASS2..."
                   className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm font-mono focus:outline-none focus:border-sky-500 h-32 resize-y"
                 />
+                
+                <div className="mt-4">
+                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-2 font-display tracking-tight">
+                    ระยะเวลาประกันหลังสั่งซื้อ <span className="text-zinc-500 font-normal">(เช่น 10 นาที, 2 ชั่วโมง, 1 วัน)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={warrantyDuration}
+                    onChange={e => setWarrantyDuration(e.target.value)}
+                    placeholder="ปล่อยว่างหากไม่มีประกัน..."
+                    className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm focus:outline-none focus:border-sky-500"
+                  />
+                </div>
               </div>
             )}
 

@@ -18,6 +18,7 @@ export interface StockItem {
   accountCredentials?: string[]; 
   fileLink?: string;
   filePassword?: string;
+  warrantyDuration?: string;
   updatedAt: string;
 }
 
