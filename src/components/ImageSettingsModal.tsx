@@ -257,7 +257,7 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
               <input
                 type="text"
                 value={settings.linkUrl || ''}
-                onChange={(e) => setSettings({ ...settings, announcementLinkUrl: e.target.value })}
+                onChange={(e) => setSettings({ ...settings, linkUrl: e.target.value })}
                 placeholder="https://... (เว้นว่างได้)"
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
               />
@@ -271,7 +271,7 @@ export const ImageSettingsModal: React.FC<ImageSettingsModalProps> = ({
               <input
                 type="text"
                 value={settings.linkUrl2 || ''}
-                onChange={(e) => setSettings({ ...settings, announcementLinkUrl2: e.target.value })}
+                onChange={(e) => setSettings({ ...settings, linkUrl2: e.target.value })}
                 placeholder="https://... (เว้นว่างได้)"
                 className="w-full bg-zinc-900 border border-white/5 text-zinc-100 px-4 py-3 rounded-xl focus:outline-none focus:border-fuchsia-500 transition-all text-sm font-sans"
               />
