@@ -99,7 +99,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         <img 
           src="https://cdn.phototourl.com/free/2026-09-12-946d23d8-794c-40de-9edd-a10ac9b4df7e.png" 
           alt="Hot" 
-          className="absolute -top-2 -right-2 sm:-top-2.5 sm:-right-2.5 w-8 h-8 sm:w-10 sm:h-10 z-40 drop-shadow-[0_0_8px_rgba(255,100,0,0.8)] pointer-events-none" 
+          className="absolute -top-3 -right-3 w-10 h-10 sm:w-12 sm:h-12 z-40 drop-shadow-[0_0_8px_rgba(255,100,0,0.8)] pointer-events-none" 
         />
       )}
 
