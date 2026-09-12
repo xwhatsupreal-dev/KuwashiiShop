@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Edit2, Trash2, Package, ShoppingCart, Flame, Star, X, Briefcase, Plus, Minus } from 'lucide-react';
+import { Edit2, Trash2, Package, ShoppingCart, Star, X, Briefcase, Plus, Minus } from 'lucide-react';
 import { StockItem } from '../types';
 
 interface ItemCardProps {
@@ -85,7 +85,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       transition={{ duration: 0.3, ease: "easeOut" }}
       exit={{ opacity: 0, scale: 0.98 }}
       whileHover={{ y: -4, transition: { duration: 0.15 } }}
-      className="group relative flex flex-col justify-between bg-[#0d0d12] hover:bg-[#121218] transition-all duration-300 border border-zinc-800/80 hover:border-purple-500/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-lg hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] overflow-hidden text-left select-none"
+      className="group relative flex flex-col justify-between bg-[#0d0d12] hover:bg-[#121218] transition-all duration-300 border border-zinc-800/80 hover:border-purple-500/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-lg hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] text-left select-none"
       id={`item-card-${item.id}`}
       onTouchStart={handlePressStart}
       onTouchEnd={handlePressEnd}
@@ -94,6 +94,15 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       onMouseUp={handlePressEnd}
       onMouseLeave={handlePressCancel}
     >
+      {/* Popular Fire Badge on the card edge */}
+      {item.isPopular && (
+        <img 
+          src="/fire.png" 
+          alt="Hot" 
+          className="absolute -top-3 -right-3 w-10 h-10 sm:w-12 sm:h-12 z-40 drop-shadow-[0_0_8px_rgba(255,100,0,0.8)] pointer-events-none" 
+        />
+      )}
+
       {/* Top Image Container */}
       <div
         className="relative w-full aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-900 border border-white/5 flex items-center justify-center cursor-pointer group/carousel"
@@ -176,20 +185,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               </div>
             )}
           </div>
-
-          <div className="flex flex-col gap-1 items-end">
-            {(item.isPopular || item.isPinned) && (
-              <div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 text-white font-black px-2 py-0.5 rounded-md text-[10px] sm:text-xs flex items-center gap-1 shadow-lg shadow-orange-600/40 border border-orange-400/40 animate-pulse">
-                <span className="tracking-wider">HOT</span>
-                <Flame className="w-3.5 h-3.5 fill-amber-300 text-amber-200" />
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Out of Stock Overlay */}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex flex-col items-center justify-center gap-1.5 z-20">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex flex-col items-center justify-center gap-1.5 z-20 rounded-2xl sm:rounded-3xl">
             <div className="w-12 h-12 bg-red-600/90 border border-red-400/40 rounded-full flex items-center justify-center shadow-2xl">
               <X className="w-6 h-6 text-white stroke-[3.5]" />
             </div>
@@ -201,7 +201,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
         {/* Long Press / Hover "ดูรายละเอียด" Overlay Pill matching screenshot */}
         <div
-          className={`absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-[2px] transition-all duration-200 pointer-events-none ${
+          className={`absolute inset-0 z-30 rounded-2xl sm:rounded-3xl flex items-center justify-center bg-black/60 backdrop-blur-[2px] transition-all duration-200 pointer-events-none ${
             isPressing ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100'
           }`}
           onClick={(e) => {
