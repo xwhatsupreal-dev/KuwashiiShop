@@ -79,11 +79,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 15, scale: 0.98 }}
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "50px 0px 50px 0px" }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      exit={{ opacity: 0, scale: 0.98 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+      exit={{ opacity: 0, scale: 0.95 }}
       whileHover={{ y: -4, transition: { duration: 0.15 } }}
       className="group relative flex flex-col justify-between bg-[#0d0d12] hover:bg-[#121218] transition-all duration-300 border border-zinc-800/80 hover:border-purple-500/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-lg hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] text-left select-none"
       id={`item-card-${item.id}`}
