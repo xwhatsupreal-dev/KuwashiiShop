@@ -257,6 +257,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     if (!name.trim()) newErrors.name = 'กรุณากรอกชื่อไอเทม';
     if (isNaN(qty) || qty < 0) newErrors.quantity = 'จำนวนสินค้าจะต้องไม่ติดลบ';
     if (isNaN(p) || p < 0) newErrors.price = 'ราคาจำเป็นจะต้องมากกว่าหรือเท่ากับ 0 บาท';
+    
+    if (saleFormat === 'ขายรหัส' && !warrantyDuration.trim()) {
+      newErrors.warrantyDuration = 'กรุณากรอกระยะเวลาประกัน (หากไม่มีให้ใส่ "ไม่มี" หรือ "-")';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -600,15 +605,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 />
                 
                 <div className="mt-4">
-                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-2 font-display tracking-tight">
-                    ระยะเวลาประกันหลังสั่งซื้อ <span className="text-zinc-500 font-normal">(เช่น 10 นาที, 2 ชั่วโมง, 1 วัน)</span>
+                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-2 font-display tracking-tight flex items-center justify-between">
+                    <span>ระยะเวลาประกันหลังสั่งซื้อ <span className="text-zinc-500 font-normal">(บังคับกรอก)</span></span>
+                    {errors.warrantyDuration && <span className="text-[10px] text-red-400 normal-case tracking-normal">{errors.warrantyDuration}</span>}
                   </label>
                   <input
                     type="text"
                     value={warrantyDuration}
-                    onChange={e => setWarrantyDuration(e.target.value)}
-                    placeholder="ปล่อยว่างหากไม่มีประกัน..."
-                    className="w-full bg-transparent border border-white/5 text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm focus:outline-none focus:border-sky-500"
+                    onChange={e => { setWarrantyDuration(e.target.value); if(errors.warrantyDuration) setErrors({...errors, warrantyDuration: ''}) }}
+                    placeholder="เช่น 10 นาที, 2 ชั่วโมง, 1 วัน (ถ้าไม่มีให้ใส่ 'ไม่มี' หรือ '-')"
+                    className={`w-full bg-transparent border ${errors.warrantyDuration ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-sky-500'} text-zinc-200 px-3 py-2 rounded-2xl text-xs sm:text-sm focus:outline-none transition-colors`}
                   />
                 </div>
               </div>

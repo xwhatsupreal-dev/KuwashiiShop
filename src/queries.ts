@@ -33,6 +33,7 @@ export async function fetchItems() {
     let origPrice = undefined;
     let fileL = undefined;
     let fileP = undefined;
+    let warranty = undefined;
 
     if (parsedPool && !Array.isArray(parsedPool) && typeof parsedPool === 'object') {
       pool = parsedPool.pool || undefined;
@@ -44,6 +45,7 @@ export async function fetchItems() {
       origPrice = parsedPool.originalPrice;
       fileL = parsedPool.fileLink;
       fileP = parsedPool.filePassword;
+      warranty = parsedPool.warrantyDuration;
     } else if (typeof parsedPool === 'string') {
        // if it failed to parse and is still a string
        try {
@@ -75,6 +77,7 @@ export async function fetchItems() {
       accountCredentials: accCreds,
       fileLink: fileL,
       filePassword: fileP,
+      warrantyDuration: warranty,
       initialQuantity: initialQty,
       piecesPerUnit: pieces,
       originalPrice: origPrice,

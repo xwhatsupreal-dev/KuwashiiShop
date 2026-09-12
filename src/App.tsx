@@ -1722,6 +1722,7 @@ export default function App() {
             accountCredentials: finalItem.accountCredentials || null,
             fileLink: finalItem.fileLink || null,
             filePassword: finalItem.filePassword || null,
+            warrantyDuration: finalItem.warrantyDuration || null,
             isPinned: finalItem.isPinned || false,
             originalPrice: finalItem.originalPrice,
           },
@@ -2029,6 +2030,7 @@ export default function App() {
               accountCredentials: nextAccCreds,
               fileLink: item.fileLink || null,
               filePassword: item.filePassword || null,
+              warrantyDuration: item.warrantyDuration || null,
               isPinned: item.isPinned || false,
             },
           })
@@ -2228,6 +2230,7 @@ export default function App() {
             accountCredentials: updated.accountCredentials || null,
             fileLink: updated.fileLink || null,
             filePassword: updated.filePassword || null,
+            warrantyDuration: updated.warrantyDuration || null,
             isPinned: updated.isPinned || false,
             originalPrice: updated.originalPrice,
           },
