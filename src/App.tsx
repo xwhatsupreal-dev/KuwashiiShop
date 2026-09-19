@@ -87,6 +87,7 @@ import { CouponManagerModal } from "./components/CouponManagerModal";
 import { AnnouncementManagerModal } from "./components/AnnouncementManagerModal";
 import { ImageSettingsModal } from "./components/ImageSettingsModal";
 import { AnnouncementPopup } from "./components/AnnouncementPopup";
+import { InAppBrowserNotice } from "./components/InAppBrowserNotice";
 import { MarqueeAnnouncement } from "./components/MarqueeAnnouncement";
 import { ShopHeader } from "./components/ShopHeader";
 import { ShopBanner } from "./components/ShopBanner";
@@ -2799,6 +2800,7 @@ export default function App() {
           transition={{ duration: 0.15, ease: "easeOut" }}
           className="min-h-[100vh] min-h-[100dvh] flex flex-col bg-transparent text-zinc-200 font-display tracking-tight selection:bg-indigo-500 selection:text-zinc-100 relative w-full"
         >
+          <InAppBrowserNotice />
           <ShopHeader
             globalStats={globalStats}
             toggleSidebar={() => setIsAstdMenuOpen(true)}
