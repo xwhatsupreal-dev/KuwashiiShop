@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../supabase';
 import { StockItem } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,7 +30,7 @@ interface PurchaseItem {
   isMock?: boolean;
 }
 
-// Individual card component with its own image error & hover state
+// Individual card component with room for full text and responsive scaling
 const PurchaseCard: React.FC<{
   purchase: PurchaseItem;
   matchedItem?: StockItem;
@@ -47,10 +47,10 @@ const PurchaseCard: React.FC<{
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 450, damping: 28 }}
       onClick={() => onSelect(purchase)}
-      className="flex-shrink-0 w-[300px] sm:w-[340px] h-[92px] bg-[#0d0e14]/95 hover:bg-[#131520] border border-white/10 hover:border-amber-500/45 rounded-2xl p-2.5 sm:p-3 flex items-center gap-3 relative overflow-hidden shadow-lg hover:shadow-[0_8px_25px_rgba(245,158,11,0.12)] backdrop-blur-xl cursor-pointer group transition-colors duration-200"
+      className="flex-shrink-0 w-[320px] sm:w-[360px] min-h-[105px] bg-[#0d0e14]/95 hover:bg-[#131520] border border-white/10 hover:border-amber-500/45 rounded-2xl p-3 flex items-center gap-3 relative overflow-hidden shadow-lg hover:shadow-[0_8px_25px_rgba(245,158,11,0.12)] backdrop-blur-xl cursor-pointer group transition-colors duration-200"
     >
       {/* Left Thumbnail */}
-      <div className="w-[64px] h-[64px] rounded-xl overflow-hidden bg-black/60 border border-white/10 shrink-0 relative flex items-center justify-center">
+      <div className="w-[68px] h-[68px] rounded-xl overflow-hidden bg-black/60 border border-white/10 shrink-0 relative flex items-center justify-center">
         {imgSrc && !imgError ? (
           <img
             src={imgSrc}
@@ -61,42 +61,42 @@ const PurchaseCard: React.FC<{
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-amber-500/20 via-zinc-900 to-black flex flex-col items-center justify-center p-1">
-            <Package className="w-6 h-6 text-amber-400/80 mb-0.5" />
-            <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">สั่งซื้อ</span>
+            <Package className="w-6 h-6 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)] mb-0.5" />
+            <span className="text-[8.5px] text-amber-300/90 font-bold uppercase tracking-wider">สั่งซื้อ</span>
           </div>
         )}
       </div>
 
       {/* Right Details */}
-      <div className="flex flex-col flex-1 min-w-0 pr-0.5 justify-between h-full py-0.5">
-        {/* Top row */}
-        <div className="flex items-center justify-between gap-1">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25 tracking-wide">
+      <div className="flex flex-col flex-1 min-w-0 justify-between py-0.5">
+        {/* Top row: Badge & Time */}
+        <div className="flex items-center justify-between gap-1 mb-1">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25 tracking-wide shrink-0">
             <ShoppingCart className="w-2.5 h-2.5" />
             สั่งซื้อ
           </span>
-          <span className="text-[10.5px] text-zinc-400 font-medium whitespace-nowrap">
+          <span className="text-[11px] text-zinc-400 font-medium whitespace-nowrap">
             {getTimeAgo(purchase.timestamp)}
           </span>
         </div>
 
-        {/* Title */}
-        <h3 className="text-[13px] font-bold text-zinc-100 group-hover:text-amber-300 transition-colors truncate w-full block leading-snug">
+        {/* Product Title: Full text displayed cleanly up to 2 lines without truncation */}
+        <h3 className="text-[13.5px] sm:text-[14px] font-bold text-zinc-100 group-hover:text-amber-300 transition-colors line-clamp-2 leading-snug break-words">
           {purchase.item_name}
         </h3>
 
         {/* Buyer */}
-        <div className="flex items-center gap-1 text-[11px] text-zinc-400 font-medium truncate">
+        <div className="flex items-center gap-1 text-[11.5px] text-zinc-400 font-medium truncate mt-0.5">
           <span className="text-zinc-300 font-semibold">คุณ {maskName(purchase.username)}</span>
           <span className="text-zinc-500">ซื้อสินค้า</span>
         </div>
 
-        {/* Bottom row */}
-        <div className="flex items-center justify-between pt-0.5 border-t border-white/5">
-          <span className="text-amber-400 font-black text-[13.5px] sm:text-[14.5px] tracking-tight">
+        {/* Bottom row: Price & Action */}
+        <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-white/5">
+          <span className="text-amber-400 font-black text-[14px] sm:text-[15px] tracking-tight">
             {purchase.price > 0 ? `${purchase.price.toLocaleString()} ฿` : 'ฟรี ฿'}
           </span>
-          <span className="text-[11px] text-zinc-400 group-hover:text-amber-300 font-medium inline-flex items-center gap-1 transition-colors">
+          <span className="text-[11.5px] text-zinc-400 group-hover:text-amber-300 font-medium inline-flex items-center gap-1 transition-colors">
             ดูเพิ่มเติม
             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </span>
@@ -109,9 +109,6 @@ const PurchaseCard: React.FC<{
 export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }> = ({ appScreen, items }) => {
   const [purchases, setPurchases] = useState<PurchaseItem[]>([]);
   const [selectedPurchase, setSelectedPurchase] = useState<PurchaseItem | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const isPausedRef = useRef(false);
-  const isInteractingRef = useRef(false);
 
   // Lock body scroll when modal is open
   useScrollLock(!!selectedPurchase);
@@ -235,60 +232,26 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
     );
   };
 
-  // Duplicate list so scroll is continuous & seamless
-  const displayList = useMemo(() => {
-    if (purchases.length === 0) return [];
-    if (purchases.length < 5) return [...purchases, ...purchases, ...purchases, ...purchases];
-    return [...purchases, ...purchases];
+  // Build duplicated list so the CSS marquee runs seamless infinite loop
+  const { displayList, marqueeDuration } = useMemo(() => {
+    if (purchases.length === 0) return { displayList: [], marqueeDuration: 20 };
+    
+    // Ensure base set has at least 8 items for a continuous visual stream
+    let baseSet: PurchaseItem[] = [];
+    while (baseSet.length < 8) {
+      baseSet = [...baseSet, ...purchases];
+    }
+    if (baseSet.length > 12) {
+      baseSet = baseSet.slice(0, 12);
+    }
+    
+    // Duplicate baseSet once for seamless -50% CSS transform loop
+    const fullList = [...baseSet, ...baseSet];
+    // Dynamic duration: ~2.4 seconds per item in baseSet gives a brisk, smooth scroll (~100-120px/s)
+    const duration = Math.max(16, Math.min(30, Math.round(baseSet.length * 2.4)));
+
+    return { displayList: fullList, marqueeDuration: duration };
   }, [purchases]);
-
-  // Smooth continuous auto-scroll loop (faster & silky smooth at 75px/sec)
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container || displayList.length === 0) return;
-
-    let animId: number;
-    let lastTime = performance.now();
-    // Brisk & lively speed: 75 pixels per second
-    const SCROLL_SPEED = 75;
-
-    const step = (time: number) => {
-      const delta = (time - lastTime) / 1000;
-      lastTime = time;
-
-      if (!isPausedRef.current && !isInteractingRef.current && container) {
-        container.scrollLeft += SCROLL_SPEED * delta;
-
-        // When scrolled past half the content, seamlessly loop back
-        const halfScroll = container.scrollWidth / 2;
-        if (halfScroll > 0 && container.scrollLeft >= halfScroll) {
-          container.scrollLeft -= halfScroll;
-        }
-      }
-      animId = requestAnimationFrame(step);
-    };
-
-    animId = requestAnimationFrame(step);
-
-    return () => {
-      cancelAnimationFrame(animId);
-    };
-  }, [displayList.length]);
-
-  // Scroll carousel left/right with arrow buttons
-  const handleScroll = (direction: 'left' | 'right') => {
-    if (!scrollContainerRef.current) return;
-    isPausedRef.current = true;
-    const scrollAmount = 320;
-    scrollContainerRef.current.scrollBy({
-      left: direction === 'left' ? -scrollAmount : scrollAmount,
-      behavior: 'smooth'
-    });
-    // Resume auto-scroll after smooth animation
-    setTimeout(() => {
-      isPausedRef.current = false;
-    }, 1800);
-  };
 
   // Navigate to store item when clicking "ดูสินค้านี้ในร้าน" inside modal
   const handleViewInStore = (item: StockItem) => {
@@ -312,6 +275,21 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
     }, 200);
   };
 
+  // Previous & Next navigation for header buttons & modal
+  const handlePrevItem = () => {
+    if (purchases.length === 0) return;
+    const currentIdx = selectedPurchase ? purchases.findIndex((p) => p.id === selectedPurchase.id) : 0;
+    const prevIdx = (currentIdx - 1 + purchases.length) % purchases.length;
+    setSelectedPurchase(purchases[prevIdx]);
+  };
+
+  const handleNextItem = () => {
+    if (purchases.length === 0) return;
+    const currentIdx = selectedPurchase ? purchases.findIndex((p) => p.id === selectedPurchase.id) : -1;
+    const nextIdx = (currentIdx + 1) % purchases.length;
+    setSelectedPurchase(purchases[nextIdx]);
+  };
+
   const selectedMatchedItem = useMemo(() => getMatchedStockItem(selectedPurchase), [selectedPurchase, items]);
   const selectedImgSrc = selectedMatchedItem?.imageUrls?.[0] || selectedMatchedItem?.imageUrl || '';
 
@@ -322,7 +300,30 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="w-full mb-6 relative px-3 sm:px-4"
     >
-      {/* Header section with live pulse indicator & scroll buttons */}
+      {/* Self-contained CSS Animation for 100% reliable hardware-accelerated auto-scroll */}
+      <style>{`
+        @keyframes autoScrollMarquee {
+          0% {
+            transform: translate3d(0, 0, 0);
+          }
+          100% {
+            transform: translate3d(-50%, 0, 0);
+          }
+        }
+        .recent-purchases-marquee-track {
+          display: flex;
+          gap: 0.75rem;
+          width: max-content;
+          animation: autoScrollMarquee var(--marquee-speed, 20s) linear infinite;
+          will-change: transform;
+        }
+        .recent-purchases-marquee-track:hover,
+        .recent-purchases-marquee-track:active {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      {/* Header section with live pulse indicator & action buttons */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div className="relative flex items-center justify-center">
@@ -340,16 +341,18 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
         {purchases.length > 0 && (
           <div className="flex items-center gap-1.5">
             <button
-              onClick={() => handleScroll('left')}
+              onClick={handlePrevItem}
               className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 hover:border-amber-500/40 text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
-              aria-label="Previous purchases"
+              aria-label="Previous purchase"
+              title="ดูรายการก่อนหน้า"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
-              onClick={() => handleScroll('right')}
+              onClick={handleNextItem}
               className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 hover:border-amber-500/40 text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
-              aria-label="Next purchases"
+              aria-label="Next purchase"
+              title="ดูรายการถัดไป"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -367,28 +370,12 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
               animate={{ opacity: 1, filter: 'blur(0px)' }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full"
+              className="relative w-full overflow-hidden"
             >
-              {/* Native Horizontal Scroll Container with smooth auto-scroll & touch swipe */}
+              {/* Continuous Auto-Scrolling Marquee Track */}
               <div
-                ref={scrollContainerRef}
-                onMouseEnter={() => {
-                  isPausedRef.current = true;
-                }}
-                onMouseLeave={() => {
-                  isPausedRef.current = false;
-                }}
-                onTouchStart={() => {
-                  isPausedRef.current = true;
-                  isInteractingRef.current = true;
-                }}
-                onTouchEnd={() => {
-                  isInteractingRef.current = false;
-                  setTimeout(() => {
-                    isPausedRef.current = false;
-                  }, 1500);
-                }}
-                className="flex gap-3 overflow-x-auto scrollbar-none py-1.5 scroll-smooth select-none w-full"
+                className="recent-purchases-marquee-track py-1.5 select-none"
+                style={{ '--marquee-speed': `${marqueeDuration}s` } as React.CSSProperties}
               >
                 {displayList.map((p, index) => (
                   <PurchaseCard
