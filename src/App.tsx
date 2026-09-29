@@ -74,6 +74,7 @@ import {
 } from "./types";
 import { DEFAULT_PRESETS } from "./presets";
 import { ItemCard } from "./components/ItemCard";
+import { ItemGrid } from "./components/ItemGrid";
 import { CategoryList } from "./components/CategoryList";
 import { ItemCardSkeleton } from "./components/ItemCardSkeleton";
 import { InquiryModal } from "./components/InquiryModal";
@@ -3273,60 +3274,41 @@ export default function App() {
                   </div>
                   <motion.button
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-zinc-800 rounded-full text-zinc-300 hover:bg-zinc-800"
+                    onClick={() => {
+                      const el = document.getElementById("shop-item-grid-section");
+                      el?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-zinc-800 rounded-full text-zinc-300 hover:bg-zinc-800 cursor-pointer"
                   >
                     ดูเพิ่มเติม{" "}
                     <ChevronRight className="w-4 h-4 text-zinc-500" />
                   </motion.button>
                 </div>
 
-                {/* Item Grid */}
-                {isLoadingStock ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4">
-                    {Array.from({ length: 8 }).map((_, idx) => (
-                      <ItemCardSkeleton key={`astd-skel-${idx}`} />
-                    ))}
-                  </div>
-                ) : sortedItems.length === 0 ? (
-                  <div className="text-center py-24 bg-zinc-900 border border-zinc-800 rounded-2xl">
-                    <Inbox className="w-16 h-16 text-indigo-500/50 mx-auto mb-6" />
-                    <h2 className="text-lg font-black text-zinc-100 mb-2 uppercase tracking-wide">
-                      {search ? `ไม่พบสินค้าสำหรับ "${search}"` : "ไม่พบสินค้าในสต๊อก"}
-                    </h2>
-                    <p className="text-zinc-500 text-sm">
-                      {search ? "ลองค้นหาด้วยคำอื่น หรือกลับไปดูสินค้าทั้งหมด" : "ขณะนี้ยังไม่มีสินค้าวางจำหน่ายในหมวดหมู่นี้"}
-                    </p>
-                  </div>
-                ) : (
-                  <motion.div
-                    layout
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4"
-                  >
-                    <AnimatePresence>
-                      {sortedItems.map((item) => (
-                        <ItemCard
-                          appScreen={appScreen}
-                          key={item.id}
-                          item={item}
-                          isAdmin={isAdmin}
-                          onEdit={(it) => {
-                            setEditingItem(it);
-                            setIsFormOpen(true);
-                          }}
-                          onDelete={handleDeleteItem}
-                          onQuickQuantityChange={handleQuickQuantityChange}
-                          onInquire={() => setInquiringItem(item)}
-                          onBuy={handleBuyItem}
-                          onTogglePin={handleTogglePin}
-                          onCategoryClick={(cat) => {
-                            setSelectedCategory(cat);
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
+                {/* Item Grid with Intersection Observer & Smooth Lazy Loading */}
+                <div id="shop-item-grid-section">
+                  <ItemGrid
+                    items={sortedItems}
+                    isLoadingStock={isLoadingStock}
+                    isAdmin={isAdmin}
+                    appScreen={appScreen}
+                    search={search}
+                    onEdit={(it) => {
+                      setEditingItem(it);
+                      setIsFormOpen(true);
+                    }}
+                    onDelete={handleDeleteItem}
+                    onQuickQuantityChange={handleQuickQuantityChange}
+                    onInquire={(it) => setInquiringItem(it)}
+                    onBuy={handleBuyItem}
+                    onTogglePin={handleTogglePin}
+                    onCategoryClick={(cat) => {
+                      setSelectedCategory(cat);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    onResetSearch={() => setSearch("")}
+                  />
+                </div>
 
                 <DiscordBanner />
               </>

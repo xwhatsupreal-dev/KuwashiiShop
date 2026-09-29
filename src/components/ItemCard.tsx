@@ -30,12 +30,25 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
   const [isPressing, setIsPressing] = React.useState(false);
+  const [isImageLoaded, setIsImageLoaded] = React.useState(false);
+  const [hasImageError, setHasImageError] = React.useState(false);
   const longPressTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const didLongPressTriggerRef = React.useRef(false);
 
   const hasDiscount = Boolean(item.originalPrice && item.originalPrice > item.price);
   const discountAmount = hasDiscount ? (item.originalPrice! - item.price) : 0;
   const isOutOfStock = item.quantity === 0;
+
+  const currentImageSrc =
+    item.imageUrls && item.imageUrls.length > 0
+      ? item.imageUrls[currentImageIndex]
+      : item.imageUrl;
+
+  // Reset image state when image source changes
+  React.useEffect(() => {
+    setIsImageLoaded(false);
+    setHasImageError(false);
+  }, [currentImageSrc]);
 
   // Long-press handling for touch & mouse
   const handlePressStart = () => {
@@ -78,14 +91,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, amount: 0.1 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
       whileHover={{ y: -4, transition: { duration: 0.15 } }}
-      className="group relative flex flex-col justify-between bg-[#0d0d12] hover:bg-[#121218] transition-all duration-300 border border-zinc-800/80 hover:border-purple-500/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-lg hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] text-left select-none"
+      className="group relative flex flex-col justify-between bg-[#0d0d12] hover:bg-[#121218] transition-colors duration-300 border border-zinc-800/80 hover:border-purple-500/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-lg hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] text-left select-none will-change-transform"
       id={`item-card-${item.id}`}
       onTouchStart={handlePressStart}
       onTouchEnd={handlePressEnd}
@@ -117,21 +128,35 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           onInquire(item);
         }}
       >
-        {(item.imageUrls && item.imageUrls.length > 0) || item.imageUrl ? (
+        {currentImageSrc ? (
           <>
-            <img
-              src={
-                item.imageUrls && item.imageUrls.length > 0
-                  ? item.imageUrls[currentImageIndex]
-                  : item.imageUrl!
-              }
-              alt={item.name}
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
+            {/* Smooth Shimmer placeholder while image loads */}
+            {!isImageLoaded && !hasImageError && (
+              <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 via-zinc-800/50 to-zinc-900 animate-pulse flex items-center justify-center">
+                <Package className="w-8 h-8 text-zinc-700/60" />
+              </div>
+            )}
+
+            {hasImageError ? (
+              <div className="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center p-3 text-zinc-600">
+                <Package className="w-8 h-8 mb-1 text-zinc-700" />
+                <span className="text-[10px] text-zinc-500 font-medium">รูปภาพไม่พร้อมใช้งาน</span>
+              </div>
+            ) : (
+              <img
+                src={currentImageSrc}
+                alt={item.name}
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onLoad={() => setIsImageLoaded(true)}
+                onError={() => setHasImageError(true)}
+                className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${
+                  isImageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
+              />
+            )}
+
             {item.imageUrls && item.imageUrls.length > 1 && (
               <>
                 <button
