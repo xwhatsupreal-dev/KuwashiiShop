@@ -5,16 +5,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingCart, 
   CheckCircle2, 
-  ShieldCheck, 
   ChevronLeft, 
   ChevronRight, 
   ArrowRight, 
   X, 
   User, 
   Package, 
-  Sparkles, 
   Search,
-  ExternalLink,
   Clock
 } from 'lucide-react';
 import { parseUTCDate, formatThaiDateTime } from '../utils/date';
@@ -33,10 +30,88 @@ interface PurchaseItem {
   isMock?: boolean;
 }
 
+// Individual card component with its own image error & hover state
+const PurchaseCard: React.FC<{
+  purchase: PurchaseItem;
+  matchedItem?: StockItem;
+  onSelect: (p: PurchaseItem) => void;
+  maskName: (name: string) => string;
+  getTimeAgo: (iso: string) => string;
+}> = ({ purchase, matchedItem, onSelect, maskName, getTimeAgo }) => {
+  const [imgError, setImgError] = useState(false);
+  const imgSrc = matchedItem?.imageUrls?.[0] || matchedItem?.imageUrl || '';
+
+  return (
+    <motion.div
+      whileHover={{ y: -3, scale: 1.01 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 450, damping: 28 }}
+      onClick={() => onSelect(purchase)}
+      className="flex-shrink-0 w-[300px] sm:w-[340px] h-[92px] bg-[#0d0e14]/95 hover:bg-[#131520] border border-white/10 hover:border-amber-500/45 rounded-2xl p-2.5 sm:p-3 flex items-center gap-3 relative overflow-hidden shadow-lg hover:shadow-[0_8px_25px_rgba(245,158,11,0.12)] backdrop-blur-xl cursor-pointer group transition-colors duration-200"
+    >
+      {/* Left Thumbnail */}
+      <div className="w-[64px] h-[64px] rounded-xl overflow-hidden bg-black/60 border border-white/10 shrink-0 relative flex items-center justify-center">
+        {imgSrc && !imgError ? (
+          <img
+            src={imgSrc}
+            alt={purchase.item_name}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-amber-500/20 via-zinc-900 to-black flex flex-col items-center justify-center p-1">
+            <Package className="w-6 h-6 text-amber-400/80 mb-0.5" />
+            <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">สั่งซื้อ</span>
+          </div>
+        )}
+      </div>
+
+      {/* Right Details */}
+      <div className="flex flex-col flex-1 min-w-0 pr-0.5 justify-between h-full py-0.5">
+        {/* Top row */}
+        <div className="flex items-center justify-between gap-1">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25 tracking-wide">
+            <ShoppingCart className="w-2.5 h-2.5" />
+            สั่งซื้อ
+          </span>
+          <span className="text-[10.5px] text-zinc-400 font-medium whitespace-nowrap">
+            {getTimeAgo(purchase.timestamp)}
+          </span>
+        </div>
+
+        {/* Title */}
+        <h3 className="text-[13px] font-bold text-zinc-100 group-hover:text-amber-300 transition-colors truncate w-full block leading-snug">
+          {purchase.item_name}
+        </h3>
+
+        {/* Buyer */}
+        <div className="flex items-center gap-1 text-[11px] text-zinc-400 font-medium truncate">
+          <span className="text-zinc-300 font-semibold">คุณ {maskName(purchase.username)}</span>
+          <span className="text-zinc-500">ซื้อสินค้า</span>
+        </div>
+
+        {/* Bottom row */}
+        <div className="flex items-center justify-between pt-0.5 border-t border-white/5">
+          <span className="text-amber-400 font-black text-[13.5px] sm:text-[14.5px] tracking-tight">
+            {purchase.price > 0 ? `${purchase.price.toLocaleString()} ฿` : 'ฟรี ฿'}
+          </span>
+          <span className="text-[11px] text-zinc-400 group-hover:text-amber-300 font-medium inline-flex items-center gap-1 transition-colors">
+            ดูเพิ่มเติม
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }> = ({ appScreen, items }) => {
   const [purchases, setPurchases] = useState<PurchaseItem[]>([]);
   const [selectedPurchase, setSelectedPurchase] = useState<PurchaseItem | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isPausedRef = useRef(false);
+  const isInteractingRef = useRef(false);
 
   // Lock body scroll when modal is open
   useScrollLock(!!selectedPurchase);
@@ -60,7 +135,7 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
 
     const loadData = async () => {
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('purchases')
           .select('id, username, item_name, price, created_at, game, quantity, item_id')
           .order('created_at', { ascending: false })
@@ -83,11 +158,10 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
             }))
           );
         } else {
-          // If no purchases exist in database yet, generate realistic recent showcase purchases
-          // based on actual items in the store so the carousel is gorgeous and interactive
+          // If no purchases exist in database yet, generate realistic showcase purchases from active stock
           const now = Date.now();
           const fallbackPurchases: PurchaseItem[] = (items.length > 0 ? items.slice(0, 8) : []).map((it, idx) => {
-            const minutesAgo = (idx + 1) * 7 + 4;
+            const minutesAgo = (idx + 1) * 8 + 5;
             const pastDate = new Date(now - minutesAgo * 60 * 1000).toISOString();
             const sampleUsernames = ['EzReal', 'Thawatchai', 'NongBeam', 'Kaitoon', 'Master99', 'Sompong', 'ProPlayer'];
             return {
@@ -129,7 +203,7 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
     };
   }, [appScreen, items]);
 
-  // Mask username: e.g. "EzReal" -> "Ez•••", "6789" -> "67•••"
+  // Mask username: e.g. "EzReal" -> "Ez•••", "si007n" -> "si•••n"
   const maskName = (name: string) => {
     if (!name) return 'ผู้ใช้ทั่วไป';
     const clean = name.trim();
@@ -161,14 +235,59 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
     );
   };
 
+  // Duplicate list so scroll is continuous & seamless
+  const displayList = useMemo(() => {
+    if (purchases.length === 0) return [];
+    if (purchases.length < 5) return [...purchases, ...purchases, ...purchases, ...purchases];
+    return [...purchases, ...purchases];
+  }, [purchases]);
+
+  // Smooth continuous auto-scroll loop (faster & silky smooth at 75px/sec)
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || displayList.length === 0) return;
+
+    let animId: number;
+    let lastTime = performance.now();
+    // Brisk & lively speed: 75 pixels per second
+    const SCROLL_SPEED = 75;
+
+    const step = (time: number) => {
+      const delta = (time - lastTime) / 1000;
+      lastTime = time;
+
+      if (!isPausedRef.current && !isInteractingRef.current && container) {
+        container.scrollLeft += SCROLL_SPEED * delta;
+
+        // When scrolled past half the content, seamlessly loop back
+        const halfScroll = container.scrollWidth / 2;
+        if (halfScroll > 0 && container.scrollLeft >= halfScroll) {
+          container.scrollLeft -= halfScroll;
+        }
+      }
+      animId = requestAnimationFrame(step);
+    };
+
+    animId = requestAnimationFrame(step);
+
+    return () => {
+      cancelAnimationFrame(animId);
+    };
+  }, [displayList.length]);
+
   // Scroll carousel left/right with arrow buttons
   const handleScroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return;
-    const scrollAmount = 360;
+    isPausedRef.current = true;
+    const scrollAmount = 320;
     scrollContainerRef.current.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth'
     });
+    // Resume auto-scroll after smooth animation
+    setTimeout(() => {
+      isPausedRef.current = false;
+    }, 1800);
   };
 
   // Navigate to store item when clicking "ดูสินค้านี้ในร้าน" inside modal
@@ -195,13 +314,6 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
 
   const selectedMatchedItem = useMemo(() => getMatchedStockItem(selectedPurchase), [selectedPurchase, items]);
   const selectedImgSrc = selectedMatchedItem?.imageUrls?.[0] || selectedMatchedItem?.imageUrl || '';
-
-  // Multiplied list for seamless infinite marquee loop
-  const displayList = useMemo(() => {
-    if (purchases.length === 0) return [];
-    if (purchases.length < 5) return [...purchases, ...purchases, ...purchases, ...purchases];
-    return [...purchases, ...purchases];
-  }, [purchases]);
 
   return (
     <motion.div
@@ -246,7 +358,7 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
       </div>
 
       {/* Carousel Container */}
-      <div className="overflow-hidden pb-2 pt-1 w-full relative group/carousel">
+      <div className="overflow-hidden pb-1 pt-0.5 w-full relative">
         <AnimatePresence mode="wait">
           {purchases.length > 0 ? (
             <motion.div
@@ -254,85 +366,40 @@ export const RecentPurchases: React.FC<{ appScreen: string; items: StockItem[] }
               initial={{ opacity: 0, filter: 'blur(6px)' }}
               animate={{ opacity: 1, filter: 'blur(0px)' }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3 }}
               className="relative w-full"
             >
-              {/* Horizontal Scroll / Marquee Container */}
+              {/* Native Horizontal Scroll Container with smooth auto-scroll & touch swipe */}
               <div
                 ref={scrollContainerRef}
-                className="flex gap-3 overflow-x-auto scrollbar-none scroll-smooth pb-2 pt-1 animate-marquee-slow hover:[animation-play-state:paused]"
+                onMouseEnter={() => {
+                  isPausedRef.current = true;
+                }}
+                onMouseLeave={() => {
+                  isPausedRef.current = false;
+                }}
+                onTouchStart={() => {
+                  isPausedRef.current = true;
+                  isInteractingRef.current = true;
+                }}
+                onTouchEnd={() => {
+                  isInteractingRef.current = false;
+                  setTimeout(() => {
+                    isPausedRef.current = false;
+                  }, 1500);
+                }}
+                className="flex gap-3 overflow-x-auto scrollbar-none py-1.5 scroll-smooth select-none w-full"
               >
-                {displayList.map((p, index) => {
-                  const matched = getMatchedStockItem(p);
-                  const imgSrc = matched?.imageUrls?.[0] || matched?.imageUrl || '';
-
-                  return (
-                    <motion.div
-                      key={`${p.id}-${index}`}
-                      whileHover={{ y: -3, scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
-                      transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-                      onClick={() => setSelectedPurchase(p)}
-                      className="flex-shrink-0 w-[300px] sm:w-[350px] bg-[#0d0e14]/90 hover:bg-[#131520] border border-white/10 hover:border-amber-500/45 rounded-2xl p-3 sm:p-3.5 flex items-center gap-3 relative overflow-hidden shadow-lg hover:shadow-[0_8px_25px_rgba(245,158,11,0.12)] backdrop-blur-xl cursor-pointer group transition-colors duration-200"
-                    >
-                      {/* Left Thumbnail */}
-                      <div className="w-[62px] h-[62px] sm:w-[68px] sm:h-[68px] rounded-xl overflow-hidden bg-black/60 border border-white/10 shrink-0 relative flex items-center justify-center">
-                        {imgSrc ? (
-                          <img
-                            src={imgSrc}
-                            alt={p.item_name}
-                            loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              // Fallback on broken image
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-amber-500/20 via-zinc-900 to-black flex items-center justify-center">
-                            <Package className="w-7 h-7 text-amber-400/80" />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Right Details */}
-                      <div className="flex flex-col flex-1 min-w-0 pr-0.5">
-                        {/* Top row: Badge & Time */}
-                        <div className="flex items-center justify-between gap-1 mb-1">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25 tracking-wide">
-                            <ShoppingCart className="w-2.5 h-2.5" />
-                            สั่งซื้อ
-                          </span>
-                          <span className="text-[10.5px] text-zinc-400 font-medium whitespace-nowrap">
-                            {getTimeAgo(p.timestamp)}
-                          </span>
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="text-[13px] sm:text-[13.5px] font-bold text-zinc-100 group-hover:text-amber-300 transition-colors truncate w-full block leading-snug">
-                          {p.item_name}
-                        </h3>
-
-                        {/* Buyer line */}
-                        <div className="flex items-center gap-1 text-[11px] text-zinc-400 font-medium truncate mt-0.5">
-                          <span className="text-zinc-300 font-semibold">คุณ {maskName(p.username)}</span>
-                          <span className="text-zinc-500">ซื้อสินค้า</span>
-                        </div>
-
-                        {/* Bottom row: Price & Action */}
-                        <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-white/5">
-                          <span className="text-amber-400 font-black text-[14px] sm:text-[15px] tracking-tight">
-                            {p.price > 0 ? `${p.price.toLocaleString()} ฿` : 'ฟรี ฿'}
-                          </span>
-                          <span className="text-[11px] text-zinc-400 group-hover:text-amber-300 font-medium inline-flex items-center gap-1 transition-colors">
-                            ดูเพิ่มเติม
-                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                {displayList.map((p, index) => (
+                  <PurchaseCard
+                    key={`${p.id}-${index}`}
+                    purchase={p}
+                    matchedItem={getMatchedStockItem(p)}
+                    onSelect={setSelectedPurchase}
+                    maskName={maskName}
+                    getTimeAgo={getTimeAgo}
+                  />
+                ))}
               </div>
             </motion.div>
           ) : (
